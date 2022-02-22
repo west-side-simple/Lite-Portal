@@ -1,4 +1,4 @@
--- Плагин поиска для lite portal - west_side 18.02.22
+-- Плагин поиска для lite portal - west_side 22.02.22
 -- необходимы скрипты Lite_qt_exfs.lua, ex-fs.lua, Lite_qt_tmdb.lua, Lite_qt_kinopub.lua, Lite_qt_filmix.lua - автор west_side
 
 function search()
