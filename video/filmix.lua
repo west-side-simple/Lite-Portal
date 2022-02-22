@@ -424,7 +424,9 @@ end
 	title = title:gsub('[%s]?/.+', ''):gsub('[%s]?%(.+', ''):gsub('смотреть онлай.+', ''):gsub('[%s]$', '')
 	local overview = answer:match('<div class="full%-story">(.-)</div>') or ''
 	overview = overview:gsub('<.->','')
+	local year = answer:match('<a itemprop="copyrightYear".->(.-)</a>') or 0	
 	local poster = answer:match('"og:image" content="([^"]+)') or logo
+	local videodesc = info_fox(title, year, poster)
 	if poster then
 		m_simpleTV.Control.ChangeChannelLogo(poster, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
 		m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = poster:gsub('thumbs/w220','orig'), TypeBackColor = 0, UseLogo = 3, Once = 1})
@@ -628,6 +630,7 @@ end
 					t[i].InfoPanelShowTime = 20000
 					t[i].InfoPanelLogo = poster
 					t[i].InfoPanelTitle = overview
+					t[i].InfoPanelDesc = '<html><body' .. videodesc .. '</body></html>'
 					i = i + 1
 				end
 				if i == 1 then
@@ -645,6 +648,7 @@ end
 					t[i].InfoPanelShowTime = 20000
 					t[i].InfoPanelLogo = poster
 					t[i].InfoPanelTitle = overview
+					t[i].InfoPanelDesc = '<html><body' .. videodesc .. '</body></html>'
 					i = i + 1
 				end
 				if i == 1 then
@@ -684,6 +688,7 @@ end
 		t1[1].InfoPanelShowTime = 20000
 		t1[1].InfoPanelLogo = poster
 		t1[1].InfoPanelTitle = overview
+		t1[1].InfoPanelDesc = '<html><body' .. videodesc .. '</body></html>'
 		t1.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Quality_filmix()'}
 		t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🧾 Теги ', ButtonScript = 'similar_filmix()'}
 		m_simpleTV.OSD.ShowSelect_UTF8('Filmix', 0, t1, 5000, 32 + 64 + 128)
