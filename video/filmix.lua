@@ -1,4 +1,4 @@
--- видеоскрипт для сайта https://filmix.ac (16/02/22)
+-- видеоскрипт для сайта https://filmix.ac (22/02/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
 -- west_side mod for lite
 -- ## авторизация ##
@@ -424,13 +424,14 @@ end
 	title = title:gsub('[%s]?/.+', ''):gsub('[%s]?%(.+', ''):gsub('смотреть онлай.+', ''):gsub('[%s]$', '')
 	local overview = answer:match('<div class="full%-story">(.-)</div>') or ''
 	overview = overview:gsub('<.->','')
-	local year = answer:match('<a itemprop="copyrightYear".->(.-)</a>') or 0	
+	local year = answer:match('<a itemprop="copyrightYear".->(.-)</a>') or 0
 	local poster = answer:match('"og:image" content="([^"]+)') or logo
 	local videodesc = info_fox(title, year, poster)
 	if poster then
 		m_simpleTV.Control.ChangeChannelLogo(poster, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
 		m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = poster:gsub('thumbs/w220','orig'), TypeBackColor = 0, UseLogo = 3, Once = 1})
 	end
+	title = title .. ', ' .. year
 	m_simpleTV.User.filmix.title = title
 	m_simpleTV.Control.SetTitle(title)
 --------------
@@ -477,7 +478,7 @@ end
 	ts[j].Name = 'Подборка: ' .. name
 	ts[j].Address = adr
 	j=j+1
-	end	
+	end
 -------------TabSimilar
 	for ws in answer:gmatch('<li class="slider%-item">.-</li>') do
 	local adr,logo,name = ws:match('href="(.-)".-src="(.-)".-title="(.-)"')
