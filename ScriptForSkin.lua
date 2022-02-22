@@ -1,3 +1,4 @@
+--Плагин быстрого доступа к замене скина, обоев, расположения контролпанели для lite portal - west_side 22.02.22
 function background_skin()
 	local currentbackground = m_simpleTV.Config.GetValue('mainView/logo/file','simpleTVConfig') or ''
 	local path = m_simpleTV.Common.GetMainPath(2) .. 'work/Channel/logo/Wallpapers/'
