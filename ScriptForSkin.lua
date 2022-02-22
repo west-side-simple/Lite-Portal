@@ -72,7 +72,7 @@ local function set_skin(dir)
 	or dir:match('Dark')
 -- add dir for backgroundimage
 	then backgroundimage = '../Channel/logo/Wallpapers/' .. dir .. '.jpg' end
-	return name, m_simpleTV.Common.GetMainPath(2) .. 'skin/' .. dir .. '/' .. preview:gsub('\\','/'), desc .. ', author: ' .. author .. ', version: ', backgroundimage, controlside
+	return name, m_simpleTV.Common.GetMainPath(2) .. 'skin/' .. dir .. '/' .. preview:gsub('\\','/'), desc .. ', author: ' .. author .. ', version: ' .. version, backgroundimage, controlside
 end
 
 m_simpleTV.Control.ExecuteAction(37)
