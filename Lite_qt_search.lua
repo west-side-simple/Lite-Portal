@@ -424,7 +424,7 @@ function search_youtube()
 				if not tab.items[i] then break end
 			t[i] = {}
 			t[i].Id = i
-			t[i].Name = tab.items[i].snippet.title
+			t[i].Name = tab.items[i].snippet.title:gsub('%&quot%;','"')
 			t[i].Adress = 'https://www.youtube.com/' .. urlyoutube .. (tab.items[i].id.videoId or tab.items[i].id.playlistId or tab.items[i].id.channelId)
 			i = i + 1
 		end

@@ -11,7 +11,7 @@ function background_skin()
 	t[i].Action = filename
 	t[i].InfoPanelLogo = m_simpleTV.Common.GetMainPath(2) .. 'work/Channel/logo/Wallpapers/' .. filename
 	t[i].InfoPanelTitle = 'Select background'
-	t[i].InfoPanelDesc = '<html><body ><table><tr><td width="100%"><center><img src="simpleTVImage:./work/Channel/logo/Wallpapers/' .. filename .. '" width="700"></td></tr></table></body></html>'
+	t[i].InfoPanelDesc = '<html><body ><table><tr><td width="100%"><center><img src="simpleTVImage:./work/Channel/logo/Wallpapers/' .. filename .. '" width="900"></td></tr></table></body></html>'
 	t[i].InfoPanelShowTime = 9000
 	if currentbackground == '../Channel/logo/Wallpapers/' .. filename then currentid = i end
 	i=i+1
@@ -45,60 +45,56 @@ end
 -------------------------------------------------------------------
 function skin_schema_settings()
 
+local function set_skin(dir)
+	local answer
+	local baze = 'skin.xml'
+	local path = m_simpleTV.Common.GetMainPath(2) .. 'skin/' .. dir .. '/'
+	local file = io.open(path .. baze, 'r')
+	if not file then
+	skin_schema_settings()
+	return
+	else
+	answer = file:read('*a')
+	file:close()
+	end
+	local version,author,name,desc,preview = answer:match('<SimpleTVSkin.-version="(.-)".-author="(.-)".-name="(.-)".-desc="(.-)".-imagepre="(.-)">')
+-- controlside
+	local controlside = 1
+	if dir:match('WS')
+	or dir:match('base')
+-- add dir for controlside = 0
+	then controlside = 0 end
+-- backgroundimage
+	local backgroundimage = '../Channel/logo/Wallpapers/simple.jpg'
+	if dir:match('WS')
+	or dir:match('FM')
+	or dir:match('Dark')
+-- add dir for backgroundimage
+	then backgroundimage = '../Channel/logo/Wallpapers/' .. dir .. '.jpg' end
+	return name, m_simpleTV.Common.GetMainPath(2) .. 'skin/' .. dir .. '/' .. preview:gsub('\\','/'), desc .. ', author: ' .. author .. ', version: ', backgroundimage, controlside
+end
+
 m_simpleTV.Control.ExecuteAction(37)
+require'lfs'
+	local currentskin = m_simpleTV.Config.GetValue('skin/path','simpleTVConfig') or ''
+	local path = m_simpleTV.Common.GetMainPath(2) .. 'skin/'
+	local dir = io.popen('dir /ad /b "' .. path .. '"')
 
-local mws={
-{"Theme FM Night","FM Night","./skin/FM Night/img/logo.png",'<html><body ><table><tr><td width="100%"><center><img src="simpleTVImage:./skin/FM Night/img/preview.jpg" width="700"></td></tr><tr><td align="center"><font color=#FFFFFF><i>Тема скина в черно-серых тонах</i></font></td></tr></table></body></html>',1,'../Channel/logo/Wallpapers/1M24.jpg'},
-{"Theme FM Neon","FM Neon","./skin/FM Neon/img/logo.png",'<html><body ><table><tr><td width="100%"><center><img src="simpleTVImage:./skin/FM Neon/img/preview.jpg" width="700"></td></tr><tr><td align="center"><font color=#FFFFFF><i>Тема скина в черно-синих тонах</i></font></td></tr></table></body></html>',1,'../Channel/logo/Wallpapers/4M24.jpg'},
-{"Theme FM Umbrella","FM Umbrella","./skin/FM Umbrella/img/logo.jpg",'<html><body ><table><tr><td width="100%"><center><img src="simpleTVImage:./skin/FM Umbrella/img/preview.jpg" width="700"></td></tr><tr><td align="center"><font color=#FFFFFF><i>Тема скина в тёмно-красных тонах </i></font></td></tr></table></body></html>',1,'../Channel/logo/Wallpapers/2M24.jpg'},
-{"Theme FM Red","FM Red","./skin/FM Red/img/logo.jpg",'<html><body ><table><tr><td width="100%"><center><img src="simpleTVImage:./skin/FM Red/img/preview.jpg" width="700"></td></tr><tr><td align="center"><font color=#FFFFFF><i>Тема скина в тёмно-красных тонах </i></font></td></tr></table></body></html>',1,'../Channel/logo/Wallpapers/15M24.jpg'},
-{"Theme FM Cruella","FM Cruella","./skin/FM Cruella/img/logo.png",'<html><body ><table><tr><td width="100%"><center><img src="simpleTVImage:./skin/FM Cruella/img/preview.jpg" width="700"></td></tr><tr><td align="center"><font color=#FFFFFF><i>Тема скина в черноых тонах с белым плейлистом </i></font></td></tr></table></body></html>',1,'../Channel/logo/Wallpapers/18M24.jpg'},
-{"Theme FM Alien","FM Alien","./skin/FM Alien/img/logo.png",'<html><body ><table><tr><td width="100%"><center><img src="simpleTVImage:./skin/FM Alien/img/preview.jpg" width="700"></td></tr><tr><td align="center"><font color=#FFFFFF><i>Тема скина в черных и мрачных тонах</i></font></td></tr></table></body></html>',1,'../Channel/logo/Wallpapers/12M24.jpg'},
-{"Theme WS Mirror","WS mirror","./skin/WS mirror/img/logo.png",'<html><body ><table><tr><td width="100%"><center><img src="simpleTVImage:./skin/WS mirror/img/preview.png" width="700"></td></tr><tr><td align="center"><font color=#FFFFFF><i>Модифицированный классический скин WS</i></font></td></tr></table></body></html>',0,'../Channel/logo/Wallpapers/WS1.jpg'},
-{"Theme WS Lite","WS Lite","./skin/WS Lite/img/logo.png",'<html><body ><table><tr><td width="100%"><center><img src="simpleTVImage:./skin/WS Lite/img/preview.png" width="700"></td></tr><tr><td align="center"><font color=#FFFFFF><i>Модифицированный скин WS</i></font></td></tr></table></body></html>',0,'../Channel/logo/Wallpapers/14M24.jpg'},
-{"Theme DarkMod+","DarkMod","./skin/DarkMod/img/logo.png",'<html><body ><table><tr><td width="100%"><center><img src="simpleTVImage:./skin/DarkMod/img/preview.jpg" width="700"></td></tr><tr><td align="center"><font color=#FFFFFF><i>Тема скина в чёрных тонах </i></font></td></tr></table></body></html>',1,'../Channel/logo/Wallpapers/9M24.jpg'},
-{"Base skin","Base skin","./skin/Base skin/img/logo.jpg",'<html><body ><table><tr><td width="100%"><center><img src="simpleTVImage:./skin/Base skin/img/preview.jpg" width="700"></td></tr><tr><td align="center"><font color=#FFFFFF><i>Базовый скин в серых тонах </i></font></td></tr></table></body></html>',1,'../Channel/logo/Wallpapers/simple.jpg'},
-}
-
-  local t={}
-  for i=1,#mws do
-    t[i] = {}
-    t[i].Id = i
-    t[i].Name = mws[i][1]
-    t[i].Action = mws[i][2]
-	t[i].InfoPanelLogo = mws[i][3]
-	t[i].InfoPanelTitle = mws[i][2]
-	t[i].InfoPanelDesc = mws[i][4]
-	t[i].osdcontrolpanelside = mws[i][5]
-	t[i].backgroundimage = mws[i][6]
-	t[i].InfoPanelShowTime = 9000
-  end
-  local nskin = 10
-  	if m_simpleTV.Config.GetValue('skin/path','simpleTVConfig') == './skin/FM Night'
-	then nskin = 1
-    elseif m_simpleTV.Config.GetValue('skin/path','simpleTVConfig') == './skin/FM Neon'
-	then nskin = 2
-	elseif m_simpleTV.Config.GetValue('skin/path','simpleTVConfig') == './skin/FM Umbrella'
-	then nskin = 3
-elseif m_simpleTV.Config.GetValue('skin/path','simpleTVConfig') == './skin/FM Red'
-	then nskin = 4
-elseif m_simpleTV.Config.GetValue('skin/path','simpleTVConfig') == './skin/FM Cruella'
-	then nskin = 5
-elseif m_simpleTV.Config.GetValue('skin/path','simpleTVConfig') == './skin/FM Alien'
-	then nskin = 6
-	elseif m_simpleTV.Config.GetValue('skin/path','simpleTVConfig') == './skin/WS mirror'
-	then nskin = 7
-elseif m_simpleTV.Config.GetValue('skin/path','simpleTVConfig') == './skin/WS Lite'
-	then nskin = 8
-elseif m_simpleTV.Config.GetValue('skin/path','simpleTVConfig') == './skin/DarkMod'
-	then nskin = 9
-	elseif m_simpleTV.Config.GetValue('skin/path','simpleTVConfig') == './skin/Base skin'
-	then nskin = 10
+	local t,i,currentid = {},1,1
+	for direname in dir:lines() do
+	t[i] ={}
+	t[i].Id = i
+	t[i].Name,t[i].InfoPanelLogo,t[i].InfoPanelTitle,t[i].backgroundimage,t[i].osdcontrolpanelside = set_skin(direname)
+	t[i].Action = direname
+	t[i].InfoPanelDesc = '<html><body ><table><tr><td width="100%"><center><img src="simpleTVImage:' .. t[i].InfoPanelLogo .. '" width="700"></td></tr></table></body></html>'
+	t[i].InfoPanelShowTime = 10000
+	if currentskin == './skin/' .. direname then currentid = i end
+	i=i+1
 	end
 
 	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Control '}
 	t.ExtButton1 = {ButtonEnable = true, ButtonName = ' Background '}
-  local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Skin settings',nskin-1,t,9000,1+4+8)
+  local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Skin settings',currentid-1,t,9000,1+4+8)
   if id==nil then return end
   if ret == 1 then
     m_simpleTV.Config.SetValue('skin/path', './skin/' .. t[id].Action ,'simpleTVConfig')
@@ -226,3 +222,14 @@ if need > 0 then
 	m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.5" src="http://m24.do.am/images/liteportal.png"' , text = str6 ,  color = ARGB(255, 255, 255, 255), showTime = 1700 * 10})
 end
 end
+
+ local t={}
+ t.utf8 = true
+ t.name = 'Skin settings'
+ t.luastring = 'skin_schema_settings()'
+ t.lua_as_scr = true
+ t.key = string.byte('E')
+ t.ctrlkey = 4
+ t.location = 0
+ t.image= m_simpleTV.MainScriptDir_UTF8 .. 'user/show_mi/emptyLogo.png'
+ m_simpleTV.Interface.AddExtMenuT(t)
