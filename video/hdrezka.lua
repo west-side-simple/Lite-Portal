@@ -1,4 +1,4 @@
--- видеоскрипт для сайта https://rezka.ag (31/01/22)
+-- видеоскрипт для сайта https://rezka.ag (23/02/22)
 -- Copyright © 2017-2021 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
 -- mod west_side for lite version
 -- ## открывает подобные ссылки ##
@@ -12,7 +12,10 @@ local proxy = ''
 -- '' - нет
 -- например 'http://proxy-nossl.antizapret.prostovpn.org:29976'
 -- ##
-local zerkalo = 'https://rezkery.com/'
+--local zerkalo = ''
+--local zerkalo = 'https://rezkery.com/'
+--local zerkalo = 'http://upivi.com/'
+--local zerkalo = 'http://kinopub.me/'
 -- '' - нет
 -- например 'https://rezkery.com/'
 -- ##
@@ -23,10 +26,16 @@ local zerkalo = 'https://rezkery.com/'
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://rezkery%.com/.+')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://hdrezka%-router%.com/.+')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://hdrezka%..+')
+			and not m_simpleTV.Control.CurrentAddress:match('^http?://kinopub%.me.+')
+			and not m_simpleTV.Control.CurrentAddress:match('^http?://upivi%.com.+')
 			and not m_simpleTV.Control.CurrentAddress:match('^%$rezka')
 		then
 		 return
 		end
+local tooltip_body
+if m_simpleTV.Config.GetValue('mainOsd/showEpgInfoAsWindow', 'simpleTVConfig') then tooltip_body = ''
+else tooltip_body = 'bgcolor="#434750"'
+end
 local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
 end
@@ -34,10 +43,11 @@ end
 local function setConfigVal(key,val)
 	m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
 end
+local zerkalo = getConfigVal('zerkalo/rezka') or ''
 	require 'playerjs'
 	local inAdr = m_simpleTV.Control.CurrentAddress
 	if zerkalo and zerkalo ~= '' then
-	inAdr = inAdr:gsub('^https?://.-/',zerkalo)
+	inAdr = inAdr:gsub('^http.-//.-/',zerkalo)
 	end
 	local inAdr1 = inAdr:gsub('$rezka.-$','')
 	m_simpleTV.OSD.ShowMessageT({text = '', showTime = 1000, id = 'channelName'})
@@ -115,7 +125,7 @@ end
 		local t, i = {}, 1
 		local url = urls:match('"url":"[^"]+') or urls
 		local qlty, adr
-			for qlty, adr in url:gmatch('%[(.-)](https?://[^%s]+)') do
+			for qlty, adr in url:gmatch('%[(.-)](http.-//[^%s]+)') do
 				t[i] = {}
 				t[i].Address = adr
 				t[i].Name = qlty
@@ -177,7 +187,7 @@ end
 			samplingFrequency = time_ms(samplingFrequency)
 		local t,i,k,j = {},1,1,1
 		for str in answer:gmatch('http.-\n') do
-			local adr = str:match('(https.-%.jpg)#')
+			local adr = str:match('(http.-%.jpg)#')
 
 			if not adr then break end
 			t[j] = {}
@@ -270,6 +280,8 @@ end
 		if queryType == 'testAddress' then
 		 if string.match(address, "rezka%.ag")
 		 or string.match(address, "rezkery%.com")
+		 or string.match(address, "upivi%.com")
+		 or string.match(address, "kinopub%.me")
 		 or string.match(address, "^#")
 		 then return true end
 		 return false
@@ -332,12 +344,16 @@ end
 			m_simpleTV.Http.Close(session)
 		 return
 		end
+	local tooltip_body
+	if m_simpleTV.Config.GetValue('mainOsd/showEpgInfoAsWindow', 'simpleTVConfig') then tooltip_body = ''
+	else tooltip_body = 'bgcolor="#434750"'
+	end
 	answer = answer:gsub('\\/', '/')
 	answer = answer:gsub('\\"', '"')
 	answer = answer:gsub('<!%-%-.-%-%->', ''):gsub('/%*.-%*/', '')
 	local playerjs_url = answer:match('src="([^"]+/js/playerjs[^"]+)')
 		if not playerjs_url then return end
-	m_simpleTV.User.rezka.playerjs_url = url:match('^https?://[^/]+') .. playerjs_url
+	m_simpleTV.User.rezka.playerjs_url = url:match('^http.-//[^/]+') .. playerjs_url
 	local adr = answer:match('"streams":"[^"]+')
 	if adr then
 	adr = rezkaDeSex(adr)
@@ -368,7 +384,7 @@ end
 	kp_id = kp_id:gsub('%%3A', ':'):gsub('%%2F', '/')
 	kp_id = kp_id:match('kinopoisk%.ru/.-/(%d+)/.-$')
 	else kp_id = '' end
-		return adr,poster,title,desc_text,'<html><body' .. videodesc .. '</body></html>'
+		return adr,poster,title,desc_text,'<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
 	end
 	local function play(retAdr, title)
 		if retAdr:match('^.-$rezka') then
@@ -470,7 +486,7 @@ end
 	answer = answer:gsub('<!%-%-.-%-%->', ''):gsub('/%*.-%*/', '')
 	local playerjs_url = answer:match('src="([^"]+/js/playerjs[^"]+)')
 		if not playerjs_url then return end
-	m_simpleTV.User.rezka.playerjs_url = inAdr:match('^https?://[^/]+') .. playerjs_url
+	m_simpleTV.User.rezka.playerjs_url = inAdr:match('^http.-//[^/]+') .. playerjs_url
 	local thumb_url = answer:match('"thumbnails":"(.-)"')
 	if thumb_url and thumb_url ~= '' and not answer:match('<li class="b%-simple_episode__item')
 	then
@@ -612,7 +628,7 @@ end
 								, tr
 								, season_id
 								, episode_id)
-					t[1].InfoPanelDesc = '<html><body' .. videodesc .. '</body></html>'
+					t[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
 					t[i].InfoPanelTitle = desc_text
 					t[i].InfoPanelName = title
 					t[i].InfoPanelShowTime = 8000
@@ -720,7 +736,7 @@ end
 		t[1] = {}
 		t[1].Id = 1
 		t[1].Name = title
-		t[1].InfoPanelDesc = '<html><body' .. videodesc .. '</body></html>'
+		t[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
 		t[1].InfoPanelTitle = desc_text
 		t[1].InfoPanelName = title
 		t[1].InfoPanelShowTime = 8000

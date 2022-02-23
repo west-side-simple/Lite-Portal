@@ -1,4 +1,4 @@
--- видеоскрипт для сайта https://filmix.ac (22/02/22)
+-- видеоскрипт для сайта https://filmix.ac (23/02/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
 -- west_side mod for lite
 -- ## авторизация ##
@@ -24,6 +24,10 @@ local zer = 'https://filmix.gay'
 		then
 		 return
 		end
+local tooltip_body
+if m_simpleTV.Config.GetValue('mainOsd/showEpgInfoAsWindow', 'simpleTVConfig') then tooltip_body = ''
+else tooltip_body = 'bgcolor="#434750"'
+end
 local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
 end
@@ -431,7 +435,7 @@ end
 		m_simpleTV.Control.ChangeChannelLogo(poster, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
 		m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = poster:gsub('thumbs/w220','orig'), TypeBackColor = 0, UseLogo = 3, Once = 1})
 	end
-	title = title .. ', ' .. year
+	title = title .. ' (' .. year .. ')'
 	m_simpleTV.User.filmix.title = title
 	m_simpleTV.Control.SetTitle(title)
 --------------
@@ -483,9 +487,11 @@ end
 	for ws in answer:gmatch('<li class="slider%-item">.-</li>') do
 	local adr,logo,name = ws:match('href="(.-)".-src="(.-)".-title="(.-)"')
 	if not adr or not name then break end
+	local year = adr:match('(%d%d%d%d)%.html$')
+	if year then year = ', ' .. year else year = '' end
 	ts[j] = {}
 	ts[j].Id = j
-	ts[j].Name = name
+	ts[j].Name = name .. year
 	ts[j].Address = adr
 	ts[j].InfoPanelLogo = logo
 	ts[j].InfoPanelName = 'Filmix медиаконтент: ' .. name
@@ -631,7 +637,7 @@ end
 					t[i].InfoPanelShowTime = 20000
 					t[i].InfoPanelLogo = poster
 					t[i].InfoPanelTitle = overview
-					t[i].InfoPanelDesc = '<html><body' .. videodesc .. '</body></html>'
+					t[i].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
 					i = i + 1
 				end
 				if i == 1 then
@@ -649,7 +655,7 @@ end
 					t[i].InfoPanelShowTime = 20000
 					t[i].InfoPanelLogo = poster
 					t[i].InfoPanelTitle = overview
-					t[i].InfoPanelDesc = '<html><body' .. videodesc .. '</body></html>'
+					t[i].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
 					i = i + 1
 				end
 				if i == 1 then
@@ -689,7 +695,7 @@ end
 		t1[1].InfoPanelShowTime = 20000
 		t1[1].InfoPanelLogo = poster
 		t1[1].InfoPanelTitle = overview
-		t1[1].InfoPanelDesc = '<html><body' .. videodesc .. '</body></html>'
+		t1[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
 		t1.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Quality_filmix()'}
 		t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🧾 Теги ', ButtonScript = 'similar_filmix()'}
 		m_simpleTV.OSD.ShowSelect_UTF8('Filmix', 0, t1, 5000, 32 + 64 + 128)
