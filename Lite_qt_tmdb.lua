@@ -1,4 +1,4 @@
---TMDb portal - lite version west_side 17.02.22
+--TMDb portal - lite version west_side 23.02.22
 
 local function find_movie(title)
 local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
@@ -999,6 +999,10 @@ function media_info_tmdb(tmdbid,tv)
 local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 60000)
+	local tooltip_body
+	if m_simpleTV.Config.GetValue('mainOsd/showEpgInfoAsWindow', 'simpleTVConfig') then tooltip_body = ''
+	else tooltip_body = 'bgcolor="#434750"'
+	end
 local urltm, titul_tmdb_media, tmdb_media
 if tv == 0 then
 urltm = decode64('aHR0cHM6Ly9hcGkudGhlbW92aWVkYi5vcmcvMy9tb3ZpZS8=') .. tmdbid .. decode64('P2FwaV9rZXk9ZDU2ZTUxZmI3N2IwODFhOWNiNTE5MmVhYWE3ODIzYWQmYXBwZW5kX3RvX3Jlc3BvbnNlPXZpZGVvcyZsYW5ndWFnZT1ydQ=='):gsub('=ru','=ru')
@@ -1091,7 +1095,7 @@ if tab and tab.genres then
 		t1[1].Name = '.: info :.'
 		t1[1].InfoPanelLogo = background
 		t1[1].InfoPanelName = tmdb_media .. ': TMDb info'
-		t1[1].InfoPanelDesc = '<html><body>' .. videodesc .. '</body></html>'
+		t1[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
 		t1[1].InfoPanelTitle = overview
 		t1[1].InfoPanelShowTime = 10000
 

@@ -1,4 +1,4 @@
--- Плагин поиска для lite portal - west_side 22.02.22
+-- Плагин поиска для lite portal - west_side 23.02.22
 -- необходимы скрипты Lite_qt_exfs.lua, ex-fs.lua, Lite_qt_tmdb.lua, Lite_qt_kinopub.lua, Lite_qt_filmix.lua - автор west_side
 
 function search()
@@ -81,8 +81,8 @@ require 'lfs'
 		local name = w:match('\n(.-)%|')
 			t1[i] = {}
 			t1[i].Id = i
-			t1[i].Name = name
-			t1[i].Action = name
+			t1[i].Name = name:gsub(' %d$','')
+			t1[i].Action = name:gsub(' %d$','')
 			i=i+1
 		end
 

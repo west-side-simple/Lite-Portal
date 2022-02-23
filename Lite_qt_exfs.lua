@@ -1,4 +1,4 @@
---EX-FS portal - lite version west_side 17.02.22
+--EX-FS portal - lite version west_side 23.02.22
 
 function run_lite_qt_exfs()
 
@@ -246,7 +246,10 @@ end
 		end
 
 function media_info(inAdr)
-
+	local tooltip_body
+	if m_simpleTV.Config.GetValue('mainOsd/showEpgInfoAsWindow', 'simpleTVConfig') then tooltip_body = ''
+	else tooltip_body = 'bgcolor="#434750"'
+	end
 local function cookiesFromFile()
 	local path = m_simpleTV.Common.GetMainPath(1) .. '/cookies.txt'
 	local file = io.open(path, 'r')
@@ -306,7 +309,7 @@ end
 		t1[1].Name = '.: info :.'
 		t1[1].InfoPanelLogo = poster
 		t1[1].InfoPanelName = title or 'EX-FS info'
-		t1[1].InfoPanelDesc = '<html><body>' .. desc1 .. '</body></html>'
+		t1[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. desc1 .. '</body></html>'
 		t1[1].InfoPanelTitle = desc
 		t1[1].InfoPanelShowTime = 10000
 		for w1 in answer1:gmatch('<a href=".-</a>') do

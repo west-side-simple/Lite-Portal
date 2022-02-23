@@ -1,4 +1,4 @@
---Filmix portal - lite version west_side 16.02.22
+--Filmix portal - lite version west_side 23.02.22
 
 local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
@@ -67,7 +67,7 @@ function run_lite_qt_filmix()
 end
 
 function type_filmix(con)
-	
+
 		local tt = {
 		{"https://filmix.gay/filmi/animes/","Аниме"},
 		{"https://filmix.gay/filmi/biografia/","Биография"},
@@ -103,7 +103,7 @@ function type_filmix(con)
 		{"https://filmix.gay/filmi/fjuntezia/","Фэнтези"},
 		{"https://filmix.gay/filmi/engl/","На английском"},
 		{"https://filmix.gay/filmi/ukraine/","На украинском"},
-		
+
 		{"https://filmix.gay/seria/animes/s7/","Аниме"},
 		{"https://filmix.gay/seria/biografia/s7/","Биография"},
 		{"https://filmix.gay/seria/boevik/s7/","Боевики"},
@@ -139,7 +139,7 @@ function type_filmix(con)
 		{"https://filmix.gay/seria/fjuntezia/s7/","Фэнтези"},
 		{"https://filmix.gay/seria/engl/s7/","На английском"},
 		{"https://filmix.gay/seria/ukraine/s7/","На украинском"},
-		
+
 		{"https://filmix.gay/mults/animes/s14/","Аниме"},
 		{"https://filmix.gay/mults/biografia/s14/","Биография"},
 		{"https://filmix.gay/mults/boevik/s14/","Боевики"},
@@ -168,10 +168,10 @@ function type_filmix(con)
 		{"https://filmix.gay/mults/fjuntezia/s14/","Фэнтези"},
 		{"https://filmix.gay/mults/engl/s14/","На английском"},
 		{"https://filmix.gay/mults/ukraine/s14/","На украинском"},
-		
+
 		{"https://filmix.gay/multserialy/","Мультсериалы"},
 		}
-		
+
 	local ganre1,ganre2,ganre3,ganre4,k1,k2,k3 = {},{},{},{},1,1,1
 	for k = 1,#tt do
 		if tt[k][1]:match('/filmi/') then
@@ -205,13 +205,13 @@ function type_filmix(con)
 	end
 
 	local title,ganre = '',{}
-	
+
 	if con == 'filmi' then title = 'Жанровое кино' ganre = ganre1
 	elseif con == 'seria' then title = 'Жанровые сериалы' ganre = ganre2
 	elseif con == 'mults' then title = 'Жанровые мульты' ganre = ganre3
 	elseif con == 'multserialy' then title = 'Жанровые мультсериалы' ganre = ganre4
-	end	
-	
+	end
+
 	ganre.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🢀 '}
 	local ret,id = m_simpleTV.OSD.ShowSelect_UTF8(title .. ' Filmix',0,ganre,10000,1+4+8+2)
 		if ret == -1 or not id then
@@ -311,7 +311,7 @@ function ganres_content_filmix(url)
 		end
 		answer = m_simpleTV.Common.multiByteToUTF8(answer)
 		local title1 = answer:match('<div class="subtitle">(.-)</div>') or ''
-		title1 = title1:gsub('Сейчас смотрят ','')
+		title1 = title1:gsub('Сейчас смотрят ','') or ''
 		local j, sim = 1, {}
 		for w in answer:gmatch('"slider%-item">(.-)</li>') do
 		sim[j] = {}
@@ -326,9 +326,30 @@ function ganres_content_filmix(url)
 			sim[j].InfoPanelShowTime = 10000
 			j = j + 1
 		end
+		local t,i = {},1
+		for w in answer:gmatch('<article class="shortstory line".-</article>') do
+		local adr,logo,name,desc
+		adr = w:match('itemprop="url" href="(.-)"') or ''
+		logo = w:match('<img src="(.-)"') or ''
+		name = w:match('alt="(.-)"') or 'noname'
+		desc = w:match('"description">(.-)<') or ''
+			if not adr or not name or adr == '' then break end
+				t[i] = {}
+				t[i].Id = i
+				t[i].Name = name
+				t[i].Address = adr
+				t[i].InfoPanelLogo = logo
+				t[i].InfoPanelName = 'Filmix медиаконтент: ' .. name
+				t[i].InfoPanelTitle = desc
+				t[i].InfoPanelShowTime = 10000
+			i = i + 1
+		end
+	local function change_page(name,sim,t,title,title1)
+		if name == 'TOP' then
 		sim.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🢀 '}
+		sim.ExtButton1 = {ButtonEnable = true, ButtonName = ' New '}
 		sim.ExtParams = {FilterType = 1, AutoNumberFormat = '%1. %2'}
-		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8(title .. ' (' .. #sim .. ') ' .. title1,0,sim,10000,1+4+8+2)
+		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8(title .. ' (' .. #sim .. ') ' .. title1 .. ' - TOP',0,sim,10000,1+4+8+2)
 		if ret == -1 or not id then
 			return
 		end
@@ -339,6 +360,30 @@ function ganres_content_filmix(url)
 		if ret == 2 then
 			run_lite_qt_filmix()
 		end
+		if ret == 3 then
+			change_page('NEW',sim,t,title,title1)
+		end
+		elseif name == 'NEW' then
+		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🢀 '}
+		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' TOP '}
+		t.ExtParams = {FilterType = 1, AutoNumberFormat = '%1. %2'}
+		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8(title .. ' (' .. #t .. ') ' .. title1 .. ' - NEW',0,t,10000,1+4+8+2)
+		if ret == -1 or not id then
+			return
+		end
+		if ret == 1 then
+			m_simpleTV.Control.ExecuteAction(37)
+			m_simpleTV.Control.PlayAddress(t[id].Address)
+		end
+		if ret == 2 then
+			run_lite_qt_filmix()
+		end
+		if ret == 3 then
+			change_page('TOP',sim,t,title,title1)
+		end
+		end
+	end
+	change_page('TOP',sim,t,title,title1)
 end
 
 function collection_filmix(url)
@@ -682,9 +727,11 @@ function person_content_filmix(url)
 		for ws in answer:gmatch('<li class="slider%-item">.-</li>') do
 		local adr,logo,name = ws:match('href="(.-)".-src="(.-)".-title="(.-)"')
 		if not adr or not name then break end
+		local year = adr:match('(%d%d%d%d)%.html$')
+		if year then year = ', ' .. year else year = '' end
 		t[j] = {}
 		t[j].Id = j
-		t[j].Name = name
+		t[j].Name = name .. year
 		t[j].Address = adr
 		t[j].InfoPanelLogo = logo
 		t[j].InfoPanelName = 'Filmix медиаконтент: ' .. name
@@ -753,7 +800,7 @@ function search_filmix_media()
 				AutoNumberFormat = ''
 				FilterType = 2
 			end
-		
+
 		t.ExtParams = {FilterType = FilterType, AutoNumberFormat = AutoNumberFormat}
 		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🔎 Меню '}
 		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔎 Поиск '}

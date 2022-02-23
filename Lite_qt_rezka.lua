@@ -1,4 +1,4 @@
---Rezka portal - lite version west_side 31.01.22
+--Rezka portal - lite version west_side 23.02.22
 
 local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
@@ -24,6 +24,7 @@ function run_lite_qt_rezka()
 		{"","Коллекции"},
 		{"","Франшизы"},
 		{"","ПОИСК"},
+		{"","Rezka зеркало"},
 		}
 
 	local t0={}
@@ -44,12 +45,14 @@ function run_lite_qt_rezka()
 		if ret == 1 then
 			if t0[id].Name == 'ПОИСК' then
 				search()
+			elseif t0[id].Name == 'Rezka зеркало' then
+				zerkalo_rezka()
 			elseif t0[id].Name == 'Rezka New' then
 				last_rezka()
 			elseif t0[id].Name == 'Коллекции' then
 				collection_rezka()
 			elseif t0[id].Name == 'Франшизы' then
-				franchises_rezka('https://rezka.ag/franchises/page/46/')
+				franchises_rezka('https://rezka.ag/franchises/page/48/')
 			end
 		end
 		if ret == 2 then
@@ -60,11 +63,63 @@ function run_lite_qt_rezka()
 		end
 end
 
+function zerkalo_rezka()
+	local function getConfigVal(key)
+	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
+	end
+
+	local function setConfigVal(key,val)
+	m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
+	end
+	local current_zerkalo = getConfigVal('zerkalo/rezka') or ''
+	local current_zerkalo_id = 0
+	local tt = {
+		{"","Без зеркала"},
+		{"https://rezkery.com/","https://rezkery.com/"},
+		{"http://upivi.com/","http://upivi.com/"},
+		{"http://kinopub.me/","http://kinopub.me/"},
+		}
+
+	local t0={}
+		for i=1,#tt do
+			t0[i] = {}
+			t0[i].Id = i
+			t0[i].Name = tt[i][2]
+			t0[i].Action = tt[i][1]
+			if t0[i].Action == current_zerkalo then current_zerkalo_id = i-1 end
+			i=i+1
+		end
+
+	t0.ExtButton0 = {ButtonEnable = true, ButtonName = ' Rezka '}
+	t0.ExtButton1 = {ButtonEnable = true, ButtonName = ' Portal '}
+	local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите зеркало Rezka',current_zerkalo_id,t0,10000,1+4+8+2)
+		if ret == -1 or not id then
+			return
+		end
+		if ret == 1 then
+			setConfigVal('zerkalo/rezka',t0[id].Action)
+			zerkalo_rezka()
+		end
+		if ret == 2 then
+			run_lite_qt_rezka()
+		end
+		if ret == 3 then
+			run_westSide_portal()
+		end
+end
+
 function last_rezka()
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
 		if not session then return end
+	local current_zerkalo = getConfigVal('zerkalo/rezka') or ''
+	local url
+	if current_zerkalo ~= '' then
+	url = current_zerkalo:gsub('/$','')
+	else
+	url = 'https://rezka.ag'
+	end
 	m_simpleTV.Http.SetTimeout(session, 8000)
-	local rc,answer = m_simpleTV.Http.Request(session,{url= 'https://rezkery.com'})
+	local rc,answer = m_simpleTV.Http.Request(session,{url= url})
 		if rc ~= 200 then return end
 	local title = 'Rezka New'
 	local t,i = {},1
@@ -76,7 +131,7 @@ function last_rezka()
 				t[i].Id = i
 				t[i].Name = name .. ' (' .. (title:match('%d%d%d%d') or 0) .. ') - ' .. group
 				t[i].InfoPanelLogo = logo
-				t[i].Address =  'https://rezkery.com' .. adr
+				t[i].Address =  url .. adr
 				t[i].InfoPanelName = name .. ' (' .. (title:match('%d%d%d%d') or 0) .. ')'
 				t[i].InfoPanelShowTime = 10000
 				i = i + 1
@@ -241,7 +296,7 @@ function franchises_rezka(url)
 		t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' Next '}
 	end
 		t1.ExtParams = {FilterType = 1, AutoNumberFormat = '%1. %2'}
-		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите франшизу Rezka (' .. #t1 .. ') - стр. ' .. 47-tonumber(current_page) .. ' из 46',0,t1,10000,1+4+8+2)
+		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите франшизу Rezka (' .. #t1 .. ') - стр. ' .. 49-tonumber(current_page) .. ' из 48',0,t1,10000,1+4+8+2)
 		if ret == -1 or not id then
 			return
 		end
@@ -380,6 +435,10 @@ function media_info_rezka(url)
 	m_simpleTV.Http.SetTimeout(session, 60000)
 	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
 		if rc ~= 200 then return '' end
+	local tooltip_body
+	if m_simpleTV.Config.GetValue('mainOsd/showEpgInfoAsWindow', 'simpleTVConfig') then tooltip_body = ''
+	else tooltip_body = 'bgcolor="#434750"'
+	end
 	answer = answer:gsub('<!%-%-.-%-%->', ''):gsub('/%*.-%*/', '')
 	local poster = answer:match('<div class="b%-sidecover"> <a href="([^"]+)') or answer:match('property="og:image" content="([^"]+)') or ''
 	local name_rus = answer:match('<h1 itemprop="name">(.-)</h1>') or answer:match('<h1><span class="t1" itemprop="name">([^<]+)') or answer:match('<div class="b%-content__htitle"> <h1>(.-)</h1>') or ''
@@ -412,7 +471,7 @@ function media_info_rezka(url)
 		t1[1].Name = '.: info :.'
 		t1[1].InfoPanelLogo = poster
 		t1[1].InfoPanelName = title or 'Rezka info'
-		t1[1].InfoPanelDesc = '<html><body>' .. desc_text .. '</body></html>'
+		t1[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. desc_text .. '</body></html>'
 		t1[1].InfoPanelTitle = desc
 		t1[1].InfoPanelShowTime = 10000
 		if answer2 and answer2 ~= '' and answer2:match('href="(.-)"') then
