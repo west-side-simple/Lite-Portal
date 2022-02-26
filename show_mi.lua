@@ -42,16 +42,16 @@ function show_mediainfo(channelId)
   end
 
  local epgTitle,epgDesc,epgTitle1,epgDesc1
-
+ local delta = m_simpleTV.Timeshift.EpgOffsetRequest or 0
  if t[1].EpgId~='' and  t[1].EpgId~='noepg' then
-	local delta = m_simpleTV.Timeshift.EpgOffsetRequest or 0
+--	local delta = m_simpleTV.Timeshift.EpgOffsetRequest or 0
 	local curTime = os.date('%Y-%m-%d %X', os.time() - delta/1000 + 1)
 	local sql = 'SELECT * FROM ChProg WHERE IdChannel=="' .. t[1].EpgId .. '"'
               .. ' AND StartPr <= "' .. curTime .. '" AND EndPr > "' .. curTime .. '"'
-	local sql1 = 'SELECT * FROM ChProg WHERE IdChannel=="' .. t[1].EpgId .. '"'
-              .. ' AND StartPr > "' .. curTime .. '"'
+--	local sql1 = 'SELECT * FROM ChProg WHERE IdChannel=="' .. t[1].EpgId .. '"'
+--              .. ' AND StartPr > "' .. curTime .. '"'
   --debug_in_file(sql)
-  local epgT = m_simpleTV.Database.GetTable(sql), m_simpleTV.Database.GetTable(sql1)
+  local epgT = m_simpleTV.Database.GetTable(sql)
 
   if     epgT~=nil
      and epgT[1]~=nil
@@ -66,7 +66,7 @@ function show_mediainfo(channelId)
 
   if t[1].EpgId1~='' and  t[1].EpgId1~='noepg' then
 
-	local delta = m_simpleTV.Timeshift.EpgOffsetRequest or 0
+--	local delta = m_simpleTV.Timeshift.EpgOffsetRequest or 0
 	local curTime = os.date('%Y-%m-%d %X', os.time() - delta/1000 + 1)
 
 	local sql1 = 'SELECT * FROM ChProg WHERE IdChannel=="' .. t[1].EpgId .. '"'
@@ -200,7 +200,30 @@ function show_mediainfo(channelId)
 --  debug_in_file(str)
  return '',str
 end
+--добавление кнопки в плейлист, кроме указанных в таблице исключений
 
+--таблица исключений
+local tab = {"Radio","Radcap","YandexTV","TVSources"}
+
+--создаем таблицу tt и заносим в нее ExtFilterID исключая ExtFilter из таблицы t
+local tt={}
+local ext = m_simpleTV.Database.GetTable('SELECT Id, Name FROM ExtFilter;', true)
+if ext~=nil then
+ local function isTestExtFilter(name)
+   for i,v in ipairs(tab) do
+    if name==v then return true end
+   end
+    return false
+ end
+  
+  for i=1, #ext do
+   if not isTestExtFilter(ext[i].Name) then
+      tt[#tt+1] = ext[i].Id
+   end
+  end
+end
+
+if #tt==0 then tt[1]=0 end
 local t ={}
 t.Image = m_simpleTV.MainScriptDir_UTF8 .. 'user/show_mi/fw_box_t.png'
 t.EventFunction = "show_mediainfo"
@@ -212,4 +235,7 @@ t.MediaMode = -1 --opt default -1 (-1 all, 0 - channels, 1 - files, etc)
 t.StaticTooltip = m_simpleTV.Common.string_toUTF8('Show Mi',1251)
 --t.ExtFilterID = 0
 --t.MaxSize =16   --opt default 0
+for i=1, #tt do
+ t.ExtFilterID = tt[i]
  m_simpleTV.PlayList.AddItemButton(t)
+end

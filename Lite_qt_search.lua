@@ -1,8 +1,10 @@
--- Плагин поиска для lite portal - west_side 23.02.22
+-- Плагин поиска для lite portal - west_side 24.02.22
 -- необходимы скрипты Lite_qt_exfs.lua, ex-fs.lua, Lite_qt_tmdb.lua, Lite_qt_kinopub.lua, Lite_qt_filmix.lua - автор west_side
 
 function search()
+
 require 'lfs'
+
 	local function getConfigVal(key)
 		return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
 	end
@@ -12,54 +14,6 @@ require 'lfs'
 	end
 
 	local search_ini = getConfigVal('search/media') or ''
-
---[[	local tt = {
-		{'',"clear"},
-		{m_simpleTV.Common.toPercentEncoding('а'),"а"},
-		{m_simpleTV.Common.toPercentEncoding('б'),"б"},
-		{m_simpleTV.Common.toPercentEncoding('в'),"в"},
-		{m_simpleTV.Common.toPercentEncoding('г'),"г"},
-		{m_simpleTV.Common.toPercentEncoding('д'),"д"},
-		{m_simpleTV.Common.toPercentEncoding('е'),"е"},
-		{m_simpleTV.Common.toPercentEncoding('ё'),"ё"},
-		{m_simpleTV.Common.toPercentEncoding('ж'),"ж"},
-		{m_simpleTV.Common.toPercentEncoding('з'),"з"},
-		{m_simpleTV.Common.toPercentEncoding('и'),"и"},
-		{m_simpleTV.Common.toPercentEncoding('й'),"й"},
-		{m_simpleTV.Common.toPercentEncoding('к'),"к"},
-		{m_simpleTV.Common.toPercentEncoding('л'),"л"},
-		{m_simpleTV.Common.toPercentEncoding('м'),"м"},
-		{m_simpleTV.Common.toPercentEncoding('н'),"н"},
-		{m_simpleTV.Common.toPercentEncoding('о'),"о"},
-		{m_simpleTV.Common.toPercentEncoding('п'),"п"},
-		{m_simpleTV.Common.toPercentEncoding('р'),"р"},
-		{m_simpleTV.Common.toPercentEncoding('с'),"с"},
-		{m_simpleTV.Common.toPercentEncoding('т'),"т"},
-		{m_simpleTV.Common.toPercentEncoding('у'),"у"},
-		{m_simpleTV.Common.toPercentEncoding('ф'),"ф"},
-		{m_simpleTV.Common.toPercentEncoding('х'),"х"},
-		{m_simpleTV.Common.toPercentEncoding('ц'),"ц"},
-		{m_simpleTV.Common.toPercentEncoding('ч'),"ч"},
-		{m_simpleTV.Common.toPercentEncoding('ш'),"ш"},
-		{m_simpleTV.Common.toPercentEncoding('щ'),"щ"},
-		{m_simpleTV.Common.toPercentEncoding('ъ'),"ъ"},
-		{m_simpleTV.Common.toPercentEncoding('ы'),"ы"},
-		{m_simpleTV.Common.toPercentEncoding('ь'),"ь"},
-		{m_simpleTV.Common.toPercentEncoding('э'),"э"},
-		{m_simpleTV.Common.toPercentEncoding('ю'),"ю"},
-		{m_simpleTV.Common.toPercentEncoding('я'),"я"},
-		{m_simpleTV.Common.toPercentEncoding('  '),"_"},
-		}
-
-	local t0={}
-		for i=1,#tt do
-			t0[i] = {}
-			t0[i].Id = i
-			t0[i].Name = tt[i][2]
-			t0[i].Action = tt[i][1]
-		end--]]
------------------------------
-
 	local answer
 	local baze = 'mediaDB.txt'
 	local path = m_simpleTV.Common.GetMainPath(1) .. 'DB/'
@@ -71,19 +25,23 @@ require 'lfs'
 	file:close()
 	end
 
-	local t1={}
+	local t1,i={},1
+	if search_ini ~= '' then
 	t1[1] ={}
 	t1[1].Id = 1
 	t1[1].Name = "!!! clear"
 	t1[1].Action = ""
-	local i=2
+	i = 2
+	end
 		for w in answer:gmatch('\n.-%|') do
 		local name = w:match('\n(.-)%|')
+		if name:match(m_simpleTV.Common.fromPercentEncoding(search_ini)) and search_ini ~= '' or search_ini == '' then
 			t1[i] = {}
 			t1[i].Id = i
 			t1[i].Name = name:gsub(' %d$','')
 			t1[i].Action = name:gsub(' %d$','')
 			i=i+1
+		end
 		end
 
 		local hash, t0 = {}, {}
@@ -100,14 +58,13 @@ require 'lfs'
 			t0[i].Name = t0[i].Name:gsub('%%22','"')
 			t0[i].Action = t0[i].Action:gsub('%%22','"')
 		end
------------------------------
+
 	if search_ini == '' then
 	t0.ExtButton0 = {ButtonEnable = true, ButtonName = ' From Buffer'}
 	else
-	t0.ExtButton0 = {ButtonEnable = true, ButtonName = ' Back'}
+	t0.ExtButton0 = {ButtonEnable = true, ButtonName = ' Back '}
+	t0.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔎 '}
 	end
-	t0.ExtButton1 = {ButtonEnable = true, ButtonName = '🔎 '}
-
 	local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Поиск медиа: ' .. m_simpleTV.Common.fromPercentEncoding(search_ini),0,t0,10000,1+4+8+2)
 
 		if ret == -1 or not id then
@@ -119,7 +76,7 @@ require 'lfs'
 			then
 			search_ini = ''
 			end
-			setConfigVal('search/media',search_ini .. m_simpleTV.Common.toPercentEncoding(t0[id].Action))
+			setConfigVal('search/media',m_simpleTV.Common.toPercentEncoding(t0[id].Action))
 			search()
 		end
 
@@ -130,7 +87,7 @@ require 'lfs'
 			setConfigVal('search/media',search_ini)
 			search()
 			else
-			setConfigVal('search/media',search_ini:gsub('%S%S%S%S%S%S$',''))
+			setConfigVal('search/media',m_simpleTV.Common.toPercentEncoding(m_simpleTV.Common.multiByteToUTF8(m_simpleTV.Common.UTF8ToMultiByte(m_simpleTV.Common.fromPercentEncoding(search_ini:gsub('^%%20%%20%%20%%20',''):gsub('^%%20%%20%%20',''):gsub('^%%20%%20',''):gsub('^%%20',''):gsub('%%20%%20%%20%%20$',''):gsub('%%20%%20%%20$',''):gsub('%%20%%20$',''):gsub('%%20$',''))):gsub('%S$',''),1251)))
 			search()
 			end
 		end
