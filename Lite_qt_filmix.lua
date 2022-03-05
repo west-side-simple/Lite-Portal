@@ -1,4 +1,4 @@
---Filmix portal - lite version west_side 23.02.22
+--Filmix portal - lite version west_side 05.03.22
 
 local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
@@ -20,14 +20,15 @@ function run_lite_qt_filmix()
 
 	local last_adr = getConfigVal('info/filmix') or ''
 	local tt = {
-		{"filmi","Жанровое кино"},
-		{"seria","Жанровые сериалы"},
-		{"mults","Жанровые мульты"},
-		{"multserialy","Жанровые мультсериалы"},
+		{"","Персоны"},
+		{"filmi","Фильмы"},
+		{"seria","Сериалы"},
+		{"mults","Мульты"},
+		{"multserialy","Мультсериалы"},
 		{"https://filmix.ac/playlists/popular","Популярные подборки"},
---		{"https://filmix.ac/playlists/films","Подборки фильмов"},
---		{"https://filmix.ac/playlists/serials","Подборки сериалов"},
---		{"https://filmix.ac/playlists/multfilms","Подборки мультов"},
+		{"https://filmix.ac/playlists/films","Подборки фильмов"},
+		{"https://filmix.ac/playlists/serials","Подборки сериалов"},
+		{"https://filmix.ac/playlists/multfilms","Подборки мультов"},
 		{"","Избранное"},
 		{"","ПОИСК"},
 		}
@@ -54,6 +55,8 @@ function run_lite_qt_filmix()
 				collection_filmix(t0[id].Action)
 			elseif t0[id].Name:match('Избранное') then
 				run_lite_qt_filmix()
+			elseif t0[id].Name:match('Персоны') then
+				person_filmix('https://filmix.ac/persons')
 			elseif t0[id].Action == 'filmi' or t0[id].Action == 'seria' or t0[id].Action == 'mults' or t0[id].Action == 'multserialy' then
 				type_filmix(t0[id].Action)
 			end
@@ -69,6 +72,7 @@ end
 function type_filmix(con)
 
 		local tt = {
+		{"https://filmix.gay/filmi/","TOP"},
 		{"https://filmix.gay/filmi/animes/","Аниме"},
 		{"https://filmix.gay/filmi/biografia/","Биография"},
 		{"https://filmix.gay/filmi/boevik/","Боевики"},
@@ -104,6 +108,7 @@ function type_filmix(con)
 		{"https://filmix.gay/filmi/engl/","На английском"},
 		{"https://filmix.gay/filmi/ukraine/","На украинском"},
 
+		{"https://filmix.gay/seria/","TOP"},
 		{"https://filmix.gay/seria/animes/s7/","Аниме"},
 		{"https://filmix.gay/seria/biografia/s7/","Биография"},
 		{"https://filmix.gay/seria/boevik/s7/","Боевики"},
@@ -140,6 +145,7 @@ function type_filmix(con)
 		{"https://filmix.gay/seria/engl/s7/","На английском"},
 		{"https://filmix.gay/seria/ukraine/s7/","На украинском"},
 
+		{"https://filmix.gay/mults/","TOP"},
 		{"https://filmix.gay/mults/animes/s14/","Аниме"},
 		{"https://filmix.gay/mults/biografia/s14/","Биография"},
 		{"https://filmix.gay/mults/boevik/s14/","Боевики"},
@@ -169,7 +175,7 @@ function type_filmix(con)
 		{"https://filmix.gay/mults/engl/s14/","На английском"},
 		{"https://filmix.gay/mults/ukraine/s14/","На украинском"},
 
-		{"https://filmix.gay/multserialy/","Мультсериалы"},
+		{"https://filmix.gay/multserialy/","TOP"},
 		}
 
 	local ganre1,ganre2,ganre3,ganre4,k1,k2,k3 = {},{},{},{},1,1,1
@@ -206,10 +212,10 @@ function type_filmix(con)
 
 	local title,ganre = '',{}
 
-	if con == 'filmi' then title = 'Жанровое кино' ganre = ganre1
-	elseif con == 'seria' then title = 'Жанровые сериалы' ganre = ganre2
-	elseif con == 'mults' then title = 'Жанровые мульты' ganre = ganre3
-	elseif con == 'multserialy' then title = 'Жанровые мультсериалы' ganre = ganre4
+	if con == 'filmi' then title = 'Кино' ganre = ganre1
+	elseif con == 'seria' then title = 'Сериалы' ganre = ganre2
+	elseif con == 'mults' then title = 'Мульты' ganre = ganre3
+	elseif con == 'multserialy' then title = 'Мультсериалы' ganre = ganre4
 	end
 
 	ganre.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🢀 '}
@@ -227,10 +233,10 @@ end
 
 function ganres_content_filmix(url)
 	local title
-	if url:match('filmi/') then title = 'Жанровое кино'
-	elseif url:match('seria/') then title = 'Жанровые сериалы'
-	elseif url:match('multserialy/') then title = 'Жанровые мультсериалы'
-	elseif url:match('mults/') then title = 'Жанровые мульты'
+	if url:match('filmi/') then title = 'Кино'
+	elseif url:match('seria/') then title = 'Сериалы'
+	elseif url:match('multserialy/') then title = 'Мультсериалы'
+	elseif url:match('mults/') then title = 'Мульты'
 	end
 	local filmixsite = 'https://filmix.gay'
 	url = url:gsub('https?://filmix%..-/', filmixsite .. '/')
@@ -260,18 +266,19 @@ function ganres_content_filmix(url)
 ---------------
 		rc,answer = m_simpleTV.Http.Request(session,{url=url})
 		if rc ~= 200 then
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/0.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/1.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/2.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/3.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/4.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/5.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/6.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Http.Close(session)
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
 		if not session then return end
@@ -292,22 +299,6 @@ function ganres_content_filmix(url)
 			local rc, answer = m_simpleTV.Http.Request(session, {body = 'login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login=submit', url = url1, method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. filmixsite})
 		end
 		rc,answer = m_simpleTV.Http.Request(session,{url=url})
-		if rc ~= 200 then
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		rc,answer = m_simpleTV.Http.Request(session,{url=url})
-		m_simpleTV.Http.Close(session)
-		end
 		end
 		answer = m_simpleTV.Common.multiByteToUTF8(answer)
 		local title1 = answer:match('<div class="subtitle">(.-)</div>') or ''
@@ -345,11 +336,12 @@ function ganres_content_filmix(url)
 			i = i + 1
 		end
 	local function change_page(name,sim,t,title,title1)
-		if name == 'TOP' then
+		if name == 'Watch' then
 		sim.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🢀 '}
 		sim.ExtButton1 = {ButtonEnable = true, ButtonName = ' New '}
 		sim.ExtParams = {FilterType = 1, AutoNumberFormat = '%1. %2'}
-		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8(title .. ' (' .. #sim .. ') ' .. title1 .. ' - TOP',0,sim,10000,1+4+8+2)
+		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8(title1 .. ' - Watch (' .. #sim .. ')',0,sim,10000,1+4+8+2)
+
 		if ret == -1 or not id then
 			return
 		end
@@ -365,9 +357,9 @@ function ganres_content_filmix(url)
 		end
 		elseif name == 'NEW' then
 		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🢀 '}
-		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' TOP '}
+		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' Watch '}
 		t.ExtParams = {FilterType = 1, AutoNumberFormat = '%1. %2'}
-		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8(title .. ' (' .. #t .. ') ' .. title1 .. ' - NEW',0,t,10000,1+4+8+2)
+		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8(title1 .. ' - NEW (' .. #t .. ')',0,t,10000,1+4+8+2)
 		if ret == -1 or not id then
 			return
 		end
@@ -379,11 +371,11 @@ function ganres_content_filmix(url)
 			run_lite_qt_filmix()
 		end
 		if ret == 3 then
-			change_page('TOP',sim,t,title,title1)
+			change_page('Watch',sim,t,title,title1)
 		end
 		end
 	end
-	change_page('TOP',sim,t,title,title1)
+	change_page('Watch',sim,t,title,title1)
 end
 
 function collection_filmix(url)
@@ -408,22 +400,6 @@ function collection_filmix(url)
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 30000)
 
-	local res, login, password, header = xpcall(function() require('pm') return pm.GetPassword('filmix') end, err)
-		if not login or not password or login == '' or password == '' then
-			login = decode64('bWV2YWxpbA')
-			password = decode64('bTEyMzQ1Ng')
-		end
-		if login and password then
-			local url1
-			if filmixsite:match('filmix%.tech') then
-				url1 = filmixsite
-			else
-				url1 = filmixsite .. '/engine/ajax/user_auth.php'
-			end
-			local url1 = filmixsite
-			local rc, answer = m_simpleTV.Http.Request(session, {body = 'login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login=submit', url = url1, method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. filmixsite})
-		end
----------------
         local content = url:match('/playlists/(.-)$')
 		local page = content:match('/page/(%d+)/') or 1
 		content = content:gsub('/page.-$','')
@@ -437,6 +413,7 @@ function collection_filmix(url)
 		return
 		end
 		answer = answer:gsub('<br />', ''):gsub('\n', '')
+		local title1 = ' - страница ' .. page
 		local navi = answer:match('<div class="navigation">.-</div>') or ''
 		local left,right
 		for w1 in navi:gmatch('<a.-</a>') do
@@ -477,7 +454,7 @@ function collection_filmix(url)
 	t.ExtButton1 = {ButtonEnable = true, ButtonName = ''}
 	end
 	t.ExtParams = {FilterType = 1, AutoNumberFormat = '%1. %2'}
-		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите коллекцию Filmix (' .. #t .. ') ' .. title,0,t,10000,1+4+8+2)
+		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите коллекцию Filmix (' .. #t .. ') ' .. title .. ' ' .. title1,0,t,10000,1+4+8+2)
 		if ret == -1 or not id then
 			return
 		end
@@ -502,97 +479,56 @@ function collection_filmix_url(url)
 	local title = 'Коллекция'
 	local filmixsite = 'https://filmix.gay'
 	url = url:gsub('https?://filmix%..-/', filmixsite .. '/')
+	local page = url:match('/page/(%d+)/') or 1
 	if not m_simpleTV.Control.CurrentAdress then
 		m_simpleTV.Control.SetTitle(title)
 	end
 	local t,i,j = {},1,1
----------------
-	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
-		if not session then return end
-	m_simpleTV.Http.SetTimeout(session, 30000)
+	local sessionFilmix = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
+		if not sessionFilmix then return end
+	m_simpleTV.Http.SetTimeout(sessionFilmix, 8000)
 
-	local res, login, password, header = xpcall(function() require('pm') return pm.GetPassword('filmix') end, err)
-		if not login or not password or login == '' or password == '' then
-			login = decode64('bWV2YWxpbA')
-			password = decode64('bTEyMzQ1Ng')
-		end
-		if login and password then
-			local url1
-			if filmixsite:match('filmix%.tech') then
-				url1 = filmixsite
-			else
-				url1 = filmixsite .. '/engine/ajax/user_auth.php'
-			end
-			local url1 = filmixsite
-			local rc, answer = m_simpleTV.Http.Request(session, {body = 'login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login=submit', url = url1, method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. filmixsite})
-		end
----------------
-		rc,answer = m_simpleTV.Http.Request(session,{url=url})
+	if not m_simpleTV.Control.CurrentAdress then
+		m_simpleTV.Control.SetTitle(title)
+	end
+
+		local headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nAccept: application/json, text/javascript, */*; q=0.01\nX-Requested-With: XMLHttpRequest\nReferer: ' .. url
+		local body = filmixsite .. '/api/notifications/get'
+		local rc, answer = m_simpleTV.Http.Request(sessionFilmix, {body = body, url = url, method = 'post', headers = headers})
 		if rc ~= 200 then
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/0.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/1.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/2.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/3.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/4.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/5.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.Http.Close(session)
-		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
-		if not session then return end
-		m_simpleTV.Http.SetTimeout(session, 30000)
-		local res, login, password, header = xpcall(function() require('pm') return pm.GetPassword('filmix') end, err)
-		if not login or not password or login == '' or password == '' then
-			login = decode64('bWV2YWxpbA')
-			password = decode64('bTEyMzQ1Ng')
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/6.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		rc, answer = m_simpleTV.Http.Request(sessionFilmix, {body = body, url = url, method = 'post', headers = headers})
 		end
-		if login and password then
-			local url1
-			if filmixsite:match('filmix%.tech') then
-				url1 = filmixsite
-			else
-				url1 = filmixsite .. '/engine/ajax/user_auth.php'
-			end
-			local url1 = filmixsite
-			local rc, answer = m_simpleTV.Http.Request(session, {body = 'login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login=submit', url = url1, method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. filmixsite})
-		end
-		rc,answer = m_simpleTV.Http.Request(session,{url=url})
-		if rc ~= 200 then
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		rc,answer = m_simpleTV.Http.Request(session,{url=url})
-		m_simpleTV.Http.Close(session)
-		end
-		end
-		answer = m_simpleTV.Common.multiByteToUTF8(answer)
+		m_simpleTV.Http.Close(sessionFilmix)
+		answer = m_simpleTV.Common.multiByteToUTF8(answer,1251)
 		answer = answer:gsub('<br />', ''):gsub('\n', '')
+		local title1 = answer:match('<title>(.-)</title>') or ''
+		title1 = title1:gsub(' смотреть онлайн','')
 		local navi = answer:match('<div class="navigation">.-</div>') or ''
-		for w1 in navi:gmatch('<a.-</a>') do
 		local left,right
-		if w1:match('class="prev icon%-arowLeft">') then
+		for w1 in navi:gmatch('<a.-</a>') do
+		if w1:match('class="nav%-back prev icon%-arowLeft') then
 		left = w1:match('href="(.-)"')
 		end
-		if w1:match('class="next icon%-arowRight">') then
+		if w1:match('class="next icon%-arowRight') then
 		right = w1:match('href="(.-)"')
 		end
 		j = j + 1
 		end
-		answer = answer:match('<div class="clr playlist%-articles.-<div class="navigation">') or ''
-		for w in answer:gmatch('<article.-<div class="panel') do
+		local answer1 = answer:match('<div class="clr playlist%-articles.-<script') or ''
+		for w in answer1:gmatch('<article.-</article>') do
 		local adr,logo,name,desc
 		adr = w:match('itemprop="url" href="(.-)"') or ''
 		logo = w:match('<img src="(.-)"') or ''
@@ -618,7 +554,7 @@ function collection_filmix_url(url)
 	t.ExtButton1 = {ButtonEnable = true, ButtonName = ''}
 	end
 	t.ExtParams = {FilterType = 1, AutoNumberFormat = '%1. %2'}
-		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите медиаконтент Filmix (' .. #t .. ') ' .. title,0,t,10000,1+4+8+2)
+		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите медиаконтент Filmix (' .. #t .. ') ' .. title .. ': ' .. title1 .. ' - страница ' .. page,0,t,10000,1+4+8+2)
 		if ret == -1 or not id then
 			return
 		end
@@ -636,6 +572,107 @@ function collection_filmix_url(url)
 		if ret == 3 then
 		if right then
 			collection_filmix_url(right)
+		end
+		end
+end
+
+function person_filmix(url)
+	local title = 'Персоны'
+	local filmixsite = 'https://filmix.gay'
+	url = url:gsub('https?://filmix%..-/', filmixsite .. '/')
+	local page = url:match('/page/(%d+)/') or 1
+
+	if not m_simpleTV.Control.CurrentAdress then
+		m_simpleTV.Control.SetTitle(title)
+	end
+	local t,i = {},1
+	local sessionFilmix = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
+		if not sessionFilmix then return end
+	m_simpleTV.Http.SetTimeout(sessionFilmix, 8000)
+
+	if not m_simpleTV.Control.CurrentAdress then
+		m_simpleTV.Control.SetTitle(title)
+	end
+
+		local headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nAccept: application/json, text/javascript, */*; q=0.01\nX-Requested-With: XMLHttpRequest\nReferer: ' .. url
+		local body = filmixsite .. '/api/notifications/get'
+		local rc, answer = m_simpleTV.Http.Request(sessionFilmix, {body = body, url = url, method = 'post', headers = headers})
+		if rc ~= 200 then
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/0.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.Common.Sleep(5000)
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/1.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.Common.Sleep(5000)
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/2.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.Common.Sleep(5000)
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/3.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.Common.Sleep(5000)
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/4.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.Common.Sleep(5000)
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/5.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.Common.Sleep(5000)
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/6.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		rc, answer = m_simpleTV.Http.Request(sessionFilmix, {body = body, url = url, method = 'post', headers = headers})
+		end
+		m_simpleTV.Http.Close(sessionFilmix)
+		answer = m_simpleTV.Common.multiByteToUTF8(answer,1251)
+		answer = answer:gsub('<br />', ''):gsub('\n', '')
+		local title1 = answer:match('<title>(.-)</title>') or ''
+		title1 = title1:gsub(' смотреть онлайн','')
+		local left,right
+		if tonumber(page) > 1 then
+			left = url:gsub('/page/%d+/', '/page/' .. tonumber(page) - 1 .. '/')
+		end
+		if tonumber(page) < 9292 then
+			right = url:gsub('/page/%d+/', '/page/' .. tonumber(page) + 1 .. '/')
+		end
+		if tonumber(page) == 1 then
+			right = url .. '/page/2/'
+		end
+
+		for w in answer:gmatch('<article class="persone line shortstory".-</article>') do
+		local adr,logo,name,desc
+		adr = w:match('<a href="(.-)"') or ''
+		logo = w:match('<img src="(.-)"') or ''
+		name = w:match('itemprop="name"><.->(.-)<') or 'noname'
+		desc = w:match('<div class="item">(.-)</article>') or ''
+		desc = desc:gsub('<.->',''):gsub('%s%s%s%s',' '):gsub('%s%s%s',' '):gsub('%s%s',' ')
+			if not adr or not name or adr == '' then break end
+				t[i] = {}
+				t[i].Id = i
+				t[i].Name = name
+				t[i].Address = adr
+				t[i].InfoPanelLogo = logo
+				t[i].InfoPanelName = 'Filmix персоны: ' .. name
+				t[i].InfoPanelTitle = desc
+				t[i].InfoPanelShowTime = 10000
+			i = i + 1
+		end
+	if left then
+	t.ExtButton0 = {ButtonEnable = true, ButtonName = ''}
+	else
+	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🢀 '}
+	end
+	if right then
+	t.ExtButton1 = {ButtonEnable = true, ButtonName = ''}
+	end
+	t.ExtParams = {FilterType = 1, AutoNumberFormat = '%1. %2'}
+		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите персону Filmix (' .. #t .. ') ' .. title .. ': ' .. title1 .. ' - страница ' .. page,0,t,10000,1+4+8+2)
+		if ret == -1 or not id then
+			return
+		end
+		if ret == 1 then
+			person_content_filmix(t[id].Address)
+		end
+		if ret == 2 then
+		if left then
+			person_filmix(left)
+		else
+			run_lite_qt_filmix()
+		end
+		end
+		if ret == 3 then
+		if right then
+			person_filmix(right)
 		end
 		end
 end
@@ -671,18 +708,19 @@ function person_content_filmix(url)
 ---------------
 		rc,answer = m_simpleTV.Http.Request(session,{url=url})
 		if rc ~= 200 then
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/0.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/1.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/2.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/3.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/4.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/5.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/6.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Http.Close(session)
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
 		if not session then return end
@@ -703,22 +741,6 @@ function person_content_filmix(url)
 			local rc, answer = m_simpleTV.Http.Request(session, {body = 'login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login=submit', url = url1, method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. filmixsite})
 		end
 		rc,answer = m_simpleTV.Http.Request(session,{url=url})
-		if rc ~= 200 then
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		rc,answer = m_simpleTV.Http.Request(session,{url=url})
-		m_simpleTV.Http.Close(session)
-		end
 		end
 		answer = m_simpleTV.Common.multiByteToUTF8(answer)
 		answer = answer:gsub('<br />', ''):gsub('\n', '')
