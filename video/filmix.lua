@@ -1,4 +1,4 @@
--- видеоскрипт для сайта https://filmix.ac (23/02/22)
+-- видеоскрипт для сайта https://filmix.ac (05/03/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
 -- west_side mod for lite
 -- ## авторизация ##
@@ -390,35 +390,20 @@ end
 ---------------
 		rc,answer = m_simpleTV.Http.Request(session,{url=inAdr})
 		if rc ~= 200 then
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/0.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/1.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/2.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/3.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/4.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/5.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/6.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		rc,answer = m_simpleTV.Http.Request(session,{url=inAdr})
-		if rc ~= 200 then
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please . . . . . . . . . . .', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		rc,answer = m_simpleTV.Http.Request(session,{url=inAdr})
-		m_simpleTV.Http.Close(session)
-		end
 		end
 
 	answer = m_simpleTV.Common.multiByteToUTF8(answer)
