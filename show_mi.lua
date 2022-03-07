@@ -203,7 +203,7 @@ end
 --добавление кнопки в плейлист, кроме указанных в таблице исключений
 
 --таблица исключений
-local tab = {"Radio","Radcap","YandexTV","TVSources"}
+local tab = {"Media Portal 24","Radio","Radcap","YandexTV","TVSources","FMPlay Streams","Zaycev FM","101RU","DFM,RMC,RU Radio","PCradio","Digitally Imported","RadioTunes","Classicalradio","Rockradio","Jazzradio","TuneIn","Radio Record","Multimediaholding","FMPlay","Love Radio","RadioOboz","FLAC Radio","EMG"}
 
 --создаем таблицу tt и заносим в нее ExtFilterID исключая ExtFilter из таблицы t
 local tt={}
@@ -215,7 +215,7 @@ if ext~=nil then
    end
     return false
  end
-  
+
   for i=1, #ext do
    if not isTestExtFilter(ext[i].Name) then
       tt[#tt+1] = ext[i].Id
