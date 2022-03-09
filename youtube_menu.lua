@@ -1,11 +1,4 @@
---menu west_side 17.02.22
-local function getConfigVal(key)
-	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
-end
-
-local function setConfigVal(key,val)
-	m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
-end
+--menu west_side 09.03.22
 
 function run_youtube_portal()
 
@@ -46,6 +39,13 @@ local tt={
 
 function highlight()
 m_simpleTV.Control.ExecuteAction(37)
+local function getConfigVal(key)
+	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
+end
+
+local function setConfigVal(key,val)
+	m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
+end
 local tt2={
 {'Youtube канал SimpleTV M24WS','https://youtube.com/playlist?list=PL0OszcisBIjOax3iduZNSGfvuMj8NAyMj'},
 
@@ -70,6 +70,42 @@ local tt2={
   end
 end
 
+function mediabaze()
+m_simpleTV.Control.ExecuteAction(37)
+local function getConfigVal(key)
+	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
+end
+
+local function setConfigVal(key,val)
+	m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
+end
+local tt2={
+{'Избранные медиабалансеры (быстро)',1},
+{'Все медиабалансеры (медленно)',2},
+
+}
+
+  local t2={}
+  for i=1,#tt2 do
+    t2[i] = {}
+    t2[i].Id = i
+    t2[i].Name = tt2[i][1]
+	t2[i].Address = tt2[i][2]
+  end
+  local cur_id = getConfigVal('mediabaze') or 0
+  if getConfigVal('mediabaze') then cur_id = tonumber(getConfigVal('mediabaze'))-1 end
+  t2.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🢀 '}
+  local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Выбор медиабалансеров',cur_id,t2,9000,1+4+8)
+  if id==nil then return end
+  if ret==1 then
+	setConfigVal('mediabaze',id)
+	mediabaze()
+  end
+  if ret==2 then
+	run_westSide_portal()
+  end
+end
+
 function run_westSide_portal()
 
 m_simpleTV.Control.ExecuteAction(37)
@@ -82,6 +118,7 @@ local tt1={
 {'Filmix',''},
 {'Kinopub',''},
 {'YouTube',''},
+{'Медиабазы',''},
 {'SimpleTV - видеоинструкции',''},
 }
 
@@ -103,6 +140,7 @@ local tt1={
   elseif t1[id].Name == 'Kinopub' then run_lite_qt_kinopub()
   elseif t1[id].Name == 'YouTube' then run_youtube_portal()
   elseif t1[id].Name == 'Поиск' then search()
+  elseif t1[id].Name == 'Медиабазы' then mediabaze()
   elseif t1[id].Name:match('SimpleTV') then highlight()
   end
   end
@@ -160,7 +198,7 @@ end
  t1.key = string.byte('I')
  t1.ctrlkey = 3
  t1.location = 0
- t1.image= m_simpleTV.MainScriptDir_UTF8 .. 'user/show_mi/lite.png'
+ t1.image= m_simpleTV.MainScriptDir_UTF8 .. 'user/show_mi/icon.png'
  m_simpleTV.Interface.AddExtMenuT({utf8 = false, name = '-'})
  m_simpleTV.Interface.AddExtMenuT(t1)
  m_simpleTV.Interface.AddExtMenuT({utf8 = false, name = '-'})

@@ -1,4 +1,4 @@
---Rezka portal - lite version west_side 23.02.22
+--Rezka portal - lite version west_side 09.03.22
 
 local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
@@ -109,6 +109,13 @@ function zerkalo_rezka()
 end
 
 function last_rezka()
+	local function getConfigVal(key)
+	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
+	end
+
+	local function setConfigVal(key,val)
+	m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
+	end
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
 		if not session then return end
 	local current_zerkalo = getConfigVal('zerkalo/rezka') or ''
@@ -155,6 +162,17 @@ function collection_rezka()
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 60000)
 	local url = 'https://rezka.ag/collections/'
+	local function getConfigVal(key)
+	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
+	end
+
+	local function setConfigVal(key,val)
+	m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
+	end
+	local current_zerkalo = getConfigVal('zerkalo/rezka') or ''
+	if current_zerkalo ~= '' then
+	url = url:gsub('http.-//.-/', current_zerkalo)
+	end	
 	local t,i = {},1
 	for j=1,3 do
 		local rc,answer = m_simpleTV.Http.Request(session,{url=url .. 'page/' .. j .. '/'})
@@ -191,6 +209,17 @@ function collection_rezka_url(url)
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 60000)
+	local function getConfigVal(key)
+	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
+	end
+
+	local function setConfigVal(key,val)
+	m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
+	end
+	local current_zerkalo = getConfigVal('zerkalo/rezka') or ''
+	if current_zerkalo ~= '' then
+	url = url:gsub('http.-//.-/', current_zerkalo)
+	end		
 	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
 		if rc ~= 200 then return '' end
 	local title = answer:match('<h1>(.-)</h1>') or 'Rezka collection'
@@ -254,6 +283,17 @@ function franchises_rezka(url)
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 60000)
+	local function getConfigVal(key)
+	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
+	end
+
+	local function setConfigVal(key,val)
+	m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
+	end
+	local current_zerkalo = getConfigVal('zerkalo/rezka') or ''
+	if current_zerkalo ~= '' then
+	url = url:gsub('http.-//.-/', current_zerkalo)
+	end	
 	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
 		if rc ~= 200 then return '' end
 	local current_page = url:match('/page/(%d+)') or 1
@@ -321,6 +361,17 @@ function franchises_rezka_url(url)
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 60000)
+	local function getConfigVal(key)
+	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
+	end
+
+	local function setConfigVal(key,val)
+	m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
+	end
+	local current_zerkalo = getConfigVal('zerkalo/rezka') or ''
+	if current_zerkalo ~= '' then
+	url = url:gsub('http.-//.-/', current_zerkalo)
+	end		
 	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
 		if rc ~= 200 then return '' end
 	local title = answer:match('<h1>Смотреть все(.-)</h1></div>') or 'Rezka franchises'
@@ -376,6 +427,17 @@ function person_rezka_work(url)
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 60000)
+	local function getConfigVal(key)
+	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
+	end
+
+	local function setConfigVal(key,val)
+	m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
+	end
+	local current_zerkalo = getConfigVal('zerkalo/rezka') or ''
+	if current_zerkalo ~= '' then
+	url = url:gsub('http.-//.-/', current_zerkalo)
+	end		
 	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
 		if rc ~= 200 then return '' end
 	local title1 = answer:match('<h1><span class="t1" itemprop="name">(.-)</span>') or 'Rezka person'
@@ -433,6 +495,17 @@ function media_info_rezka(url)
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 60000)
+	local function getConfigVal(key)
+	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
+	end
+
+	local function setConfigVal(key,val)
+	m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
+	end
+	local current_zerkalo = getConfigVal('zerkalo/rezka') or ''
+	if current_zerkalo ~= '' then
+	url = url:gsub('http.-//.-/', current_zerkalo)
+	end		
 	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
 		if rc ~= 200 then return '' end
 	local tooltip_body

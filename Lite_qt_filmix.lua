@@ -1,4 +1,4 @@
---Filmix portal - lite version west_side 06.03.22
+--Filmix portal - lite version west_side 08.03.22
 
 local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
@@ -31,6 +31,7 @@ function run_lite_qt_filmix()
 		{"https://filmix.ac/playlists/multfilms","Подборки мультов"},
 		{"","Избранное"},
 		{"","ПОИСК"},
+		{"","Filmix зеркало"},		
 		}
 
 	local t0={}
@@ -51,6 +52,8 @@ function run_lite_qt_filmix()
 		if ret == 1 then
 			if t0[id].Name == 'ПОИСК' then
 				search_all()
+			elseif t0[id].Name == 'Filmix зеркало' then
+				zerkalo_filmix()				
 			elseif t0[id].Name:match('одборки') then
 				collection_filmix(t0[id].Action)
 			elseif t0[id].Name:match('Избранное') then
@@ -66,6 +69,51 @@ function run_lite_qt_filmix()
 		end
 		if ret == 3 then
 		run_westSide_portal()
+		end
+end
+
+function zerkalo_filmix()
+	local function getConfigVal(key)
+	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
+	end
+
+	local function setConfigVal(key,val)
+	m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
+	end
+	local current_zerkalo = getConfigVal('zerkalo/filmix') or ''
+	local current_zerkalo_id = 0
+	local tt = {
+		{'https://filmix.ac','Без зеркала'},
+		{'https://filmix.gay','https://filmix.gay'},
+		{'https://filmix.love','https://filmix.love'},
+		{'https://filmix.beer','https://filmix.beer'},
+		}
+
+	local t0={}
+		for i=1,#tt do
+			t0[i] = {}
+			t0[i].Id = i
+			t0[i].Name = tt[i][2]
+			t0[i].Action = tt[i][1]
+			if t0[i].Action == current_zerkalo then current_zerkalo_id = i-1 end
+			i=i+1
+		end
+
+	t0.ExtButton0 = {ButtonEnable = true, ButtonName = ' Filmix '}
+	t0.ExtButton1 = {ButtonEnable = true, ButtonName = ' Portal '}
+	local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите зеркало Filmix',current_zerkalo_id,t0,10000,1+4+8+2)
+		if ret == -1 or not id then
+			return
+		end
+		if ret == 1 then
+			setConfigVal('zerkalo/filmix',t0[id].Action)
+			zerkalo_filmix()
+		end
+		if ret == 2 then
+			run_lite_qt_filmix()
+		end
+		if ret == 3 then
+			run_westSide_portal()
 		end
 end
 
@@ -238,7 +286,7 @@ function ganres_content_filmix(url)
 	elseif url:match('multserialy/') then title = 'Мультсериалы'
 	elseif url:match('mults/') then title = 'Мульты'
 	end
-	local filmixsite = 'https://filmix.gay'
+	local filmixsite = m_simpleTV.Config.GetValue('zerkalo/filmix', 'LiteConf.ini') or 'https://filmix.ac'
 	url = url:gsub('https?://filmix%..-/', filmixsite .. '/')
 	if not m_simpleTV.Control.CurrentAdress then
 		m_simpleTV.Control.SetTitle(title)
@@ -389,7 +437,7 @@ function collection_filmix(url)
 	elseif url:match('/playlists/multfilms') then
 	title = 'Мульты'
 	end
-	local filmixsite = 'https://filmix.gay'
+	local filmixsite = m_simpleTV.Config.GetValue('zerkalo/filmix', 'LiteConf.ini') or 'https://filmix.ac'
 	url = url:gsub('https?://filmix%..-/', filmixsite .. '/')
 	if not m_simpleTV.Control.CurrentAdress then
 		m_simpleTV.Control.SetTitle(title)
@@ -477,7 +525,7 @@ end
 
 function collection_filmix_url(url)
 	local title = 'Коллекция'
-	local filmixsite = 'https://filmix.gay'
+	local filmixsite = m_simpleTV.Config.GetValue('zerkalo/filmix', 'LiteConf.ini') or 'https://filmix.ac'
 	url = url:gsub('https?://filmix%..-/', filmixsite .. '/')
 	local page = url:match('/page/(%d+)/') or 1
 	if not m_simpleTV.Control.CurrentAdress then
@@ -578,7 +626,7 @@ end
 
 function person_filmix(url)
 	local title = 'Персоны'
-	local filmixsite = 'https://filmix.gay'
+	local filmixsite = m_simpleTV.Config.GetValue('zerkalo/filmix', 'LiteConf.ini') or 'https://filmix.ac'
 	url = url:gsub('https?://filmix%..-/', filmixsite .. '/')
 	local page = url:match('/page/(%d+)/') or 1
 
@@ -683,7 +731,7 @@ end
 
 function person_content_filmix(url)
 	local title = 'Персона'
-	local filmixsite = 'https://filmix.gay'
+	local filmixsite = m_simpleTV.Config.GetValue('zerkalo/filmix', 'LiteConf.ini') or 'https://filmix.ac'
 	url = url:gsub('https?://filmix%..-/', filmixsite .. '/')
 	if not m_simpleTV.Control.CurrentAdress then
 		m_simpleTV.Control.SetTitle(title)
@@ -699,16 +747,9 @@ function person_content_filmix(url)
 			login = decode64('bWV2YWxpbA')
 			password = decode64('bTEyMzQ1Ng')
 		end
-		if login and password then
-			local url1
-			if filmixsite:match('filmix%.tech') then
-				url1 = filmixsite
-			else
-				url1 = filmixsite .. '/engine/ajax/user_auth.php'
-			end
-			local url1 = filmixsite
-			local rc, answer = m_simpleTV.Http.Request(session, {body = 'login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login=submit', url = url1, method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. filmixsite})
-		end
+		
+			local rc, answer = m_simpleTV.Http.Request(session, {body = 'login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login=submit', url = filmixsite, method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. filmixsite})
+
 ---------------
 		rc,answer = m_simpleTV.Http.Request(session,{url=url})
 		if rc ~= 200 then
@@ -725,25 +766,9 @@ function person_content_filmix(url)
 		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/5.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 		m_simpleTV.Common.Sleep(5000)
 		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/6.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
---		m_simpleTV.Http.Close(session)
---		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
---		if not session then return end
---		m_simpleTV.Http.SetTimeout(session, 30000)
---		local res, login, password, header = xpcall(function() require('pm') return pm.GetPassword('filmix') end, err)
---		if not login or not password or login == '' or password == '' then
---			login = decode64('bWV2YWxpbA')
---			password = decode64('bTEyMzQ1Ng')
---		end
---		if login and password then
---			local url1
---			if filmixsite:match('filmix%.tech') then
---				url1 = filmixsite
---			else
---				url1 = filmixsite .. '/engine/ajax/user_auth.php'
---			end
---			local url1 = filmixsite
-			rc, answer = m_simpleTV.Http.Request(session, {body = 'login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login=submit', url = url1, method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. filmixsite})
---		end
+
+			rc, answer = m_simpleTV.Http.Request(session, {body = 'login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login=submit', url = filmixsite, method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. filmixsite})
+
 		rc,answer = m_simpleTV.Http.Request(session,{url=url})
 		end
 		answer = m_simpleTV.Common.multiByteToUTF8(answer)
@@ -787,7 +812,7 @@ function search_filmix_media()
 	local function setConfigVal(key,val)
 		m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
 	end
-	local filmixsite = 'https://filmix.gay'
+	local filmixsite = m_simpleTV.Config.GetValue('zerkalo/filmix', 'LiteConf.ini') or 'https://filmix.ac'
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 8000)
