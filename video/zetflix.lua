@@ -53,21 +53,34 @@
 	answerd = answerd:gsub('(%[%])', '"nil"')
 	local tab = json.decode(answerd)
 	local background, name_tmdb, tmdb_id, tv = '', '', '', 0
-	if not tab and (not tab.movie_results[1] or tab.movie_results[1]==nil) and not tab.movie_results[1].backdrop_path or not tab and not (tab.tv_results[1] or tab.tv_results[1]==nil) and not tab.tv_results[1].backdrop_path then background = '' else
+	if not tab and (not tab.movie_results[1] or tab.movie_results[1]==nil) and not tab.movie_results[1].backdrop_path and not tab.movie_results[1].poster_path
+	and not (tab.tv_results[1] or tab.tv_results[1]==nil) and not tab.tv_results[1].backdrop_path and not tab.tv_results[1].poster_path
+	then background = '' 
+	else
 	if tab.movie_results[1] then
 	background = tab.movie_results[1].backdrop_path or ''
+	background1 = tab.movie_results[1].poster_path or ''
 	name_tmdb = tab.movie_results[1].title or ''
+	year_tmdb = tab.movie_results[1].release_date or ''
+	overview_tmdb = tab.movie_results[1].overview or ''
 	tmdb_id = tab.movie_results[1].id
 	elseif tab.tv_results[1] then
 	background = tab.tv_results[1].backdrop_path or ''
+	background1 = tab.tv_results[1].poster_path or ''
 	name_tmdb = tab.tv_results[1].name or ''
+	year_tmdb = tab.tv_results[1].first_air_date or ''
+	overview_tmdb = tab.tv_results[1].overview or ''
 	tmdb_id = tab.tv_results[1].id
 	tv = 1
 	end
 	end
-	if background and background ~= nil and background ~= '' then background = 'http://image.tmdb.org/t/p/original' .. background end
+	if year_tmdb and year_tmdb ~= '' then
+	year_tmdb = year_tmdb:match('%d%d%d%d')
+	else year_tmdb = 0 end
+	if background and background ~= nil and background ~= '' then background = 'http://image.tmdb.org/t/p/original' .. background
+	elseif background1 and background1 ~= nil and background1 ~= '' then background = 'http://image.tmdb.org/t/p/original' .. background1 end
 	if background == nil then background = '' end
-	return background, name_tmdb, tmdb_id, tv
+	return background, name_tmdb, year_tmdb, overview_tmdb, tmdb_id, tv
 	end
 	local function tmdb_tv(tmdbid,inAdr)
 	local urls = 'https://api.themoviedb.org/3/tv/' .. tmdbid .. decode64('P2FwaV9rZXk9ZDU2ZTUxZmI3N2IwODFhOWNiNTE5MmVhYWE3ODIzYWQmbGFuZ3VhZ2U9cnUtUlU=')
@@ -103,7 +116,7 @@
 	local kpid = inAdr:match('kp%=(%d+)')
 	m_simpleTV.User.ZF.kpid = kpid
 	local season,episode=m_simpleTV.User.ZF.CurAddress:match('season=(%d+).-episode=(%d+)')
-	local logo, title, tmdbid, tv = bg_imdb_id(imdbid(kpid))	
+	local logo, title, year, overview, tmdbid, tv = bg_imdb_id(imdbid(kpid))	
 	if tv == 1 then
 	if not season or not episode then
 	if not season then season = 1 end
@@ -213,19 +226,21 @@
 	m_simpleTV.User.ZF.titleTab = nil
 	m_simpleTV.User.ZF.isVideo = nil
 	m_simpleTV.Control.ChangeChannelLogo(logo, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
-	m_simpleTV.Control.SetTitle(title)
-	m_simpleTV.Control.CurrentTitle_UTF8 = title
+	m_simpleTV.Control.CurrentTitle_UTF8 = title .. ', ' .. year
+	m_simpleTV.Control.SetTitle(title .. ', ' .. year)
+	local poster = answer:match('poster: "(.-)"')
 	if m_simpleTV.Control.MainMode == 0 then
-		m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = logo, TypeBackColor = 0, UseLogo = 3, Once = 1})
+		m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = poster or logo, TypeBackColor = 0, UseLogo = 3, Once = 1})
 	end
 	local retAdr
 	retAdr = answer:match('file:"(.-)"')
+	if retAdr then setConfigVal('perevod/zf', '') end
 		if not retAdr then
 		retAdr = answer:match('file:%[(.-)%]%}')		
 		if retAdr == '' then m_simpleTV.Control.ExecuteAction(102, 1) return end
 		local t1,i,current_p = {},1
 		for w in retAdr:gmatch('%{.-%}') do
-		local name,file = w:match('"title": "(.-)".-"file": "(.-)"')		
+		local name,file = w:match('"title": "(.-)".-"file":.-"(.-)"')		
 		if not name or not file then break end
 		t1[i]={}
 		t1[i].Id = i
@@ -257,8 +272,8 @@
 		end
 	local t = {}
 	if current_np then
-	m_simpleTV.Control.SetTitle(title)
-	m_simpleTV.Control.CurrentTitle_UTF8 = title
+	m_simpleTV.Control.CurrentTitle_UTF8 = title .. ', ' .. year
+	m_simpleTV.Control.SetTitle(title .. ', ' .. year)
 	end
 	retAdr = GetZFAdr(retAdr)
 	if tv == 1	then
@@ -294,7 +309,9 @@
 	end
 	m_simpleTV.User.ZF.titleTab = t
 	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_ZF()'}
+	if getConfigVal('perevod/zf') ~= '' then
 	t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_ZF()'}
+	end
 	m_simpleTV.OSD.ShowSelect_UTF8('Сезоны: ' .. title, current_ep - 1, t, 10000, 32)
 	m_simpleTV.Control.ChangeAdress = 'Yes'
 	m_simpleTV.Control.CurrentAddress = retAdr
@@ -304,8 +321,10 @@
 		t[1].Id = 1
 		t[1].Name = title:gsub(' %- ' .. current_np,'')
 			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_ZF()'}
+			if getConfigVal('perevod/zf') ~= '' then
 			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_ZF()'}
-			m_simpleTV.OSD.ShowSelect_UTF8('ZF: ' .. current_np, 0, t, 8000, 32 + 64 + 128)
+			end
+			m_simpleTV.OSD.ShowSelect_UTF8('ZF: ' .. getConfigVal('perevod/zf'), 0, t, 8000, 32 + 64 + 128)
 	end
 	m_simpleTV.Http.Close(session)
 	m_simpleTV.Control.CurrentAddress = retAdr

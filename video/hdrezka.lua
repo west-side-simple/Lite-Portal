@@ -47,7 +47,7 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 	require 'playerjs'
 	local inAdr = m_simpleTV.Control.CurrentAddress
 	if zerkalo and zerkalo ~= '' then
-	inAdr = inAdr:gsub('^http.-//.-/',zerkalo)
+	inAdr = inAdr:gsub('^http.-://.-/',zerkalo)
 	end
 	local inAdr1 = inAdr:gsub('$rezka.-$','')
 	m_simpleTV.OSD.ShowMessageT({text = '', showTime = 1000, id = 'channelName'})
@@ -338,7 +338,7 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 	return background
 	end
 	local function get_best_stream(url)
-	local rc, answer = m_simpleTV.Http.Request(session, {url = url})
+	local rc, answer = m_simpleTV.Http.Request(session, {url = url})	
 		if rc ~= 200 then
 			showError('4')
 			m_simpleTV.Http.Close(session)
@@ -351,13 +351,13 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 	answer = answer:gsub('\\/', '/')
 	answer = answer:gsub('\\"', '"')
 	answer = answer:gsub('<!%-%-.-%-%->', ''):gsub('/%*.-%*/', '')
-	local playerjs_url = answer:match('src="([^"]+/js/playerjs[^"]+)')
+	local playerjs_url = answer:match('src="([^"]+/js/playerjs[^"]+)')	
 		if not playerjs_url then return end
-	m_simpleTV.User.rezka.playerjs_url = url:match('^http.-//[^/]+') .. playerjs_url
-	local adr = answer:match('"streams":"[^"]+')
+	m_simpleTV.User.rezka.playerjs_url = url:match('^http.-//[^/]+') .. playerjs_url	
+	local adr = answer:match('"streams":"[^"]+')	
 	if adr then
-	adr = rezkaDeSex(adr)
-	adr = adr:match('%[1080p Ultra%](https://stream%.voidboost%..-%.m3u8)') or adr:match('%[1080p%](https://stream%.voidboost%..-%.m3u8)') or adr:match('%[720p%](https://stream%.voidboost%..-%.m3u8)') or adr:match('%[480p%](https://stream%.voidboost%..-%.m3u8)') or adr:match('%[360p%](https://stream%.voidboost%..-%.m3u8)') or adr:match('%[240p%](https://stream%.voidboost%..-%.m3u8)') or ''
+	adr = rezkaDeSex(adr)	
+	adr = adr:match('%[1080p Ultra%](http.-://stream%.voidboost%..-%.m3u8)') or adr:match('%[1080p%](http.-://stream%.voidboost%..-%.m3u8)') or adr:match('%[720p%](http.-://stream%.voidboost%..-%.m3u8)') or adr:match('%[480p%](http.-://stream%.voidboost%..-%.m3u8)') or adr:match('%[360p%](http.-://stream%.voidboost%..-%.m3u8)') or adr:match('%[240p%](http.-://stream%.voidboost%..-%.m3u8)') or ''
 	else
 	adr = ''
 	end

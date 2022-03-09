@@ -114,8 +114,8 @@ local proxy = ''
 			url = url:gsub('^%[', '')
 		end
 		local t = {}
-			for adr in url:gmatch('%](//[^%s]+%.mp4)') do
-				local qlty = adr:match('/(%d+)%.mp4')
+			for adr in url:gmatch('%](//[^%s]+%.m3u8)') do
+				local qlty = adr:match('/(%d+)%.m3u8')
 				if qlty then
 					t[#t + 1] = {}
 					t[#t].qlty = tonumber(qlty)
@@ -124,7 +124,7 @@ local proxy = ''
 				end
 			end
 			if #t == 0 then return end
-		local adr1080 = t[1].Address:gsub('/%d+.mp4', '/1080.mp4')
+		local adr1080 = t[1].Address:gsub('/%d+.m3u8', '/1080.m3u8')
 		local rc, answer = m_simpleTV.Http.Request(session, {url = adr1080, method = 'head'})
 		if rc == 200 then
 			t[#t + 1] = {}

@@ -1,4 +1,4 @@
--- видеоскрипт поиска медиаконтента на видеобалансере Rezka (05/09/21)
+-- видеоскрипт поиска медиаконтента на видеобалансере Rezka (08/03/22)
 -- autor westSide
 		if m_simpleTV.Control.ChangeAdress ~= 'No' then return end
 	local inAdr = m_simpleTV.Control.CurrentAdress
@@ -292,7 +292,10 @@ end
 	end
 
 	local function find_rezka(rezka_search,con)
-
+	local zerkalo = getConfigVal('zerkalo/rezka') or ''
+	if zerkalo ~= '' then
+	inAdr = inAdr:gsub('^http.-//.-/',zerkalo)
+	end
 		local function infodesc_rezka(adr1)
 		local rc3,answeradr = m_simpleTV.Http.Request(session,{url=adr1})
 		if rc3~=200 then
@@ -303,7 +306,7 @@ end
 		return overview
 		end
 
-	local urld2 = 'https://rezkery.com/search?do=search&subaction=search&q=' .. m_simpleTV.Common.toPercentEncoding(rezka_search:gsub('%-',' '))
+	local urld2 = zerkalo .. 'search?do=search&subaction=search&q=' .. m_simpleTV.Common.toPercentEncoding(rezka_search:gsub('%-',' '))
 	local rc2,answerd2 = m_simpleTV.Http.Request(session,{url=urld2})
 	if rc2~=200 then
 		m_simpleTV.Http.Close(session)

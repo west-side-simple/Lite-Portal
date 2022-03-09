@@ -16,23 +16,46 @@
 -- http://rating.kinopoisk.ru/7378.gif
 -- https://www.kinopoisk.ru/series/733493/
 -- ## адрес сайта (зеркала) filmix.ac ##
-local filmixsite = 'https://filmix.gay/'
+local filmixsite = m_simpleTV.Config.GetValue('zerkalo/filmix', 'LiteConf.ini') or 'https://filmix.ac'
 -- 'https://filmix.life' (пример)
 -- ## прокси для Seasonvar ##
 local proxy = ''
 -- '' - нет
 -- 'https://proxy-nossl.antizapret.prostovpn.org:29976' (пример)
 -- ## источники ##
-local tname = {
+local tname = {}
+if not m_simpleTV.Config.GetValue('mediabaze', 'LiteConf.ini') or tonumber(m_simpleTV.Config.GetValue('mediabaze', 'LiteConf.ini')) == 1 then
+-- сокращенная база
+tname = {
 -- сортировать: поменять порядок строк
 -- отключить: поставить в начале строки --
  'Videocdn',
  'VB',
  'ZF',
- 'Filmix',
+-- 'Filmix',
+-- 'CDN Movies',
+-- 'Videoframe',
+-- 'Hdvb',
+-- 'Collaps',
+-- 'Kodik',
+-- 'КиноПоиск онлайн',
+-- 'Seasonvar',
+-- 'ivi',
+-- 'ZonaMobi',
+	}
+-- ##
+elseif tonumber(m_simpleTV.Config.GetValue('mediabaze', 'LiteConf.ini')) == 2 then
+-- полная база
+tname = {
+-- сортировать: поменять порядок строк
+-- отключить: поставить в начале строки --
+ 'Videocdn',
+ 'VB',
+ 'ZF',
+-- 'Filmix',
+ 'CDN Movies',
  'Videoframe',
  'Hdvb',
- 'CDN Movies',
  'Collaps',
  'Kodik',
 -- 'КиноПоиск онлайн',
@@ -41,6 +64,7 @@ local tname = {
 -- 'ZonaMobi',
 	}
 -- ##
+end
 		if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 		if not m_simpleTV.Control.CurrentAddress:match('^https?://[%w%.]*kinopoisk%.ru/.+') then return end
 	local inAdr = m_simpleTV.Control.CurrentAddress
@@ -258,7 +282,7 @@ local tname = {
 		elseif url:match('zetflix') then
 			rc, answer = m_simpleTV.Http.Request(session, {url = url})
 				if rc ~= 200 then return end
-			return url			
+			return url
 		end
 	 return
 	end
@@ -321,7 +345,7 @@ local tname = {
 		elseif url:match('voidboost') then
 			return answer
 		elseif url:match('zetflix') then
-			return answer			
+			return answer
 		end
 	 return
 	end
@@ -345,6 +369,73 @@ local tname = {
 			m_simpleTV.Interface.SetBackground({BackColor = 0, BackColorEnd = 255, PictFileName = url, TypeBackColor = 0, UseLogo = 3, Once = 1})
 		end
 	end
+	local function imdbid(kpid)
+	local url_vn = decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvc2hvcnQ/YXBpX3Rva2VuPW9TN1d6dk5meGU0SzhPY3NQanBBSVU2WHUwMVNpMGZtJmtpbm9wb2lza19pZD0=') .. kpid
+	local rc5,answer_vn = m_simpleTV.Http.Request(session,{url=url_vn})
+		if rc5~=200 then
+		return '','',''
+		end
+		require('json')
+		answer_vn = answer_vn:gsub('(%[%])', '"nil"')
+		local tab_vn = json.decode(answer_vn)
+		if tab_vn and tab_vn.data and tab_vn.data[1] and tab_vn.data[1].imdb_id and tab_vn.data[1].imdb_id ~= 'null' then
+		return tab_vn.data[1].imdb_id or '', tab_vn.data[1].title or '',tab_vn.data[1].year:match('%d%d%d%d') or ''
+		else
+		return '', tab_vn.data[1].title or '',tab_vn.data[1].year:match('%d%d%d%d') or ''
+		end
+	end
+	local function bg_imdb_id(imdb_id)
+	local urld = 'https://api.themoviedb.org/3/find/' .. imdb_id .. decode64('P2FwaV9rZXk9ZDU2ZTUxZmI3N2IwODFhOWNiNTE5MmVhYWE3ODIzYWQmbGFuZ3VhZ2U9cnUmZXh0ZXJuYWxfc291cmNlPWltZGJfaWQ')
+	local rc5,answerd = m_simpleTV.Http.Request(session,{url=urld})
+	if rc5~=200 then
+		m_simpleTV.Http.Close(session)
+	return
+	end
+	require('json')
+	answerd = answerd:gsub('(%[%])', '"nil"')
+	local tab = json.decode(answerd)
+	local background, name_tmdb, year_tmdb, overview_tmdb = '', '', '', ''
+	if not tab and (not tab.movie_results[1] or tab.movie_results[1]==nil) and not tab.movie_results[1].backdrop_path or not tab and not (tab.tv_results[1] or tab.tv_results[1]==nil) and not tab.tv_results[1].backdrop_path then background = '' else
+	if tab.movie_results[1] then
+	background = tab.movie_results[1].backdrop_path or ''
+	name_tmdb = tab.movie_results[1].title or ''
+	year_tmdb = tab.movie_results[1].release_date or ''
+	overview_tmdb = tab.movie_results[1].overview or ''
+	elseif tab.tv_results[1] then
+	background = tab.tv_results[1].backdrop_path or ''
+	name_tmdb = tab.tv_results[1].name or ''
+	year_tmdb = tab.tv_results[1].first_air_date or ''
+	overview_tmdb = tab.tv_results[1].overview or ''
+	end
+	end
+	if year_tmdb and year_tmdb ~= '' then
+	year_tmdb = year_tmdb:match('%d%d%d%d')
+	else year_tmdb = 0 end
+	if background and background ~= nil and background ~= '' then background = 'http://image.tmdb.org/t/p/original' .. background end
+	if background == nil then background = '' end
+	return background, name_tmdb, year_tmdb, overview_tmdb
+	end
+	local background, id_imdb, name_tmdb, year_tmdb, overview_tmdb
+
+	if imdbid(kpid)
+		then
+		id_imdb, title, year = imdbid(kpid)
+		if id_imdb ~= '' then
+		background, name_tmdb, year_tmdb, overview_tmdb = bg_imdb_id(id_imdb)
+		end
+	end
+	if background and background~= ''
+		then
+		logourl = background
+		m_simpleTV.Interface.SetBackground({BackColor = 0, BackColorEnd = 255, PictFileName = background, TypeBackColor = 0, UseLogo = 3, Once = 1})
+		else
+		getlogo()
+	end
+
+	if not title or title and title == '' then title = name_tmdb or 'Кинопоиск' end
+	if not year or year and year == '' then year = year_tmdb or '' end
+	m_simpleTV.Control.CurrentTitle_UTF8 = title .. ' (' .. year .. ')'
+	m_simpleTV.Control.SetTitle(title .. ' (' .. year .. ')')
 	local function setMenu()
 		local logo_k = logourl or 'https://avatars.mds.yandex.net/get-zen-logos/200214/pub_595fb4431410c3258a91bf55_5af1c6e63dceb755566a70a2/xxh'
 		m_simpleTV.Control.ChangeChannelLogo(logo_k, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
@@ -374,11 +465,11 @@ local tname = {
 			elseif tname[i] == 'VB' then
 				turl[i] = {adr = decode64('aHR0cHM6Ly92b2lkYm9vc3QubmV0L2VtYmVkLw') .. kpid, tTitle = 'Большая база фильмов и сериалов', tLogo = logo_k}
 			elseif tname[i] == 'ZF' then
-				turl[i] = {adr = decode64('aHR0cHM6Ly9oZGkuemV0ZmxpeC5vbmxpbmUvaXBsYXllci92aWRlb2RiLnBocD9rcD0=') .. kpid, tTitle = 'Большая база фильмов и сериалов', tLogo = logo_k}				
+				turl[i] = {adr = decode64('aHR0cHM6Ly9oZGkuemV0ZmxpeC5vbmxpbmUvaXBsYXllci92aWRlb2RiLnBocD9rcD0=') .. kpid, tTitle = 'Большая база фильмов и сериалов', tLogo = logo_k}
 			end
 		end
 	end
-	local function getReting()
+--[[	local function getReting()
 			local function round(num)
 			 return tonumber(string.format('%.' .. (1 or 0) .. 'f', num))
 			end
@@ -436,18 +527,19 @@ local tname = {
 		kp_r = tonumber(tab.response.docs[1].rating_kinopoisk or '0')
 		imdb_r = tonumber(tab.response.docs[1].rating_imdb or '0')
 	 return ''
-	end
+	end--]]
 	local function menu()
 		for i = 1, #tname do
 			t[i] = {}
 			t[i].Name = tname[i]
 			t[i].answer = answerdget(turl[i].adr)
 			t[i].Address = turl[i].adr
-			if zonaDesc and zonaDesc ~= '' and title ~= '' then
-				t[i].InfoPanelTitle = zonaDesc
-				t[i].InfoPanelName = title .. ' (' .. year .. ')'
+			if background and name_tmdb and year_tmdb and overview_tmdb then
+				t[i].InfoPanelTitle = overview_tmdb
+				t[i].InfoPanelName = name_tmdb .. ' (' .. year_tmdb .. ')'
 				t[i].InfoPanelLogo = logourl or 'https://avatars.mds.yandex.net/get-zen-logos/200214/pub_595fb4431410c3258a91bf55_5af1c6e63dceb755566a70a2/xxh'
 			else
+				t[i].InfoPanelName = title .. ' (' .. year .. ')'
 				t[i].InfoPanelTitle = turl[i].tTitle
 				t[i].InfoPanelLogo = turl[i].tLogo
 			end
@@ -463,7 +555,7 @@ local tname = {
 			rett.ExtButton1 = {ButtonEnable = true, ButtonName = '🔎 Rezka'}
 
 		m_simpleTV.OSD.ShowMessageT({text = '', showTime = 1000, id = 'channelName'})
-		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('🎞 ' .. title .. getReting(), 0, rett, 8000, 1 + 2)
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('🎞 ' .. title .. ' (' .. year .. ')', 0, rett, 8000, 1 + 2)
 			if ret == 3 then
 				retAdr = 0
 			 return
@@ -476,68 +568,11 @@ local tname = {
 			selectmenu()
 		end
 	end
-	local function imdbid(kpid)
-	local url_vn = decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvc2hvcnQ/YXBpX3Rva2VuPW9TN1d6dk5meGU0SzhPY3NQanBBSVU2WHUwMVNpMGZtJmtpbm9wb2lza19pZD0=') .. kpid
-	local rc5,answer_vn = m_simpleTV.Http.Request(session,{url=url_vn})
-		if rc5~=200 then
-		return ''
-		end
-		require('json')
-		answer_vn = answer_vn:gsub('(%[%])', '"nil"')
-		local tab_vn = json.decode(answer_vn)
-		if tab_vn and tab_vn.data and tab_vn.data[1] and tab_vn.data[1].imdb_id and tab_vn.data[1].imdb_id ~= 'null' then
-		return tab_vn.data[1].imdb_id
-		else
-		return ''
-		end
-	end
-	local function bg_imdb_id(imdb_id)
-	local urld = 'https://api.themoviedb.org/3/find/' .. imdb_id .. decode64('P2FwaV9rZXk9ZDU2ZTUxZmI3N2IwODFhOWNiNTE5MmVhYWE3ODIzYWQmbGFuZ3VhZ2U9cnUmZXh0ZXJuYWxfc291cmNlPWltZGJfaWQ')
-	local rc5,answerd = m_simpleTV.Http.Request(session,{url=urld})
-	if rc5~=200 then
-		m_simpleTV.Http.Close(session)
-	return
-	end
-	require('json')
-	answerd = answerd:gsub('(%[%])', '"nil"')
-	local tab = json.decode(answerd)
-	local background, name_tmdb = '', ''
-	if not tab and (not tab.movie_results[1] or tab.movie_results[1]==nil) and not tab.movie_results[1].backdrop_path or not tab and not (tab.tv_results[1] or tab.tv_results[1]==nil) and not tab.tv_results[1].backdrop_path then background = '' else
-	if tab.movie_results[1] then
-	background = tab.movie_results[1].backdrop_path or ''
-	name_tmdb = tab.movie_results[1].title or ''
-	elseif tab.tv_results[1] then
-	background = tab.tv_results[1].backdrop_path or ''
-	name_tmdb = tab.tv_results[1].name or ''
-	end
-	end
-	if background and background ~= nil and background ~= '' then background = 'http://image.tmdb.org/t/p/original' .. background end
-	if background == nil then background = '' end
-	return background, name_tmdb
-	end
-	local background, id_imdb, name_tmdb
-	if imdbid(kpid) and imdbid(kpid) ~= ''
-		then
-		background, name_tmdb = bg_imdb_id(imdbid(kpid)) id_imdb = imdbid(kpid)
-	end
-	if background and background~= ''
-		then
-		logourl = background
-		m_simpleTV.Interface.SetBackground({BackColor = 0, BackColorEnd = 255, PictFileName = background, TypeBackColor = 0, UseLogo = 3, Once = 1})
-		else
-		getlogo()
-	end
-	getRkinopoisk()
+
+--	getRkinopoisk()
 	setMenu()
 	menu()
-	if title == '' then
-	if name_tmdb and name_tmdb ~= ''
-	then
-	title = name_tmdb
-	else
-	title = 'Кинопоиск'
-	end
-	end
+
 	if #rett == 0 then
 		m_simpleTV.Control.ExecuteAction(37)
 		m_simpleTV.Http.Close(session)
@@ -551,8 +586,8 @@ local tname = {
 		m_simpleTV.Control.PlayAddress('#' .. m_simpleTV.Common.UTF8ToMultiByte(title))
 	 return
 	end
-	m_simpleTV.Control.CurrentTitle_UTF8 = title
-	m_simpleTV.Control.SetTitle(title)
+	m_simpleTV.Control.CurrentTitle_UTF8 = title .. ' (' .. year .. ')'
+	m_simpleTV.Control.SetTitle(title .. ' (' .. year .. ')')
 	m_simpleTV.Http.Close(session)
 	m_simpleTV.Control.ExecuteAction(37)
 	m_simpleTV.Control.ChangeAddress = 'No'

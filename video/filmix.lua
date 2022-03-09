@@ -1,4 +1,4 @@
--- видеоскрипт для сайта https://filmix.ac (05/03/22)
+-- видеоскрипт для сайта https://filmix.ac (08/03/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
 -- west_side mod for lite
 -- ## авторизация ##
@@ -14,9 +14,7 @@
 -- https://filmix.ac/download/5409
 -- https://filmix.ac/download/35895
 -- ## зеркало ##
-local zer = 'https://filmix.gay'
--- '' - нет
--- 'https://filmix.tech' - (пример)
+local zer = m_simpleTV.Config.GetValue('zerkalo/filmix', 'LiteConf.ini') or ''
 -- ##
 		if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 		if not m_simpleTV.Control.CurrentAddress:match('^https?://filmix%.')
@@ -61,22 +59,30 @@ end
 			m_simpleTV.Control.CurrentAddress = retAdr
 		 return
 		end
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3809.87 Safari/537.36')
+		if not session then
+			showError('1')
+			return
+		end
+	m_simpleTV.Http.SetTimeout(session, 12000)
 	local host = inAdr:match('https?://.-/')
 		if inAdr:match('/download/') then
-			local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3809.87 Safari/537.36')
-				if not session then
-					showError('1')
-				 return
-				end
-			m_simpleTV.Http.SetTimeout(session, 12000)
+			local filmix_adr = inAdr:match('&(.-)$')
+			inAdr = inAdr:gsub('&.-$','')
+		local res, login, password, header = xpcall(function() require('pm') return pm.GetPassword('filmix') end, err)
+		if not login or not password or login == '' or password == '' then
+			login = decode64('bWV2YWxpbA')
+			password = decode64('bTEyMzQ1Ng')
+		end
+
+			local rc, answer = m_simpleTV.Http.Request(session, {body = 'login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login=submit', url = host, method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. host})
 			local rc, answer = m_simpleTV.Http.Request(session, {url = inAdr})
-			m_simpleTV.Http.Close(session)
 				if rc ~= 200 then
 					showError('2')
 				 return
 				end
 			answer = m_simpleTV.Common.multiByteToUTF8(answer)
-			local title, year = answer:match('<h1>Скачать бесплатно (.-), (%d+)<')
+			local title, year = answer:match('<h1>Скачать бесплатно (.-)%, (%d+)<')
 			title = title:gsub('<span class="title">','')
 			if not year then year = 0 end
 			local videodesc, background = info_fox(title,year,'')
@@ -112,15 +118,18 @@ end
 					showError('3')
 				 return
 				end
-			if i > 2 then
-				local _, id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите торрент', 0, t, 5000, 1)
+
+                local retAdr
+				if filmix_adr then
+					t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Filmix ', ButtonScript = 'm_simpleTV.Control.PlayAddress(\'' .. filmix_adr .. '\')'}
+				end
+	            t.ExtButton1 = {ButtonEnable = true, ButtonName = ' Portal ', ButtonScript = 'run_lite_qt_filmix()'}
+				local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите торрент', 0, t, 5000, 32+64+128)
 				if not id then id = 1 end
-				inAdr = t[id].Address
-			else
-				inAdr = t[1].Address
-			end
-			inAdr = 'torrent://' .. inAdr:gsub('https://', 'http://')
-			m_simpleTV.Control.CurrentAddress = inAdr
+				retAdr = t[id].Address
+
+			retAdr = 'torrent://' .. retAdr:gsub('https://', 'http://')
+			m_simpleTV.Control.CurrentAddress = retAdr
 			m_simpleTV.Control.CurrentTitle_UTF8 = title
 			if m_simpleTV.Control.MainMode == 0 then
 				m_simpleTV.Control.ChangeChannelName(title, m_simpleTV.Control.ChannelID, false)
@@ -359,12 +368,7 @@ end
 		 return
 		end
 	inAdr = inAdr:gsub('&kinopoisk', '')
-	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; rv:97.0) Gecko/20100101 Firefox/97.0')
-		if not session then
-			showError('5')
-		 return
-		end
-	m_simpleTV.Http.SetTimeout(session, 16000)
+
 	m_simpleTV.User.filmix.Tabletitle = nil
 	local id = inAdr:match('/(%d+)')
 		if not id then
@@ -377,16 +381,9 @@ end
 			login = decode64('bWV2YWxpbA')
 			password = decode64('bTEyMzQ1Ng')
 		end
-		if login and password then
-			local url1
-			if host:match('filmix%.tech') then
-				url1 = host
-			else
-				url1 = host .. 'engine/ajax/user_auth.php'
-			end
-			local url1 = host
-			local rc, answer = m_simpleTV.Http.Request(session, {body = 'login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login=submit', url = url1, method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. host})
-		end
+
+			local rc, answer = m_simpleTV.Http.Request(session, {body = 'login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login=submit', url = host, method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. host})
+
 ---------------
 		rc,answer = m_simpleTV.Http.Request(session,{url=inAdr})
 		if rc ~= 200 then
@@ -483,9 +480,17 @@ end
 	ts[j].InfoPanelName = 'Filmix медиаконтент: ' .. name
 	j=j+1
 	end
+-------------TabTorrent
+	local tor = answer:match('href="(' .. host .. 'download/%d+)">')
+	if tor then
+	ts[j] = {}
+	ts[j].Id = j
+	ts[j].Name = 'Filmix torrent'
+	ts[j].Address = tor .. '&' .. inAdr
+	end
 	m_simpleTV.User.filmix.TabSimilar = ts
 --------------
---	local tor = answer:match('href="(https://filmix%.ac/download/%d+)">')
+
 	local playerjs_url = answer:match('(modules/playerjs/[^\'"]+)')
 		if not playerjs_url then
 			showError('playerjs not found')
@@ -501,12 +506,25 @@ end
 		end
 	m_simpleTV.Http.Request(session, {url = host .. 'api/notifications/get',
 	method = 'post', headers = 'X-Requested-With: XMLHttpRequest\nReferer: ' .. inAdr, body = 'page=1'})
-	local tr = answer0:match('"video"(.-)}')
+	local tr
+	if answer0:match('"video":%[%]')
+	then tr = answer0:match('"trailers"(.-)}')
+	else tr	= answer0:match('"video"(.-)}')
+	end
 		if not tr then
-			m_simpleTV.Http.Close(session)
-			showError('10')
-		 return
-		end
+		local t1 = {}
+		t1[1] = {}
+		t1[1].Id = 1
+		t1[1].Name = title
+		t1[1].Address = inAdr
+		t1[1].InfoPanelName = title
+		t1[1].InfoPanelShowTime = 20000
+		t1[1].InfoPanelLogo = poster
+		t1[1].InfoPanelTitle = overview
+		t1[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'Видео недоступно', color = ARGB(255, 255, 255, 255), showTime = 1000 * 60})
+		similar_filmix()
+		else
 	local t, i, current_p = {}, 1
 	local name, Adr, current_p
 		for name, Adr in tr:gmatch('"(.-)":"(.-)"') do
@@ -520,12 +538,7 @@ end
 		end
 
 		m_simpleTV.User.filmix.TabPerevod = t
---[[		if tor then
-		t[i+1] = {}
-		t[i+1].Id = i+1
-		t[i+1].Name = 'torrent'
-		t[i+1].Address = tor
-		end--]]
+
 		if i == 1 then
 			showError('11')
 		 return
@@ -686,5 +699,6 @@ end
 		t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🧾 Теги ', ButtonScript = 'similar_filmix()'}
 		m_simpleTV.OSD.ShowSelect_UTF8('Filmix', 0, t1, 5000, 32 + 64 + 128)
 		m_simpleTV.User.filmix.isVideo = true
+	end
 	end
 	play(inAdr, title)

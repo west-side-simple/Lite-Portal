@@ -1,27 +1,21 @@
 -- ##
--- автор west_side 16/02/2022
+-- автор west_side 08/03/2022
 -- мультипоиск для сайта https://filmix.ac
 -- открывает ссылки типа ?паркер
 -- ##
 if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 local inAdr =  m_simpleTV.Control.CurrentAddress
--- ## зеркало ##
-local zer = 'https://filmix.gay'
--- '' - нет
--- 'https://filmix.tech' - (пример)
--- ##
-local filmixsite = 'https://filmix.ac'
-if zer ~= '' then
-	inAdr = inAdr:gsub('https?://filmix%..-/', zer .. '/')
-end
 if not string.match( inAdr, '^?.-$' ) then return end
+
+local filmixsite = m_simpleTV.Config.GetValue('zerkalo/filmix', 'LiteConf.ini') or 'https://filmix.ac'
+
 m_simpleTV.Control.ChangeAddress='Yes'
 m_simpleTV.Control.CurrentAddress = 'error'
 local InfoPanelTitle, InfoPanelDesc = '', ''
 local userAgent = "Mozilla/5.0 (Windows NT 10.0; rv:85.0) Gecko/20100101 Firefox/85.0"
-local sessionFilmix =  m_simpleTV.Http.New(userAgent)
-if not sessionFilmix then return end
-m_simpleTV.Http.SetTimeout(sessionFilmix, 60000)
+local session =  m_simpleTV.Http.New(userAgent)
+if not session then return end
+m_simpleTV.Http.SetTimeout(session, 60000)
 
 local search = m_simpleTV.Common.multiByteToUTF8(inAdr:gsub('^?', ''), 1251)
 local logo = 'https://filmix.ac/templates/Filmix/media/img/favicon.ico'
@@ -39,8 +33,8 @@ local logo = 'https://filmix.ac/templates/Filmix/media/img/favicon.ico'
 			local filmixurl = filmixsite .. '/search'
 			local headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. filmixurl
 			local body = 'scf=fx&story=' .. m_simpleTV.Common.toPercentEncoding(search) .. '&search_start=0&do=search&subaction=search&years_ot=&years_do=&kpi_ot=&kpi_do=&imdb_ot=&imdb_do=&sort_name=asc&undefined=asc&sort_date=&sort_favorite='
-			local rc, answer = m_simpleTV.Http.Request(sessionFilmix, {body = body, url = filmixsite .. '/engine/ajax/sphinx_search.php', method = 'post', headers = headers})
-			m_simpleTV.Http.Close(sessionFilmix)
+			local rc, answer = m_simpleTV.Http.Request(session, {body = body, url = filmixsite .. '/engine/ajax/sphinx_search.php', method = 'post', headers = headers})
+			m_simpleTV.Http.Close(session)
 					local otvet = answer:match('<article.-<script>') or ''
 					local i, t = 1, {}
 					for w in otvet:gmatch('<article.-</article>') do
@@ -64,36 +58,27 @@ local logo = 'https://filmix.ac/templates/Filmix/media/img/favicon.ico'
 				 return
 				end
 		m_simpleTV.Http.SetTimeout(session, 600000)
-		local url_search = 'https://filmix.ac/persons/search/' .. search
+		local url_search = filmixsite .. '/persons/search/' .. search
 		local rc, answer = m_simpleTV.Http.Request(session, {url = url_search})
 
 					if rc ~= 200 then
-					m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please', color = ARGB(255, 127, 63, 255), showTime = 1000 * 30})
-					m_simpleTV.Common.Sleep(60000)
-					rc, answer = m_simpleTV.Http.Request(session, {url = url_search})
-					if rc ~= 200
-					then
-					m_simpleTV.Common.Sleep(60000)
-					rc, answer = m_simpleTV.Http.Request(session, {url = url_search})
-					if rc ~= 200
-					then
-					m_simpleTV.Common.Sleep(60000)
-					rc, answer = m_simpleTV.Http.Request(session, {url = url_search})
-					if rc ~= 200
-					then
-					m_simpleTV.Common.Sleep(60000)
-					rc, answer = m_simpleTV.Http.Request(session, {url = url_search})
-					if rc ~= 200
-					then
-					m_simpleTV.Common.Sleep(60000)
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/0.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.Common.Sleep(5000)
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/1.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.Common.Sleep(5000)
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/2.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.Common.Sleep(5000)
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/3.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.Common.Sleep(5000)
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/4.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.Common.Sleep(5000)
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/5.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
+		m_simpleTV.Common.Sleep(5000)
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/6.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
 					rc, answer = m_simpleTV.Http.Request(session, {url = url_search})
 					if rc ~= 200
 					then
 					m_simpleTV.Control.ExecuteAction(63)
-					end
-					end
-					end
-					end
 					end
 					end
 
