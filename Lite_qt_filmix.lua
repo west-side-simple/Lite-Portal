@@ -836,13 +836,36 @@ function search_filmix_media()
 					if not logo or not adr or not name then break end
 							t[i] = {}
 							t[i].Id = i
-							t[i].Address = adr
+							t[i].Address = adr							
+							if adr:match('filmi/') then name = name .. ' - Кино'
+							elseif adr:match('seria/') then name = name .. ' - Сериал'
+							elseif adr:match('multserialy/') then name = name .. ' - Мультсериал'
+							elseif adr:match('mults/') then name = name .. ' - Мультфильм'
+							end
 							t[i].Name = name
 							t[i].InfoPanelLogo = logo:gsub('/orig/','/thumbs/w220/')
 							t[i].InfoPanelName = name
 							t[i].InfoPanelShowTime = 30000
 					i = i + 1
 					end
+------------------------
+			rc, answer = m_simpleTV.Http.Request(session, {url = filmixsite .. '/persons/search/' .. search_ini})
+					answer = m_simpleTV.Common.multiByteToUTF8(answer)
+					answer = answer:gsub('\n', ' ')
+	
+					for w in answer:gmatch('<div class="short">.-</a></h2>') do							
+					local sim_adr, sim_img, sim_name = w:match('href="(.-)".-img src="(.-)".-<h2 class="name" itemprop="name"><a href=".-">(.-)</a></h2>')
+					if not sim_adr or not sim_name then break end					
+							t[i] = {}
+							t[i].Id = i
+							t[i].Address = sim_adr
+							t[i].Name = sim_name .. ' - Персона'
+							t[i].InfoPanelLogo = sim_img
+							t[i].InfoPanelName = sim_name
+							t[i].InfoPanelShowTime = 30000
+					i = i + 1
+					end
+------------------------					
 	local AutoNumberFormat, FilterType
 			if #t > 4 then
 				AutoNumberFormat = '%1. %2'
@@ -861,8 +884,12 @@ function search_filmix_media()
 			return
 		end
 		if ret == 1 then
-			m_simpleTV.Control.ExecuteAction(37)
-			m_simpleTV.Control.PlayAddress(t[id].Address)
+			if t[id].Name:match(' %- Персона') then
+				person_content_filmix(t[id].Address)	
+			else
+				m_simpleTV.Control.ExecuteAction(37)
+				m_simpleTV.Control.PlayAddress(t[id].Address)
+			end
 		end
 		if ret == 3 then
 			search()
