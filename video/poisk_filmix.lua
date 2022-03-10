@@ -103,85 +103,85 @@ local logo = 'https://filmix.ac/templates/Filmix/media/img/favicon.ico'
 	end
 
 	local function findpersonwork(url_person)
-		local session1 = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36', prx, false)
-				if not session1 then
+		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36', prx, false)
+				if not session then
 				 return
 				end
-					m_simpleTV.Http.SetTimeout(session1, 60000)
-					local rc, answer = m_simpleTV.Http.Request(session1, {url = url_person})
+					m_simpleTV.Http.SetTimeout(session, 60000)
+					local rc, answer = m_simpleTV.Http.Request(session, {url = url_person})
 					local k = 0
 
 					if rc ~= 200 then
 					k = k + 1
 					m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please ' .. k, color = ARGB(255, 127, 63, 255), showTime = 1000 * 10})
-					m_simpleTV.Http.Close(session1)
+					m_simpleTV.Http.Close(session)
 					m_simpleTV.Common.Sleep(120000)
-					local session1 = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36', prx, false)
-					if not session1 then
+					local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36', prx, false)
+					if not session then
 						return
 					end
-					m_simpleTV.Http.SetTimeout(session1, 60000)
-					rc, answer = m_simpleTV.Http.Request(session1, {url = url_person})
+					m_simpleTV.Http.SetTimeout(session, 60000)
+					rc, answer = m_simpleTV.Http.Request(session, {url = url_person})
 					if rc ~= 200
 					then
 					k = k + 1
 					m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please ' .. k, color = ARGB(255, 127, 63, 255), showTime = 1000 * 10})
-					m_simpleTV.Http.Close(session1)
+					m_simpleTV.Http.Close(session)
 					m_simpleTV.Common.Sleep(120000)
-					local session1 = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36', prx, false)
-					if not session1 then
+					local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36', prx, false)
+					if not session then
 						return
 					end
-					m_simpleTV.Http.SetTimeout(session1, 60000)
-					rc, answer = m_simpleTV.Http.Request(session1, {url = url_person})
+					m_simpleTV.Http.SetTimeout(session, 60000)
+					rc, answer = m_simpleTV.Http.Request(session, {url = url_person})
 					if rc ~= 200
 					then
 					k = k + 1
 					m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please ' .. k, color = ARGB(255, 127, 63, 255), showTime = 1000 * 10})
-					m_simpleTV.Http.Close(session1)
+					m_simpleTV.Http.Close(session)
 					m_simpleTV.Common.Sleep(120000)
-					local session1 = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36', prx, false)
-					if not session1 then
+					local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36', prx, false)
+					if not session then
 						return
 					end
-					m_simpleTV.Http.SetTimeout(session1, 60000)
-					rc, answer = m_simpleTV.Http.Request(session1, {url = url_person})
+					m_simpleTV.Http.SetTimeout(session, 60000)
+					rc, answer = m_simpleTV.Http.Request(session, {url = url_person})
 					if rc ~= 200
 					then
 					k = k + 1
 					m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please ' .. k, color = ARGB(255, 127, 63, 255), showTime = 1000 * 10})
-					m_simpleTV.Http.Close(session1)
+					m_simpleTV.Http.Close(session)
 					m_simpleTV.Common.Sleep(120000)
-					local session1 = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36', prx, false)
-					if not session1 then
+					local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36', prx, false)
+					if not session then
 						return
 					end
-					m_simpleTV.Http.SetTimeout(session1, 60000)
-					rc, answer = m_simpleTV.Http.Request(session1, {url = url_person})
+					m_simpleTV.Http.SetTimeout(session, 60000)
+					rc, answer = m_simpleTV.Http.Request(session, {url = url_person})
 					if rc ~= 200
 					then
 					k = k + 1
 					m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please ' .. k, color = ARGB(255, 127, 63, 255), showTime = 1000 * 10})
-					m_simpleTV.Http.Close(session1)
+					m_simpleTV.Http.Close(session)
 					m_simpleTV.Common.Sleep(120000)
-					local session1 = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36', prx, false)
-					if not session1 then
+					local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36', prx, false)
+					if not session then
 						return
 					end
-					m_simpleTV.Http.SetTimeout(session1, 60000)
-					rc, answer = m_simpleTV.Http.Request(session1, {url = url_person})
+					m_simpleTV.Http.SetTimeout(session, 60000)
+					rc, answer = m_simpleTV.Http.Request(session, {url = url_person})
 					if rc ~= 200
 					then
 					k = k + 1
 					m_simpleTV.OSD.ShowMessageT({text = ' ... one moment please ' .. k, color = ARGB(255, 127, 63, 255), showTime = 1000 * 10})
-					m_simpleTV.Http.Close(session1)
+					m_simpleTV.Http.Close(session)
 					m_simpleTV.Common.Sleep(120000)
-					local session1 = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36', prx, false)
-					if not session1 then
+					local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36', prx, false)
+					if not session then
 						return
 					end
-					m_simpleTV.Http.SetTimeout(session1, 60000)
-					rc, answer = m_simpleTV.Http.Request(session1, {url = url_person})
+					m_simpleTV.Http.SetTimeout(session, 60000)
+					rc, answer = m_simpleTV.Http.Request(session, {url = url_person})
 					if rc ~= 200
 					then
 					m_simpleTV.Control.ExecuteAction(63)
@@ -211,7 +211,7 @@ local logo = 'https://filmix.ac/templates/Filmix/media/img/favicon.ico'
 							sim[i].InfoPanelShowTime = 30000
 	i = i + 1
 	end
-	m_simpleTV.Http.Close(session1)
+	m_simpleTV.Http.Close(session)
 		return sim, i-1
 	end
 
@@ -244,6 +244,7 @@ function menu1()
 		end
 		if ret == 2 then
 			search = '=' .. m_simpleTV.Common.UTF8ToMultiByte(search)
+			m_simpleTV.Control.PlayAddress(search)
 		end
 		if ret == 3 then
 			menu1()
@@ -296,6 +297,7 @@ function menu1()
 
 		if ret == 2 then
 		search = '=' .. m_simpleTV.Common.UTF8ToMultiByte(search)
+		m_simpleTV.Control.PlayAddress(search)
 		end
 
 	if ret == 1 then

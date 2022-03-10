@@ -20,7 +20,7 @@
 
 	local function getadr(imdbid)
 
-	local url_vn = decode64('aHR0cHM6Ly8zOC5zdmV0YWNkbi5pbi9mblhPVURCOW5OU08vbW92aWUvMjc4OD9pbWRiX2lkPQ==') .. imdbid
+	local url_vn = decode64('aHR0cHM6Ly84MjA5LnN2ZXRhY2RuLmluL1BYazJRR2J2RVZtUz9pbWRiX2lkPQ==') .. imdbid
 	local rc5,answer_vn = m_simpleTV.Http.Request(session,{url=url_vn})
 		if rc5~=200 then
 		return ''
@@ -51,7 +51,9 @@
 	end
 
 local function find_movie(title)
-
+local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3809.87 Safari/537.36')
+		if not session then return end
+		m_simpleTV.Http.SetTimeout(session, 12000)
 local urld = decode64('aHR0cHM6Ly9hcGkudGhlbW92aWVkYi5vcmcvMy9zZWFyY2gvbW92aWU/YXBpX2tleT1kNTZlNTFmYjc3YjA4MWE5Y2I1MTkyZWFhYTc4MjNhZCZsYW5ndWFnZT1ydSZleHRlcm5hbF9zb3VyY2U9aW1kYl9pZCZxdWVyeT0=') .. m_simpleTV.Common.toPercentEncoding(title)
 local rc1,answerd = m_simpleTV.Http.Request(session,{url=urld})
 if rc1~=200 then
@@ -560,13 +562,13 @@ if id == '9309' then logo_c ='https://www.themoviedb.org/t/p/original/koiG0RZgrv
     t[i] = {}
     t[i].Id = i
 	if i == 1 then
-    t[i].Name = tt[i][1] .. ' (' .. nm1 .. ')'
+    t[i].Name = tt[i][1] .. ' (' .. (nm1 or 0) .. ')'
 	elseif i == 2 then
-    t[i].Name = tt[i][1] .. ' (' .. nm2 .. ')'
+    t[i].Name = tt[i][1] .. ' (' .. (nm2 or 0) .. ')'
 	elseif i == 3 then
-    t[i].Name = tt[i][1] .. ' (' .. nm3 .. ')'
+    t[i].Name = tt[i][1] .. ' (' .. (nm3 or 0) .. ')'
 	elseif i == 4 then
-    t[i].Name = tt[i][1] .. ' (' .. nm5 .. ')'
+    t[i].Name = tt[i][1] .. ' (' .. (nm5 or 0) .. ')'
 	end
     t[i].Action = tt[i][2]
 	t[i].InfoPanelLogo = tt[i][3]
