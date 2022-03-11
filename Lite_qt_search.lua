@@ -1,4 +1,4 @@
--- Плагин поиска для lite portal - west_side 24.02.22
+-- Плагин поиска для lite portal - west_side 11.03.22
 -- необходимы скрипты Lite_qt_exfs.lua, ex-fs.lua, Lite_qt_tmdb.lua, Lite_qt_kinopub.lua, Lite_qt_filmix.lua - автор west_side
 
 function search()
@@ -230,6 +230,7 @@ function search_media()
 			search_all()
 		end
 		else
+			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'EX-FS: Медиаконтент не найден', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
 			search_all()
 		end
 end
@@ -316,6 +317,7 @@ function search_rezka()
 			search_all()
 		end
 		else
+			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'Rezka: Медиаконтент не найден', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
 			search_all()
 		end
 	end
@@ -412,6 +414,106 @@ function search_youtube()
 			search_all()
 		end
 		else
+			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'Youtube: Медиаконтент не найден', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
+			search_all()
+		end
+end
+
+function search_filmix_media()
+	local function getConfigVal(key)
+		return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
+	end
+
+	local function setConfigVal(key,val)
+		m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
+	end
+	local filmixsite = m_simpleTV.Config.GetValue('zerkalo/filmix', 'LiteConf.ini') or 'https://filmix.ac'
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
+		if not session then return end
+	m_simpleTV.Http.SetTimeout(session, 8000)
+
+	local search_ini = getConfigVal('search/media') or ''
+	local title1 = 'Поиск медиа: ' .. m_simpleTV.Common.fromPercentEncoding(search_ini)
+	if not m_simpleTV.Control.CurrentAdress then
+		m_simpleTV.Control.SetTitle(title1)
+	end
+
+			local filmixurl = filmixsite .. '/search'
+			local headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. filmixurl
+			local body = 'scf=fx&story=' .. search_ini .. '&search_start=0&do=search&subaction=search&years_ot=&years_do=&kpi_ot=&kpi_do=&imdb_ot=&imdb_do=&sort_name=asc&undefined=asc&sort_date=&sort_favorite='
+			local rc, answer = m_simpleTV.Http.Request(session, {body = body, url = filmixsite .. '/engine/ajax/sphinx_search.php', method = 'post', headers = headers})
+--			m_simpleTV.Http.Close(session)
+
+					local otvet = answer:match('<article.-<script>') or ''
+					local i, t = 1, {}
+					for w in otvet:gmatch('<article.-</article>') do
+					local logo, name, adr = w:match('<a class="fancybox" href="(.-)".-alt="(.-)".-<a class="watch icon%-play" itemprop="url" href="(.-)"')
+					if not logo or not adr or not name then break end
+							t[i] = {}
+							t[i].Id = i
+							t[i].Address = adr
+							if adr:match('filmi/') then name = name .. ' - Кино'
+							elseif adr:match('seria/') then name = name .. ' - Сериал'
+							elseif adr:match('multserialy/') then name = name .. ' - Мультсериал'
+							elseif adr:match('mults/') then name = name .. ' - Мультфильм'
+							end
+							t[i].Name = name
+							t[i].InfoPanelLogo = logo:gsub('/orig/','/thumbs/w220/')
+							t[i].InfoPanelName = name
+							t[i].InfoPanelShowTime = 30000
+					i = i + 1
+					end
+------------------------
+			rc, answer = m_simpleTV.Http.Request(session, {url = filmixsite .. '/persons/search/' .. search_ini})
+					answer = m_simpleTV.Common.multiByteToUTF8(answer)
+					answer = answer:gsub('\n', ' ')
+
+					for w in answer:gmatch('<div class="short">.-</a></h2>') do
+					local sim_adr, sim_img, sim_name = w:match('href="(.-)".-img src="(.-)".-<h2 class="name" itemprop="name"><a href=".-">(.-)</a></h2>')
+					if not sim_adr or not sim_name then break end
+							t[i] = {}
+							t[i].Id = i
+							t[i].Address = sim_adr
+							t[i].Name = sim_name .. ' - Персона'
+							t[i].InfoPanelLogo = sim_img
+							t[i].InfoPanelName = sim_name
+							t[i].InfoPanelShowTime = 30000
+					i = i + 1
+					end
+------------------------
+	local AutoNumberFormat, FilterType
+			if #t > 4 then
+				AutoNumberFormat = '%1. %2'
+				FilterType = 1
+			else
+				AutoNumberFormat = ''
+				FilterType = 2
+			end
+
+		t.ExtParams = {FilterType = FilterType, AutoNumberFormat = AutoNumberFormat}
+		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🔎 Меню '}
+		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔎 Поиск '}
+		if #t > 0 then
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('Найдено Filmix: ' .. m_simpleTV.Common.fromPercentEncoding(search_ini) .. ' (' .. #t .. ')', 0, t, 30000, 1+4+8+2)
+		if ret == -1 or not id then
+			return
+		end
+		if ret == 1 then
+			if t[id].Name:match(' %- Персона') then
+				person_content_filmix(t[id].Address)
+			else
+				m_simpleTV.Control.ExecuteAction(37)
+				m_simpleTV.Control.PlayAddress(t[id].Address)
+			end
+		end
+		if ret == 3 then
+			search()
+		end
+		if ret == 2 then
+			search_all()
+		end
+		else
+			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'Filmix: Медиаконтент не найден', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
 			search_all()
 		end
 end
