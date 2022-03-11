@@ -1,4 +1,4 @@
--- видеоскрипт для сайта https://filmix.ac (08/03/22)
+-- видеоскрипт для сайта https://filmix.ac (11/03/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
 -- west_side mod for lite
 -- ## авторизация ##
@@ -522,7 +522,7 @@ end
 		t1[1].InfoPanelLogo = poster
 		t1[1].InfoPanelTitle = overview
 		t1[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
-		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'Видео недоступно', color = ARGB(255, 255, 255, 255), showTime = 1000 * 60})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'Видео недоступно', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
 		similar_filmix()
 		else
 	local t, i, current_p = {}, 1
