@@ -323,6 +323,51 @@ function search_rezka()
 	end
 
 function search_youtube()
+	local function getConfigVal(key)
+		return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
+	end
+	local function setConfigVal(key,val)
+		m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
+	end
+	local search_ini = getConfigVal('search/media') or ''
+	local title1 = 'Поиск YouTube: ' .. m_simpleTV.Common.fromPercentEncoding(search_ini)
+	if not m_simpleTV.Control.CurrentAdress then
+		m_simpleTV.Control.SetTitle(title1)
+	end
+	local tt = {
+	{'video','watch?v=','','видео'},
+	{'playlist','playlist?list=','','плейлист'},
+	{'channel','channel/','','канал'},
+	{'video','watch?v=','&eventType=live','прямой эфир'},
+	{'video&videoDimension=2d','watch?v=','','2D видео'},
+	}
+	local t = {}
+	for i = 1,#tt do
+	t[i] = {}
+    t[i].Id = i
+    t[i].Name = tt[i][4]
+	t[i].types = tt[i][1]
+	t[i].urlyoutube = tt[i][2]
+	t[i].eventType = tt[i][3]
+	t[i].Action = ''
+  end
+  t.ExtButton1 = {ButtonEnable = true, ButtonName = ' Portal '}
+  t.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🔎 Меню '}
+  local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Поиск YouTube: ' .. m_simpleTV.Common.fromPercentEncoding(search_ini),0,t,9000,1+4+8)
+  if id==nil then return end
+
+  if ret==1 then
+	search_youtube_item(t[id].types, t[id].urlyoutube, t[id].eventType, t[id].Name)
+  end
+  if ret==2 then
+	search_all()
+  end
+  if ret==3 then
+	run_westSide_portal()
+  end
+end
+
+function search_youtube_item(types, urlyoutube, eventType, header)
 -- west_side code
 	local function getConfigVal(key)
 		return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
@@ -331,7 +376,7 @@ function search_youtube()
 		m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
 	end
 	local search_ini = getConfigVal('search/media') or ''
-	local title1 = 'Поиск медиа: ' .. m_simpleTV.Common.fromPercentEncoding(search_ini)
+	local title1 = 'Поиск ' .. header .. ': ' .. m_simpleTV.Common.fromPercentEncoding(search_ini)
 	if not m_simpleTV.Control.CurrentAdress then
 		m_simpleTV.Control.SetTitle(title1)
 	end
@@ -370,9 +415,7 @@ function search_youtube()
 			m_simpleTV.User.Ytube.ApiKeyHeader = decode64('UmVmZXJlcjpodHRwczovL25leHRlcnItc2ltcGxldHYucnU=')
 		end
 	end
-	local types, urlyoutube, header = 'video','watch?v=','видео'
-	local eventType = ''
-	local url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q=' .. search_ini .. '&type=' .. types .. '&fields=items/id,items/snippet/title&maxResults=50' .. eventType .. '&key='
+	local url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q=' .. search_ini .. '&type=' .. types .. '&fields=items/id,items/snippet/title,items/snippet/thumbnails/default/url,items/snippet/description,items/snippet/liveBroadcastContent,items/snippet/channelTitle&maxResults=50' .. eventType .. '&key='
 	local rc, answer = m_simpleTV.Http.Request(session, {url = url .. m_simpleTV.User.Ytube.ApiKey, headers = m_simpleTV.User.Ytube.ApiKeyHeader})
 	m_simpleTV.Http.Close(session)
 		if rc ~= 200 then return end
@@ -385,6 +428,10 @@ function search_youtube()
 			t[i].Id = i
 			t[i].Name = tab.items[i].snippet.title:gsub('%&quot%;','"')
 			t[i].Adress = 'https://www.youtube.com/' .. urlyoutube .. (tab.items[i].id.videoId or tab.items[i].id.playlistId or tab.items[i].id.channelId)
+			t[i].InfoPanelLogo = tab.items[i].snippet.thumbnails.default.url:gsub('/default','/hqdefault')
+			t[i].InfoPanelName = tab.items[i].snippet.channelTitle .. ' | ' .. tab.items[i].snippet.title:gsub('%&quot%;','"')
+			t[i].InfoPanelTitle = tab.items[i].snippet.description
+			t[i].InfoPanelShowTime = 10000
 			i = i + 1
 		end
 -- west_side code
@@ -398,9 +445,9 @@ function search_youtube()
 			end
 		t.ExtParams = {FilterType = FilterType, AutoNumberFormat = AutoNumberFormat}
 		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🔎 Меню '}
-		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔎 Поиск '}
+		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔎 Youtube '}
 		if #t > 0 then
-		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('Найдено Youtube: ' .. m_simpleTV.Common.fromPercentEncoding(search_ini) .. ' (' .. #t .. ')', 0, t, 30000, 1+4+8+2)
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('Youtube' .. header .. ': ' .. m_simpleTV.Common.fromPercentEncoding(search_ini) .. ' (' .. #t .. ')', 0, t, 30000, 1+4+8+2)
 		if ret == -1 or not id then
 			return
 		end
@@ -408,14 +455,14 @@ function search_youtube()
 			m_simpleTV.Control.PlayAddress(t[id].Adress)
 		end
 		if ret == 3 then
-			search()
+			search_youtube()
 		end
 		if ret == 2 then
 			search_all()
 		end
 		else
-			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'Youtube: Медиаконтент не найден', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
-			search_all()
+			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'Youtube ' .. header .. ': Медиаконтент не найден', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
+			search_youtube()
 		end
 end
 
