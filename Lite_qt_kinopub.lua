@@ -174,6 +174,7 @@ function show_select(inAdr)
 	if title1:match('Авторизоваться') then 
 	m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="https://cdn.service-kp.com/logo.png"', text = 'Kinopub: Вы не авторизованы', color = ARGB(255, 255, 255, 255), showTime = 1000 * 60})
 	run_lite_qt_kinopub() return end
+	if #t > 0 then
 	local ret, id = m_simpleTV.OSD.ShowSelect_UTF8(title1, 0, t, 30000, 1 + 4 + 8 + 2)
 	if ret == -1 or not id then
 		 return
@@ -197,7 +198,10 @@ function show_select(inAdr)
 	end
 	end
 	if ret == 3 then show_select('https://kino.pub' .. next_pg:gsub('&amp;','&')) end
-
+	else
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'Kinopub: Медиаконтент не найден', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
+		search_all()
+	end
 end
 
 function show_selection(inAdr)

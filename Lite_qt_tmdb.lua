@@ -1,4 +1,4 @@
---TMDb portal - lite version west_side 23.02.22
+--TMDb portal - lite version west_side 11.03.22
 
 local function find_movie(title)
 local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
@@ -1269,39 +1269,59 @@ local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; r
 	{"Коллекции","","./luaScr/user/show_mi/IconCollection.png",""},
 	}
 
-	local t={}
+	local t, k = {}, 1
   for i=1,#tt do
-    t[i] = {}
-    t[i].Id = i
-	if i == 1 then
-    t[i].Name = tt[i][1] .. ' (' .. nm1 .. ')'
-	elseif i == 2 then
-    t[i].Name = tt[i][1] .. ' (' .. nm2 .. ')'
-	elseif i == 3 then
-    t[i].Name = tt[i][1] .. ' (' .. nm3 .. ')'
-	elseif i == 4 then
-    t[i].Name = tt[i][1] .. ' (' .. nm4 .. ')'
+    t[k] = {}
+	if i == 1 and tonumber(nm1) > 0 then
+    t[k].Id = k
+    t[k].Name = tt[i][1] .. ' (' .. nm1 .. ')'
+	t[k].Action = tt[i][1]
+	t[k].InfoPanelLogo = tt[i][3]
+	t[k].InfoPanelTitle = tt[i][4]
+	t[k].InfoPanelShowTime = 12000
+	k = k + 1
+	elseif i == 2 and tonumber(nm2) > 0 then
+    t[k].Id = k
+    t[k].Name = tt[i][1] .. ' (' .. nm2 .. ')'
+	t[k].Action = tt[i][1]
+	t[k].InfoPanelLogo = tt[i][3]
+	t[k].InfoPanelTitle = tt[i][4]
+	t[k].InfoPanelShowTime = 12000
+	k = k + 1
+	elseif i == 3 and tonumber(nm3) > 0 then
+    t[k].Id = k
+    t[k].Name = tt[i][1] .. ' (' .. nm3 .. ')'
+	t[k].Action = tt[i][1]
+	t[k].InfoPanelLogo = tt[i][3]
+	t[k].InfoPanelTitle = tt[i][4]
+	t[k].InfoPanelShowTime = 12000
+	k = k + 1
+	elseif i == 4 and tonumber(nm4) > 0 then
+    t[k].Id = k
+    t[k].Name = tt[i][1] .. ' (' .. nm4 .. ')'
+	t[k].Action = tt[i][1]
+	t[k].InfoPanelLogo = tt[i][3]
+	t[k].InfoPanelTitle = tt[i][4]
+	t[k].InfoPanelShowTime = 12000
+	k = k + 1
 	end
-    t[i].Action = tt[i][2]
-	t[i].InfoPanelLogo = tt[i][3]
-	t[i].InfoPanelTitle = tt[i][4]
-	t[i].InfoPanelShowTime = 12000
+	i = i + 1
   end
 	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🔎 Меню '}
 	t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔎 Поиск '}
+	if k > 1 then
     local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('🔎 Выберите категорию поиска: ' .. tmdb_search,0,t,10000,1+4+8+2)
-		if ret == -1 or not id then
+	if ret == -1 or not id then
 		 return
-		end
-		if ret == 2 then
+	end
+	if ret == 2 then
 		search_all()
-		end
-		if ret == 3 then
+	end
+	if ret == 3 then
 		search()
-		end
-  if ret == 1 then
-
-	if id == 1 then
+	end
+	if ret == 1 then
+	if t[id].Action == "Фильмы" then
 	if tonumber(nm1) == 0 then search_tmdb() end
 	t1.ExtButton1 = {ButtonEnable = true, ButtonName = '✕'}
 	t1.ExtButton0 = {ButtonEnable = true, ButtonName = '🢀'}
@@ -1315,8 +1335,7 @@ local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; r
 		if ret == 1 then
 			media_info_tmdb(t1[id].Address,0)
 		end
-
-	elseif id == 2 then
+	elseif t[id].Action == "Сериалы" then
 	if tonumber(nm2) == 0 then search_tmdb() end
 	t2.ExtButton1 = {ButtonEnable = true, ButtonName = '✕'}
 	t2.ExtButton0 = {ButtonEnable = true, ButtonName = '🢀'}
@@ -1330,8 +1349,7 @@ local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; r
 		if ret == 1 then
 			media_info_tmdb(t2[id].Address,1)
 		end
-
-	elseif id == 3 then
+	elseif t[id].Action == "Персоны" then
 	if tonumber(nm3) == 0 then search_tmdb() end
 	t3.ExtButton1 = {ButtonEnable = true, ButtonName = '✕'}
 	t3.ExtButton0 = {ButtonEnable = true, ButtonName = '🢀'}
@@ -1345,8 +1363,7 @@ local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; r
 		if ret == 1 then
 			personWorkById(t3[id].Address)
 		end
-
-	elseif id == 4 then
+	elseif t[id].Action == "Коллекции" then
 	if tonumber(nm4) == 0 then search_tmdb() end
 	t4.ExtButton1 = {ButtonEnable = true, ButtonName = '✕'}
 	t4.ExtButton0 = {ButtonEnable = true, ButtonName = '🢀'}
@@ -1362,8 +1379,11 @@ local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; r
 		end
 	end
 	end
+	else
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'TMDB: Медиаконтент не найден', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
+		search_all()
 	end
-
+	end
 -------------------------------------------------------------------
 --[[
  local t1={}
