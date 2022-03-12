@@ -54,7 +54,7 @@ tname = {
  'ZF',
 -- 'Filmix',
  'CDN Movies',
- 'Videoframe',
+-- 'Videoframe',
  'Hdvb',
  'Collaps',
  'Kodik',
@@ -89,7 +89,7 @@ end
 	htmlEntities = require 'htmlEntities'
 	m_simpleTV.Control.ChangeAddress= 'Yes'
 	m_simpleTV.Control.CurrentAddress = ''
-	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; rv:90.0) Gecko/20100101 Firefox/90.0')
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; rv:97.0) Gecko/20100101 Firefox/97.0')
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 8000)
 	if inAdr:match('hd%.kinopoisk%.ru') then
@@ -280,8 +280,9 @@ end
 				if rc ~= 200 then return end
 			return url
 		elseif url:match('zetflix') then
-			rc, answer = m_simpleTV.Http.Request(session, {url = url})
-				if rc ~= 200 then return end
+--			rc, answer = m_simpleTV.Http.Request(session, {url = url})
+			rc,answer = m_simpleTV.Http.Request(session,{url = url, method = 'get', headers = 'User-agent: Mozilla/5.0 (Windows NT 10.0; rv:97.0) Gecko/20100101 Firefox/97.0\nReferer: https://hdi.zetflix.online/iplayer/player.php'})
+				if rc ~= 200 or answer:match('video_not_found') then return end
 			return url
 		end
 	 return
@@ -378,10 +379,11 @@ end
 		require('json')
 		answer_vn = answer_vn:gsub('(%[%])', '"nil"')
 		local tab_vn = json.decode(answer_vn)
-		if tab_vn and tab_vn.data and tab_vn.data[1] and tab_vn.data[1].imdb_id and tab_vn.data[1].imdb_id ~= 'null' then
+		if tab_vn and tab_vn.data and tab_vn.data[1] and tab_vn.data[1].imdb_id and tab_vn.data[1].imdb_id ~= 'null' and tab_vn.data[1].year then
 		return tab_vn.data[1].imdb_id or '', tab_vn.data[1].title or '',tab_vn.data[1].year:match('%d%d%d%d') or ''
-		else
+		elseif tab_vn and tab_vn.data and tab_vn.data[1] and ( not tab_vn.data[1].imdb_id or tab_vn.data[1].imdb_id ~= 'null') then
 		return '', tab_vn.data[1].title or '',tab_vn.data[1].year:match('%d%d%d%d') or ''
+		else return '','',''
 		end
 	end
 	local function bg_imdb_id(imdb_id)
@@ -575,15 +577,19 @@ end
 
 	if #rett == 0 then
 		m_simpleTV.Control.ExecuteAction(37)
-		m_simpleTV.Http.Close(session)
-		m_simpleTV.Control.PlayAddress('#' .. m_simpleTV.Common.UTF8ToMultiByte(title))
+--		m_simpleTV.Http.Close(session)
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'Kinopoisk: Медиаконтент не найден', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
+		search_all()
+--		m_simpleTV.Control.PlayAddress('#' .. m_simpleTV.Common.UTF8ToMultiByte(title))
 	 return
 	end
 	selectmenu()
 	if not retAdr or retAdr == 0 then
 		m_simpleTV.Control.ExecuteAction(37)
-		m_simpleTV.Http.Close(session)
-		m_simpleTV.Control.PlayAddress('#' .. m_simpleTV.Common.UTF8ToMultiByte(title))
+--		m_simpleTV.Http.Close(session)
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'Kinopoisk: Медиаконтент не найден', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
+		search_all()
+--		m_simpleTV.Control.PlayAddress('#' .. m_simpleTV.Common.UTF8ToMultiByte(title))
 	 return
 	end
 	m_simpleTV.Control.CurrentTitle_UTF8 = title .. ' (' .. year .. ')'

@@ -722,12 +722,14 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 		if not inAdr:match('"success":true') then
 			inAdr = answer:match('data%-translator_id="' .. tr .. '"%s+data%-cdn_url="([^"]+)') or answer:match('"streams":"([^"]+)')
 				if not inAdr then
-				 if kp_id and kp_id ~= ''
+				m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'Видео недоступно', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
+				media_info_rezka(inAdr1)
+--[[				 if kp_id and kp_id ~= ''
 				  then
 				   m_simpleTV.Control.PlayAddress('**' .. kp_id)
 				  else
 				   m_simpleTV.Control.PlayAddress('*' .. m_simpleTV.Common.UTF8ToMultiByte(m_simpleTV.Control.CurrentTitle_UTF8:gsub(' %(.-$',''),1251))
-				 end
+				 end--]]
 				 return
 				end
 			inAdr = inAdr .. (answer:match('"subtitle":"[^"]+') or '')
