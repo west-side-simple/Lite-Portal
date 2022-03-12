@@ -414,9 +414,12 @@ end
 	local year = answer:match('<a itemprop="copyrightYear".->(.-)</a>') or 0
 	local poster = answer:match('"og:image" content="([^"]+)') or logo
 	local videodesc = info_fox(title, year, poster)
+	local background = answer:match('<ul class="frames%-list">(.-)</ul>')
+	if background then background = background:match('"(.-)"') end
+	if background then background = host .. background:gsub('^/','') end
 	if poster then
 		m_simpleTV.Control.ChangeChannelLogo(poster, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
-		m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = poster:gsub('thumbs/w220','orig'), TypeBackColor = 0, UseLogo = 3, Once = 1})
+		m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = background or poster:gsub('thumbs/w220','orig'), TypeBackColor = 0, UseLogo = 3, Once = 1})
 	end
 	title = title .. ' (' .. year .. ')'
 	m_simpleTV.User.filmix.title = title
