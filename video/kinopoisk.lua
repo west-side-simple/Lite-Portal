@@ -559,8 +559,9 @@ end
 		m_simpleTV.OSD.ShowMessageT({text = '', showTime = 1000, id = 'channelName'})
 		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('🎞 ' .. title .. ' (' .. year .. ')', 0, rett, 8000, 1 + 2)
 			if ret == 3 then
-				retAdr = 0
-			 return
+				m_simpleTV.Config.SetValue('search/media',m_simpleTV.Common.toPercentEncoding(title),'LiteConf.ini')
+				search_rezka()
+--			 return
 			end
 
 		id = id or 1

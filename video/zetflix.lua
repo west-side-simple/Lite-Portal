@@ -31,15 +31,16 @@
 	local url_vn = decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvc2hvcnQ/YXBpX3Rva2VuPW9TN1d6dk5meGU0SzhPY3NQanBBSVU2WHUwMVNpMGZtJmtpbm9wb2lza19pZD0=') .. kpid
 	local rc5,answer_vn = m_simpleTV.Http.Request(session,{url=url_vn})
 		if rc5~=200 then
-		return ''
+		return '','',''
 		end
 		require('json')
 		answer_vn = answer_vn:gsub('(%[%])', '"nil"')
 		local tab_vn = json.decode(answer_vn)
-		if tab_vn and tab_vn.data and tab_vn.data[1] and tab_vn.data[1].imdb_id and tab_vn.data[1].imdb_id ~= 'null' then
-		return tab_vn.data[1].imdb_id
-		else
-		return ''
+		if tab_vn and tab_vn.data and tab_vn.data[1] and tab_vn.data[1].imdb_id and tab_vn.data[1].imdb_id ~= 'null' and tab_vn.data[1].year then
+		return tab_vn.data[1].imdb_id or '', tab_vn.data[1].title or '',tab_vn.data[1].year:match('%d%d%d%d') or ''
+		elseif tab_vn and tab_vn.data and tab_vn.data[1] and ( not tab_vn.data[1].imdb_id or tab_vn.data[1].imdb_id ~= 'null') then
+		return '', tab_vn.data[1].title or '',tab_vn.data[1].year:match('%d%d%d%d') or ''
+		else return '','',''
 		end
 	end
 	local function bg_imdb_id(imdb_id)
@@ -116,7 +117,10 @@
 	local kpid = inAdr:match('kp%=(%d+)')
 	m_simpleTV.User.ZF.kpid = kpid
 	local season,episode=m_simpleTV.User.ZF.CurAddress:match('season=(%d+).-episode=(%d+)')
-	local logo, title, year, overview, tmdbid, tv = bg_imdb_id(imdbid(kpid))	
+	local logo, title, year, overview, tmdbid, tv
+	local id_imdb,title_v,year_v = imdbid(kpid)
+	if id_imdb and id_imdb~= '' and bg_imdb_id(id_imdb)	then 
+	logo, title, year, overview, tmdbid, tv = bg_imdb_id(imdbid(kpid))
 	if tv == 1 then
 	if not season or not episode then
 	if not season then season = 1 end
@@ -126,6 +130,11 @@
 	return
 	end
 	title = title .. ' (Сезон ' .. season .. ', Серия ' .. episode .. ')'	
+	end
+	else
+	logo = 'https://st.kp.yandex.net/images/film_iphone/iphone360_' .. kpid .. '.jpg'
+	title = title_v
+	year = year_v
 	end
 	rc,answer = m_simpleTV.Http.Request(session,{url = inAdr, method = 'get', headers = 'User-agent: ' .. ua .. '\nReferer: https://hdi.zetflix.online/iplayer/player.php'})
 		if rc ~= 200 then return end
@@ -229,6 +238,7 @@
 	m_simpleTV.Control.CurrentTitle_UTF8 = title .. ', ' .. year
 	m_simpleTV.Control.SetTitle(title .. ', ' .. year)
 	local poster = answer:match('poster: "(.-)"')
+	if poster and poster == '' then poster = logo end
 	if m_simpleTV.Control.MainMode == 0 then
 		m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = poster or logo, TypeBackColor = 0, UseLogo = 3, Once = 1})
 	end
