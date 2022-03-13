@@ -28,19 +28,21 @@
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 30000)
 	local function imdbid(kpid)
+	local tv = 0
 	local url_vn = decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvc2hvcnQ/YXBpX3Rva2VuPW9TN1d6dk5meGU0SzhPY3NQanBBSVU2WHUwMVNpMGZtJmtpbm9wb2lza19pZD0=') .. kpid
 	local rc5,answer_vn = m_simpleTV.Http.Request(session,{url=url_vn})
 		if rc5~=200 then
-		return '','',''
+		return '','','',0
 		end
 		require('json')
 		answer_vn = answer_vn:gsub('(%[%])', '"nil"')
 		local tab_vn = json.decode(answer_vn)
+		if tab_vn and tab_vn.data and tab_vn.data[1] and tab_vn.data[1].type and tab_vn.data[1].type == 'serial' then tv = 1 end
 		if tab_vn and tab_vn.data and tab_vn.data[1] and tab_vn.data[1].imdb_id and tab_vn.data[1].imdb_id ~= 'null' and tab_vn.data[1].year then
-		return tab_vn.data[1].imdb_id or '', tab_vn.data[1].title or '',tab_vn.data[1].year:match('%d%d%d%d') or ''
+		return tab_vn.data[1].imdb_id or '', tab_vn.data[1].title or '',tab_vn.data[1].year:match('%d%d%d%d') or '', tv
 		elseif tab_vn and tab_vn.data and tab_vn.data[1] and ( not tab_vn.data[1].imdb_id or tab_vn.data[1].imdb_id ~= 'null') then
-		return '', tab_vn.data[1].title or '',tab_vn.data[1].year:match('%d%d%d%d') or ''
-		else return '','',''
+		return '', tab_vn.data[1].title or '',tab_vn.data[1].year:match('%d%d%d%d') or '', tv
+		else return '','','',0
 		end
 	end
 	local function bg_imdb_id(imdb_id)
@@ -56,7 +58,7 @@
 	local background, name_tmdb, tmdb_id, tv = '', '', '', 0
 	if not tab and (not tab.movie_results[1] or tab.movie_results[1]==nil) and not tab.movie_results[1].backdrop_path and not tab.movie_results[1].poster_path
 	and not (tab.tv_results[1] or tab.tv_results[1]==nil) and not tab.tv_results[1].backdrop_path and not tab.tv_results[1].poster_path
-	then background = '' 
+	then background = ''
 	else
 	if tab.movie_results[1] then
 	background = tab.movie_results[1].backdrop_path or ''
@@ -113,13 +115,13 @@
 	end
 	return t
 	end
-	end	
+	end
 	local kpid = inAdr:match('kp%=(%d+)')
 	m_simpleTV.User.ZF.kpid = kpid
 	local season,episode=m_simpleTV.User.ZF.CurAddress:match('season=(%d+).-episode=(%d+)')
 	local logo, title, year, overview, tmdbid, tv
-	local id_imdb,title_v,year_v = imdbid(kpid)
-	if id_imdb and id_imdb~= '' and bg_imdb_id(id_imdb)	then 
+	local id_imdb,title_v,year_v,tv = imdbid(kpid)
+	if id_imdb and id_imdb~= '' and bg_imdb_id(id_imdb)	then
 	logo, title, year, overview, tmdbid, tv = bg_imdb_id(imdbid(kpid))
 	if tv == 1 then
 	if not season or not episode then
@@ -129,7 +131,7 @@
 	m_simpleTV.Control.PlayAddress(inAdr)
 	return
 	end
-	title = title .. ' (Сезон ' .. season .. ', Серия ' .. episode .. ')'	
+	title = title .. ' (Сезон ' .. season .. ', Серия ' .. episode .. ')'
 	end
 	else
 	logo = 'https://st.kp.yandex.net/images/film_iphone/iphone360_' .. kpid .. '.jpg'
@@ -246,11 +248,11 @@
 	retAdr = answer:match('file:"(.-)"')
 	if retAdr then setConfigVal('perevod/zf', '') end
 		if not retAdr then
-		retAdr = answer:match('file:%[(.-)%]%}')		
+		retAdr = answer:match('file:%[(.-)%]%}')
 		if retAdr == '' then m_simpleTV.Control.ExecuteAction(102, 1) return end
 		local t1,i,current_p = {},1
 		for w in retAdr:gmatch('%{.-%}') do
-		local name,file = w:match('"title": "(.-)".-"file":.-"(.-)"')		
+		local name,file = w:match('"title": "(.-)".-"file":.-"(.-)"')
 		if not name or not file then break end
 		t1[i]={}
 		t1[i].Id = i
@@ -285,9 +287,12 @@
 	m_simpleTV.Control.CurrentTitle_UTF8 = title .. ', ' .. year
 	m_simpleTV.Control.SetTitle(title .. ', ' .. year)
 	end
+	if imdb or (not imdb and tv~=1) then
 	retAdr = GetZFAdr(retAdr)
+	end
 	if tv == 1	then
 	local current_ep = 1
+	if tmdbid then
 	local urls = 'https://api.themoviedb.org/3/tv/' .. tmdbid .. decode64('P2FwaV9rZXk9ZDU2ZTUxZmI3N2IwODFhOWNiNTE5MmVhYWE3ODIzYWQmbGFuZ3VhZ2U9cnUtUlU=')
 	local rc6,answers = m_simpleTV.Http.Request(session,{url=urls})
 	if rc6~=200 then
@@ -295,7 +300,7 @@
 	return
 	end
 	require('json')
-	answers = answers:gsub('(%[%])', '"nil"')	
+	answers = answers:gsub('(%[%])', '"nil"')
 	local tab = json.decode(answers)
 	if tab and tab.seasons and tab.seasons[1] and tab.seasons[1].episode_count and tab.seasons[1].season_number
 	then
@@ -317,6 +322,24 @@
 	j=j+1
 	end
 	end
+	else
+	local i = 1
+	local answer1 = answer:match('file:%[(.-)%,%]')
+	for w in answer1:gmatch('%[%{"comment":.-%}') do
+	local name,adr = w:match('"comment":"(.-)"%,"file":"(.-)"')
+	if not name or not adr then break end
+	t[i]={}
+	t[i].Id = i
+	t[i].Address = GetZFAdr(adr)
+	t[i].Name = name
+	i=i+1
+	end
+	table.sort(t, function(a, b) return tostring(a.Id) > tostring(b.Id) end)
+	for i = 1, #t do
+		t[i].Id = i
+	end
+	retAdr = t[1].Address
+	end
 	m_simpleTV.User.ZF.titleTab = t
 	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_ZF()'}
 	if getConfigVal('perevod/zf') ~= '' then
@@ -336,6 +359,7 @@
 			end
 			m_simpleTV.OSD.ShowSelect_UTF8('ZF: ' .. getConfigVal('perevod/zf'), 0, t, 8000, 32 + 64 + 128)
 	end
+
 	m_simpleTV.Http.Close(session)
 	m_simpleTV.Control.CurrentAddress = retAdr
 -- debug_in_file(retAdr .. '\n')
