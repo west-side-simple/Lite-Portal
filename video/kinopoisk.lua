@@ -1,4 +1,4 @@
--- видеоскрипт для сайта http://www.kinopoisk.ru (11/02/22)
+-- видеоскрипт для сайта http://www.kinopoisk.ru (15/02/22)
 -- Copyright © 2017-2021 Nexterr | https://github.com/Nexterr/simpleTV
 -- mod west_side (add voidboost - VB Rezka streames)
 -- ## необходим ##
@@ -55,7 +55,7 @@ tname = {
 -- 'Filmix',
  'CDN Movies',
 -- 'Videoframe',
- 'Hdvb',
+-- 'Hdvb',
  'Collaps',
  'Kodik',
 -- 'КиноПоиск онлайн',
@@ -600,6 +600,7 @@ end
 	m_simpleTV.Control.ChangeAddress = 'No'
 	retAdr = retAdr:gsub('\\/', '/')
 	retAdr = retAdr:gsub('^//', 'http://')
+	if retAdr:match('svetacdn%.') then retAdr = retAdr .. '&embed=' .. kpid end
 	m_simpleTV.Control.CurrentAddress = retAdr
 	dofile(m_simpleTV.MainScriptDir_UTF8 .. 'user\\video\\video.lua')
 -- debug_in_file(retAdr .. '\n')

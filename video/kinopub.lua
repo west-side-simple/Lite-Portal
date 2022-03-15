@@ -1,4 +1,4 @@
--- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (11/09/21) - автор west_side
+-- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (15/02/22) - автор west_side
 -- необходим действующий аккаунт на сайте https://kino.pub
 -- работает в связке со скриптом Lite_qt_kinopub.lua - автор west_side
 -- необходимо сгенерировать cookies в браузере Mozilla, дополнение cookies.txt.
@@ -20,7 +20,10 @@
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 16000)
-
+local tooltip_body
+if m_simpleTV.Config.GetValue('mainOsd/showEpgInfoAsWindow', 'simpleTVConfig') then tooltip_body = ''
+else tooltip_body = 'bgcolor="#434750"'
+end
 local function bg_imdb_id(imdb_id)
 --#!!nexterr code!!#--
 local urld = 'https://api.themoviedb.org/3/find/' .. imdb_id .. decode64('P2FwaV9rZXk9ZDU2ZTUxZmI3N2IwODFhOWNiNTE5MmVhYWE3ODIzYWQmbGFuZ3VhZ2U9cnUmZXh0ZXJuYWxfc291cmNlPWltZGJfaWQ')
@@ -487,7 +490,7 @@ else
 		t[i].InfoPanelName = title:gsub(' %(.-$',''):gsub(' %/.-$',''):gsub('&#039;',"'"):gsub('&amp;',"&") .. ' (' .. (se_name:gsub('%)',''):gsub('^.-%(','') .. ', '  .. name1:gsub('&#039;',"'"):gsub('&amp;',"&") .. name2:gsub('&#039;',"'"):gsub('&amp;',"&") .. ')'):gsub('^%, ','')
 		t[i].InfoPanelShowTime = 8000
 		t[i].InfoPanelLogo = logo
-		t[i].InfoPanelDesc = '<html><body' .. videodesc .. '</body></html>'
+		t[i].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
 		i=i+1
 		end
 	else
@@ -505,7 +508,7 @@ else
 		t[i].InfoPanelName = title:gsub(' %(.-$',''):gsub(' %/.-$',''):gsub('&#039;',"'"):gsub('&amp;',"&") .. ' (' .. (se_name:gsub('%)',''):gsub('^.-%(','') .. ', ' .. name1:gsub('&#039;',"'"):gsub('&amp;',"&") .. ')'):gsub('^%, ','')
 		t[i].InfoPanelShowTime = 8000
 		t[i].InfoPanelLogo = logo
-		t[i].InfoPanelDesc = '<html><body' .. videodesc .. '</body></html>'
+		t[i].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
 		i=i+1
 		end
 	end
@@ -528,7 +531,7 @@ else
 		t[1].InfoPanelName = title:gsub('&#039;',"'"):gsub('&amp;',"&")
 		t[1].InfoPanelShowTime = 8000
 		t[1].InfoPanelLogo = logo
-		t[1].InfoPanelDesc = '<html><body' .. videodesc .. '</body></html>'
+		t[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
 		t.ExtButton0 = {ButtonEnable = true, ButtonName = '⚙', ButtonScript = 'Qlty_kinopub(\'' .. answer1 .. '\')'}
 		t.ExtButton1 = {ButtonEnable = true, ButtonName = '🧾', ButtonScript = 'tags_kinopub(\'' .. answer3 .. '\')'}
 

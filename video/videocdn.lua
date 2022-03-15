@@ -1,5 +1,6 @@
--- видеоскрипт для видеобалансера "videocdn" https://videocdn.tv (15/2/22)
+-- видеоскрипт для видеобалансера "videocdn" https://videocdn.tv (15/03/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
+-- mod - west_side
 -- ## открывает подобные ссылки ##
 -- https://32.svetacdn.in/fnXOUDB9nNSO?kp_id=5928
 -- https://32.tvmovies.in/fnXOUDB9nNSO/tv-series/92
@@ -22,6 +23,7 @@ local proxy = ''
 		 return
 		end
 	local inAdr = m_simpleTV.Control.CurrentAddress
+
 	if domen ~= '' then
 		inAdr = inAdr:gsub('^https?://.-/', domen .. '/')
 	end
@@ -32,6 +34,70 @@ local proxy = ''
 			m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = '', TypeBackColor = 0, UseLogo = 0, Once = 1})
 		end
 	end
+local function imdbid(kpid)
+	local url_vn = decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvc2hvcnQ/YXBpX3Rva2VuPW9TN1d6dk5meGU0SzhPY3NQanBBSVU2WHUwMVNpMGZtJmtpbm9wb2lza19pZD0=') .. kpid
+	local rc5,answer_vn = m_simpleTV.Http.Request(session,{url=url_vn})
+		if rc5~=200 then
+		return '','',''
+		end
+		require('json')
+		answer_vn = answer_vn:gsub('(%[%])', '"nil"')
+		local tab_vn = json.decode(answer_vn)
+		if tab_vn and tab_vn.data and tab_vn.data[1] and tab_vn.data[1].imdb_id and tab_vn.data[1].imdb_id ~= 'null' and tab_vn.data[1].year then
+		return tab_vn.data[1].imdb_id or '', tab_vn.data[1].title or '',tab_vn.data[1].year:match('%d%d%d%d') or ''
+		elseif tab_vn and tab_vn.data and tab_vn.data[1] and ( not tab_vn.data[1].imdb_id or tab_vn.data[1].imdb_id ~= 'null') then
+		return '', tab_vn.data[1].title or '',tab_vn.data[1].year:match('%d%d%d%d') or ''
+		else return '','',''
+		end
+end
+local function bg_imdb_id(imdb_id)
+	local urld = 'https://api.themoviedb.org/3/find/' .. imdb_id .. decode64('P2FwaV9rZXk9ZDU2ZTUxZmI3N2IwODFhOWNiNTE5MmVhYWE3ODIzYWQmbGFuZ3VhZ2U9cnUmZXh0ZXJuYWxfc291cmNlPWltZGJfaWQ')
+	local rc5,answerd = m_simpleTV.Http.Request(session,{url=urld})
+	if rc5~=200 then
+		m_simpleTV.Http.Close(session)
+	return
+	end
+	require('json')
+	answerd = answerd:gsub('(%[%])', '"nil"')
+	local tab = json.decode(answerd)
+	local background, name_tmdb, year_tmdb, overview_tmdb = '', '', '', ''
+	if not tab and (not tab.movie_results[1] or tab.movie_results[1]==nil) and not tab.movie_results[1].backdrop_path or not tab and not (tab.tv_results[1] or tab.tv_results[1]==nil) and not tab.tv_results[1].backdrop_path then background = '' else
+	if tab.movie_results[1] then
+	background = tab.movie_results[1].backdrop_path or ''
+	name_tmdb = tab.movie_results[1].title or ''
+	year_tmdb = tab.movie_results[1].release_date or ''
+	overview_tmdb = tab.movie_results[1].overview or ''
+	elseif tab.tv_results[1] then
+	background = tab.tv_results[1].backdrop_path or ''
+	name_tmdb = tab.tv_results[1].name or ''
+	year_tmdb = tab.tv_results[1].first_air_date or ''
+	overview_tmdb = tab.tv_results[1].overview or ''
+	end
+	end
+	if year_tmdb and year_tmdb ~= '' then
+	year_tmdb = year_tmdb:match('%d%d%d%d')
+	else year_tmdb = 0 end
+	if background and background ~= nil and background ~= '' then background = 'http://image.tmdb.org/t/p/original' .. background end
+	if background == nil then background = '' end
+	return background, name_tmdb, year_tmdb, overview_tmdb
+end
+local function title_translate(translate)
+local url = 'aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvdHJhbnNsYXRpb25zP2FwaV90b2tlbj1vUzdXenZOZnhlNEs4T2NzUGpwQUlVNlh1MDFTaTBmbQ=='
+	local rc, answer = m_simpleTV.Http.Request(session, {url = decode64(url)})
+	require('json')
+	answer = answer:gsub('(%[%])', '"nil"')
+	local tab = json.decode(answer)
+	if not tab or not tab.data or not tab.data[1]
+	then
+	return '' end
+	local i = 1
+	while true do
+	if not tab.data[i] then break end
+	if tonumber(tab.data[i].id) == tonumber(translate) then return ' - ' .. tab.data[i].title end
+		i = i + 1
+		end
+return ''
+end
 	local psevdotv
 	if inAdr:match('PARAMS=psevdotv') then
 		psevdotv = true
@@ -50,11 +116,47 @@ local proxy = ''
 	if not m_simpleTV.User.Videocdn.qlty then
 		m_simpleTV.User.Videocdn.qlty = tonumber(m_simpleTV.Config.GetValue('Videocdn_qlty') or '10000')
 	end
+	if not inAdr:match('^$videocdn') then
+	m_simpleTV.User.Videocdn.translate = nil
+	m_simpleTV.User.Videocdn.title_translate = nil
+	m_simpleTV.User.Videocdn.TranslateTable = nil
+	m_simpleTV.User.Videocdn.title = nil
+	m_simpleTV.User.Videocdn.year = nil
+	m_simpleTV.User.Videocdn.embed = nil
+	m_simpleTV.User.Videocdn.overview = nil
+	end
+	local translate = inAdr:match('%?translation=(%d+)')
+	if translate then
+	m_simpleTV.User.Videocdn.translate = translate
+	m_simpleTV.User.Videocdn.title_translate = title_translate(translate)
+	end
+	local imdb_id, kp_id
+	if inAdr:match('%&embed=')
+	then m_simpleTV.User.Videocdn.embed = inAdr:match('%&embed=(.-)$')
+	end
+	inAdr = inAdr:gsub('%?translation=.-$', ''):gsub('%&embed=.-$', '')
+	if not inAdr:match('^$videocdn') then
+	m_simpleTV.User.Videocdn.adr = inAdr
+	end
+	if m_simpleTV.User.Videocdn.embed then
+	imdb_id = m_simpleTV.User.Videocdn.embed:match('tt%d+')
+	if not imdb_id then kp_id = m_simpleTV.User.Videocdn.embed:match('(%d+)') end
+	end
+	if kp_id then imdb_id = imdbid(kp_id) end
+	local logo = 'https://videocdn.tv/favicon.png'
+	if imdb_id and imdb_id~='' then
+	m_simpleTV.User.Videocdn.background, m_simpleTV.User.Videocdn.title, m_simpleTV.User.Videocdn.year, m_simpleTV.User.Videocdn.overview = bg_imdb_id(imdb_id)
+	m_simpleTV.Control.ChangeChannelLogo(m_simpleTV.User.Videocdn.background, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
+	m_simpleTV.Interface.SetBackground({BackColor = 0, BackColorEnd = 255, PictFileName = m_simpleTV.User.Videocdn.background, TypeBackColor = 0, UseLogo = 3, Once = 1})
+	end
+	if not m_simpleTV.User.Videocdn.background or m_simpleTV.User.Videocdn.background=='' then
+		m_simpleTV.Control.ChangeChannelLogo(logo, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
+	end
 	local title
 	if m_simpleTV.User.Videocdn.Tabletitle then
 		local index = m_simpleTV.Control.GetMultiAddressIndex()
 		if index then
-			title = m_simpleTV.User.Videocdn.title .. ' - ' .. m_simpleTV.User.Videocdn.Tabletitle[index].Name
+			title = m_simpleTV.User.Videocdn.title or 'Videocdn' .. ' - ' .. m_simpleTV.User.Videocdn.Tabletitle[index].Name
 		end
 	end
 	local function ShowInfo(s)
@@ -189,6 +291,7 @@ local proxy = ''
 		end
 	end
 	local function play(retAdr, title)
+
 		retAdr = GetQualityFromAddress(retAdr, title)
 			if not retAdr then return end
 		local extOpt
@@ -199,7 +302,9 @@ local proxy = ''
 			m_simpleTV.OSD.ShowMessageT({text = title, color = 0xff9999ff, showTime = 1000 * 5, id = 'channelName'})
 			m_simpleTV.Control.CurrentTitle_UTF8 = title
 		end
+
 		m_simpleTV.Control.CurrentAddress = retAdr
+		
 -- debug_in_file(retAdr .. '\n')
 	end
 	function Qlty_Videocdn()
@@ -209,14 +314,7 @@ local proxy = ''
 		if not m_simpleTV.User.Videocdn.isVideo then
 			t.ExtButton0 = {ButtonEnable = true, ButtonName = '💾', ButtonScript = 'SaveVideocdnPlaylist()'}
 		end
-		if m_simpleTV.User.paramScriptForSkin_buttonOk then
-			t.OkButton = {ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonOk}
-		end
-		if m_simpleTV.User.paramScriptForSkin_buttonClose then
-			t.ExtButton1 = {ButtonEnable = true, ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonClose}
-		else
 			t.ExtButton1 = {ButtonEnable = true, ButtonName = '✕', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
-		end
 		if #t > 0 then
 			local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('⚙ Качество', index - 1, t, 10000, 1 + 4 + 2)
 			if ret == 1 then
@@ -228,6 +326,29 @@ local proxy = ''
 			if ret == 2 then
 				SaveVideocdnPlaylist()
 			end
+		end
+	end
+	function Tr_all()
+	local t1 = m_simpleTV.User.Videocdn.TranslateTable
+	if not t1 then return end
+	local t,current_id = {},1
+	for i = 1,#t1 do
+	t[i] = {}
+	t[i].Id = i
+	if tonumber(t1[i].Address) == tonumber(m_simpleTV.User.Videocdn.translate) then current_id = i end
+	t[i].Address = m_simpleTV.User.Videocdn.adr .. '?translation=' .. t1[i].Address .. '&embed=' .. m_simpleTV.User.Videocdn.embed
+	t[i].Name = t1[i].Name
+	end
+	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_Videocdn()'}
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('Перевод', tonumber(current_id)-1, t, 5000, 1 + 4 + 2)
+		if ret == -1 or not id then
+			return
+		end
+		if ret == 1 then
+			m_simpleTV.Control.SetNewAddress(t[id].Address, m_simpleTV.Control.GetPosition())
+		end
+		if ret == 2 then
+			Qlty_Videocdn()
 		end
 	end
 	m_simpleTV.User.Videocdn.isVideo = false
@@ -247,7 +368,11 @@ local proxy = ''
 	answer = answer:gsub('\\', '')
 	title = answer:match('<title>([^<]+)') or answer:match('id="title" value="([^"]+)')
 	if not title or title == '' then
-		title = m_simpleTV.Control.CurrentTitle_UTF8
+	if m_simpleTV.User.Videocdn.title and m_simpleTV.User.Videocdn.year then
+	title = m_simpleTV.User.Videocdn.title .. ' (' .. m_simpleTV.User.Videocdn.year .. ')'
+	else
+	title = m_simpleTV.Control.CurrentTitle_UTF8
+	end
 	end
 	m_simpleTV.Control.SetTitle(title)
 	local tv_series = answer:match('value="tv_series"')
@@ -279,12 +404,10 @@ local proxy = ''
 			for i = 1, #t do
 				t[i].Id = i
 			end
+		m_simpleTV.User.Videocdn.TranslateTable = t
 		if #t > 1 then
 			local _, id
-			if not psevdotv then
-				if m_simpleTV.User.paramScriptForSkin_buttonOk then
-					t.OkButton = {ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonOk}
-				end
+			if not psevdotv and not translate then
 				_, id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите перевод - ' .. title, selected, t, 10000, 1 + 2 + 4 + 8)
 			end
 			id = id or selected + 1
@@ -293,7 +416,7 @@ local proxy = ''
 			transl = t[1].Address
 		end
 	end
-	transl = transl or '%d+'
+	transl = translate or transl or '%d+'
 	local answer = answer:match('id="files" value="(.+)')
 		if not answer then return end
 	if tv_series then
@@ -338,6 +461,11 @@ local proxy = ''
 					t[i].Id = i
 					t[i].Name = tab[seson].folder[i].comment:gsub('<i>.-</i>', ''):gsub('<br>', '')
 					t[i].Address = '$videocdn' .. tab[seson].folder[i].file
+					if m_simpleTV.User.Videocdn.overview then
+					t[i].InfoPanelName = m_simpleTV.User.Videocdn.title
+					t[i].InfoPanelTitle = m_simpleTV.User.Videocdn.overview
+					t[i].InfoPanelLogo = m_simpleTV.User.Videocdn.background
+					end
 					i = i + 1
 				end
 				if i == 1 then return end
@@ -348,25 +476,23 @@ local proxy = ''
 					t[i].Id = i
 					t[i].Name = tab[i].comment:gsub('<i>.-</i>', ''):gsub('<br>', '')
 					t[i].Address = '$videocdn' .. tab[i].file
+					if m_simpleTV.User.Videocdn.overview then
+					t[i].InfoPanelName = m_simpleTV.User.Videocdn.title
+					t[i].InfoPanelTitle = m_simpleTV.User.Videocdn.overview
+					t[i].InfoPanelLogo = m_simpleTV.User.Videocdn.background
+					end
 					i = i + 1
 				end
 				if i == 1 then return end
 		end
 		m_simpleTV.User.Videocdn.Tabletitle = t
-		if m_simpleTV.User.paramScriptForSkin_buttonClose then
-			t.ExtButton1 = {ButtonEnable = true, ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonClose, ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
-		else
-			t.ExtButton1 = {ButtonEnable = true, ButtonName = '✕', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
-		end
-		if m_simpleTV.User.paramScriptForSkin_buttonOk then
-			t.OkButton = {ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonOk}
-		end
-		if m_simpleTV.User.paramScriptForSkin_buttonOptions then
-			t.ExtButton0 = {ButtonEnable = true, ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonOptions, ButtonScript = 'Qlty_Videocdn()'}
-		else
+			if m_simpleTV.User.Videocdn.TranslateTable and translate then
+				t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'Tr_all()'}
+				else
+				t.ExtButton1 = {ButtonEnable = true, ButtonName = ' ✕ ', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
+				end
 			t.ExtButton0 = {ButtonEnable = true, ButtonName = '⚙', ButtonScript = 'Qlty_Videocdn()'}
-		end
-		t.ExtParams = {FilterType = 2, StopOnError = 1, StopAfterPlay = 1, PlayMode = 0}
+			t.ExtParams = {FilterType = 2, StopOnError = 1, StopAfterPlay = 1, PlayMode = 0}
 		local p = 0
 		if i == 2 then
 			p = 32
@@ -394,22 +520,21 @@ local proxy = ''
 		t1[1].Id = 1
 		t1[1].Name = title
 		t1[1].Address = inAdr
+		if m_simpleTV.User.Videocdn.overview then
+		t1[1].InfoPanelName = m_simpleTV.User.Videocdn.title .. ' (' .. m_simpleTV.User.Videocdn.year .. ')' .. (m_simpleTV.User.Videocdn.title_translate or '')
+		t1[1].InfoPanelTitle = m_simpleTV.User.Videocdn.overview
+		t1[1].InfoPanelLogo = m_simpleTV.User.Videocdn.background
+		end
 		if not psevdotv then
-			if m_simpleTV.User.paramScriptForSkin_buttonClose then
-				t1.ExtButton1 = {ButtonEnable = true, ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonClose, ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
-			else
-				t1.ExtButton1 = {ButtonEnable = true, ButtonName = '✕', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
-			end
-			if m_simpleTV.User.paramScriptForSkin_buttonOk then
-				t1.OkButton = {ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonOk}
-			end
-			if m_simpleTV.User.paramScriptForSkin_buttonOptions then
-				t1.ExtButton0 = {ButtonEnable = true, ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonOptions, ButtonScript = 'Qlty_Videocdn()'}
-			else
-				t1.ExtButton0 = {ButtonEnable = true, ButtonName = '⚙', ButtonScript = 'Qlty_Videocdn()'}
-			end
-			m_simpleTV.OSD.ShowSelect_UTF8('Videocdn', 0, t1, 5000, 32 + 64 + 128)
+				if m_simpleTV.User.Videocdn.TranslateTable and translate then
+				t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'Tr_all()'}
+				else
+				t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' ✕ ', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
+				end
+				t1.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_Videocdn()'}
+				m_simpleTV.OSD.ShowSelect_UTF8('Videocdn', 0, t1, 5000, 32 + 64 + 128)
 		end
 		m_simpleTV.User.Videocdn.isVideo = true
+
 	end
-	play(inAdr, title)
+	play(inAdr, title .. (m_simpleTV.User.Videocdn.title_translate or ''))
