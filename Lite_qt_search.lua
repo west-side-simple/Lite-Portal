@@ -1,4 +1,4 @@
--- Плагин поиска для lite portal - west_side 11.03.22
+-- Плагин поиска для lite portal - west_side 17.03.22
 -- необходимы скрипты Lite_qt_exfs.lua, ex-fs.lua, Lite_qt_tmdb.lua, Lite_qt_kinopub.lua, Lite_qt_filmix.lua - автор west_side
 
 function search()
@@ -113,6 +113,7 @@ m_simpleTV.Control.ExecuteAction(37)
 	{'EX-FS',''},
 	{'Rezka',''},
 	{'Filmix',''},
+	{'KinoGo',''},
 	{'Kinopub',''},
 	{'YouTube',''},
 	}
@@ -134,6 +135,7 @@ m_simpleTV.Control.ExecuteAction(37)
   elseif t1[id].Name == 'EX-FS' then search_media()
   elseif t1[id].Name == 'Rezka' then search_rezka()
   elseif t1[id].Name == 'Filmix' then search_filmix_media()
+  elseif t1[id].Name == 'KinoGo' then search_kinogo()
   elseif t1[id].Name == 'Kinopub' then show_select('https://kino.pub/item/search?query=' .. search_ini)
   elseif t1[id].Name == 'YouTube' then search_youtube()
   end
@@ -561,6 +563,77 @@ function search_filmix_media()
 		end
 		else
 			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'Filmix: Медиаконтент не найден', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
+			search_all()
+		end
+end
+
+function search_kinogo()
+	local function getConfigVal(key)
+		return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
+	end
+
+	local function setConfigVal(key,val)
+		m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
+	end
+
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:96.0) Gecko/20100101 Firefox/96.0')
+		if not session then return end
+	m_simpleTV.Http.SetTimeout(session, 60000)
+
+	local search_ini = getConfigVal('search/media') or ''
+	local title1 = 'Поиск медиа: ' .. m_simpleTV.Common.fromPercentEncoding(search_ini)
+	if not m_simpleTV.Control.CurrentAdress then
+		m_simpleTV.Control.SetTitle(title1)
+	end
+	local urld2 = 'https://kinogo.cc/index.php?do=search&story=' .. m_simpleTV.Common.toPercentEncoding(search_ini:gsub('%-',' '))
+	local rc2,answerd2 = m_simpleTV.Http.Request(session,{url=urld2})
+	if rc2~=200 then
+		m_simpleTV.Http.Close(session)
+	return
+	end
+	answerd2 = answerd2:gsub('<!%-%-.-%-%->', ''):gsub('/%*.-%*/', '')
+	local t, i = {}, 1
+	for w in answerd2:gmatch('<div class="hikinogo_lenta">.-<b>') do
+	local adr, logo, title, desc = w:match('<a href="(.-)">.-<img data%-src="(.-)".-title="(.-)".-<br>(.-)<br>')
+	if not adr or not title then break end
+	t[i] = {}
+	t[i].Id = i
+	t[i].Name = title
+	t[i].Address = adr
+	t[i].InfoPanelLogo = 'https://kinogo.cc' .. logo
+	t[i].InfoPanelName = 'KinoGo info: ' .. title
+	t[i].InfoPanelShowTime = 30000
+	t[i].InfoPanelTitle = desc
+	i = i + 1
+	end
+	local AutoNumberFormat, FilterType
+			if #t > 4 then
+				AutoNumberFormat = '%1. %2'
+				FilterType = 1
+			else
+				AutoNumberFormat = ''
+				FilterType = 2
+			end
+		t.ExtParams = {FilterType = FilterType, AutoNumberFormat = AutoNumberFormat}
+		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🔎 Меню '}
+		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔎 Поиск '}
+		if #t > 0 then
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('Найдено KinoGo: ' .. m_simpleTV.Common.fromPercentEncoding(search_ini) .. ' (' .. #t .. ')', 0, t, 30000, 1+4+8+2)
+		if ret == -1 or not id then
+			return
+		end
+		if ret == 1 then
+			m_simpleTV.Control.ExecuteAction(37)
+			m_simpleTV.Control.PlayAddress(t[id].Address)
+		end
+		if ret == 3 then
+			search()
+		end
+		if ret == 2 then
+			search_all()
+		end
+		else
+			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'KinoGo: Медиаконтент не найден', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
 			search_all()
 		end
 end
