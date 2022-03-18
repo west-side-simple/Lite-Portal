@@ -1,4 +1,4 @@
---menu west_side 09.03.22
+--menu west_side 18.03.22
 
 function run_youtube_portal()
 
@@ -117,6 +117,8 @@ local tt1={
 {'Rezka',''},
 {'Filmix',''},
 {'Kinopub',''},
+{'Переводы',''},
+{'KinoGo',''},
 {'YouTube',''},
 {'Медиабазы',''},
 {'SimpleTV - видеоинструкции',''},
@@ -142,6 +144,8 @@ local tt1={
   elseif t1[id].Name == 'Поиск' then search()
   elseif t1[id].Name == 'Медиабазы' then mediabaze()
   elseif t1[id].Name:match('SimpleTV') then highlight()
+  elseif t1[id].Name == 'Переводы' then run_lite_qt_cdntr()
+  elseif t1[id].Name == 'KinoGo' then run_lite_qt_kinogo()
   end
   end
 end

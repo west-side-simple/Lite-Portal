@@ -1,4 +1,4 @@
--- Плагин поиска для lite portal - west_side 17.03.22
+-- Плагин поиска для lite portal - west_side 18.03.22
 -- необходимы скрипты Lite_qt_exfs.lua, ex-fs.lua, Lite_qt_tmdb.lua, Lite_qt_kinopub.lua, Lite_qt_filmix.lua - автор west_side
 
 function search()
@@ -638,7 +638,7 @@ function search_kinogo()
 		end
 end
 -------------------------------------------------------------------
- local t2={}
+--[[ local t2={}
  t2.utf8 = true
  t2.name = 'Search menu'
  t2.luastring = 'search()'
@@ -647,5 +647,5 @@ end
  t2.ctrlkey = 3
  t2.location = 0
  t2.image= m_simpleTV.MainScriptDir_UTF8 .. 'user/show_mi/Search.png'
- m_simpleTV.Interface.AddExtMenuT(t2)
+ m_simpleTV.Interface.AddExtMenuT(t2)--]]
 -------------------------------------------------------------------
