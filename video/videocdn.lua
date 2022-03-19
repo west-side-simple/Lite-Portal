@@ -142,12 +142,17 @@ end
 	imdb_id = m_simpleTV.User.Videocdn.embed:match('tt%d+')
 	if not imdb_id then kp_id = m_simpleTV.User.Videocdn.embed:match('(%d+)') end
 	end
-	if kp_id then imdb_id = imdbid(kp_id) end
+	local title_v, year_v
+	if kp_id then imdb_id, title_v, year_v = imdbid(kp_id) end
 	local logo = 'https://videocdn.tv/favicon.png'
-	if imdb_id and imdb_id~='' then
+	if imdb_id and imdb_id~='' and bg_imdb_id(imdb_id)~='' then
 	m_simpleTV.User.Videocdn.background, m_simpleTV.User.Videocdn.title, m_simpleTV.User.Videocdn.year, m_simpleTV.User.Videocdn.overview = bg_imdb_id(imdb_id)
 	m_simpleTV.Control.ChangeChannelLogo(m_simpleTV.User.Videocdn.background, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
 	m_simpleTV.Interface.SetBackground({BackColor = 0, BackColorEnd = 255, PictFileName = m_simpleTV.User.Videocdn.background, TypeBackColor = 0, UseLogo = 3, Once = 1})
+	end
+	if not m_simpleTV.User.Videocdn.title and not m_simpleTV.User.Videocdn.year then
+		m_simpleTV.User.Videocdn.title = title_v
+		m_simpleTV.User.Videocdn.year = year_v
 	end
 	if not m_simpleTV.User.Videocdn.background or m_simpleTV.User.Videocdn.background=='' then
 		m_simpleTV.Control.ChangeChannelLogo(logo, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')

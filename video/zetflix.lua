@@ -324,20 +324,23 @@
 	end
 	end
 	else
-	local i = 1
+	local t1,i = {},1
 	local answer1 = answer:match('file:%[(.-)%,%]')
 	for w in answer1:gmatch('%[%{"comment":.-%}') do
 	local name,adr = w:match('"comment":"(.-)"%,"file":"(.-)"')
 	if not name or not adr then break end
-	t[i]={}
-	t[i].Id = i
-	t[i].Address = GetZFAdr(adr)
-	t[i].Name = name
+	t1[i]={}
+	t1[i].Id = i
+	t1[i].Address = GetZFAdr(adr)
+	t1[i].Name = name
 	i=i+1
 	end
-	table.sort(t, function(a, b) return tostring(a.Id) > tostring(b.Id) end)
-	for i = 1, #t do
-		t[i].Id = i
+
+	for i = 1, #t1 do
+		t[i]={}
+		t[i].Address = t1[#t1-i+1].Address
+		t[i].Name = t1[#t1-i+1].Name
+		t[i].Id = #t1-i+1
 	end
 	retAdr = t[1].Address
 	end

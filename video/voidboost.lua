@@ -21,15 +21,16 @@
 	local url_vn = decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvc2hvcnQ/YXBpX3Rva2VuPW9TN1d6dk5meGU0SzhPY3NQanBBSVU2WHUwMVNpMGZtJmtpbm9wb2lza19pZD0=') .. kpid
 	local rc5,answer_vn = m_simpleTV.Http.Request(session,{url=url_vn})
 		if rc5~=200 then
-		return ''
+		return '','',''
 		end
 		require('json')
 		answer_vn = answer_vn:gsub('(%[%])', '"nil"')
 		local tab_vn = json.decode(answer_vn)
-		if tab_vn and tab_vn.data and tab_vn.data[1] and tab_vn.data[1].imdb_id and tab_vn.data[1].imdb_id ~= 'null' then
-		return tab_vn.data[1].imdb_id
-		else
-		return ''
+		if tab_vn and tab_vn.data and tab_vn.data[1] and tab_vn.data[1].imdb_id and tab_vn.data[1].imdb_id ~= 'null' and tab_vn.data[1].year then
+		return tab_vn.data[1].imdb_id or '', tab_vn.data[1].title or '',tab_vn.data[1].year:match('%d%d%d%d') or ''
+		elseif tab_vn and tab_vn.data and tab_vn.data[1] and ( not tab_vn.data[1].imdb_id or tab_vn.data[1].imdb_id ~= 'null') then
+		return '', tab_vn.data[1].title or '',tab_vn.data[1].year:match('%d%d%d%d') or ''
+		else return '','',''
 		end
 	end
 	local function bg_imdb_id(imdb_id)
@@ -75,6 +76,8 @@
 	if not m_simpleTV.User.Rezka then
 		m_simpleTV.User.Rezka = {}
 	end
+	m_simpleTV.User.Videocdn.title = nil
+	m_simpleTV.User.Videocdn.year = nil
 	if inAdr:match('/embed/')
 	then m_simpleTV.User.Rezka.embed = inAdr:match('/embed/(.-)$') m_simpleTV.User.Rezka.embed = m_simpleTV.User.Rezka.embed:gsub('%?.-$','')
 	elseif inAdr:match('%&embed=')
@@ -82,15 +85,20 @@
 	end
 	imdb_id = m_simpleTV.User.Rezka.embed:match('tt%d+')
 	if not imdb_id then kp_id = m_simpleTV.User.Rezka.embed:match('(%d+)') end
-	if kp_id then imdb_id = imdbid(kp_id) end
+	local title_v, year_v
+	if kp_id then imdb_id, title_v, year_v = imdbid(kp_id) end
 	local logo = 'https://static.hdrezka.ac/templates/hdrezka/images/avatar.png'
-	if imdb_id and imdb_id~='' then
+	if imdb_id and imdb_id~='' and bg_imdb_id(imdb_id)~='' then
 	m_simpleTV.User.Rezka.background, m_simpleTV.User.Rezka.title = bg_imdb_id(imdb_id)
 	m_simpleTV.Control.ChangeChannelLogo(m_simpleTV.User.Rezka.background, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
+	end
+	if not m_simpleTV.User.Rezka.title then
+		m_simpleTV.User.Rezka.title = title_v
 	end
 	if not m_simpleTV.User.Rezka.background or m_simpleTV.User.Rezka.background=='' then
 		m_simpleTV.Control.ChangeChannelLogo(logo, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
 	end
+	m_simpleTV.Control.SetTitle(m_simpleTV.User.Rezka.title)
 	local function showError(str)
 		m_simpleTV.OSD.ShowMessageT({text = 'hdrezka ошибка: ' .. str, showTime = 5000, color = 0xffff1000, id = 'channelName'})
 	end
@@ -409,6 +417,7 @@
 	else
 		title = m_simpleTV.Control.CurrentTitle_UTF8:gsub(' %(Сезон.-$','')
 	end
+	if title == '' then title = title_v .. ', ' .. year_v end
 	local rc, answer = m_simpleTV.Http.Request(session, {url = inAdr})
 		if rc ~= 200 then
 			showError('4')
