@@ -1,4 +1,4 @@
---videocdn translations portal - lite version west_side 15.03.22
+--videocdn translations portal - lite version west_side 19.03.22
 
 function run_lite_qt_cdntr()
 
@@ -65,7 +65,25 @@ local tt1={
 end
 
 function page_cdntr(url)
-
+local function title_translate(translate)
+local url = 'aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvdHJhbnNsYXRpb25zP2FwaV90b2tlbj1vUzdXenZOZnhlNEs4T2NzUGpwQUlVNlh1MDFTaTBmbQ=='
+	local rc, answer = m_simpleTV.Http.Request(session, {url = decode64(url)})
+	require('json')
+	answer = answer:gsub('(%[%])', '"nil"')
+	local tab = json.decode(answer)
+	if not tab or not tab.data or not tab.data[1]
+	then
+	return '' end
+	local i = 1
+	while true do
+	if not tab.data[i] then break end
+	if tonumber(tab.data[i].id) == tonumber(translate) then return tab.data[i].title end
+		i = i + 1
+		end
+return ''
+end
+	local current_id = url:match('%&translation=(%d+)')
+	local current_tr = title_translate(current_id)
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 60000)
@@ -90,9 +108,9 @@ require('json')
 		t[i]={}
 		t[i].Id = i
 		t[i].Name = tab.data[i].ru_title
-		t[i].Action = 'http:' .. tab.data[i].translations[1].iframe_src
+		t[i].Action = 'http:' .. tab.data[i].iframe_src .. '?translation=' .. current_id
 		t[i].InfoPanelName = tab.data[i].ru_title .. ' / ' .. tab.data[i].orig_title .. year
-		t[i].InfoPanelTitle = tab.data[i].translations[1].title
+		t[i].InfoPanelTitle = current_tr
 		t[i].InfoPanelLogo = 'https://videocdn.tv/favicon.png'
 		t[i].imdb_id = tab.data[i].imdb_id or ''
 		t[i].kinopoisk_id = tab.data[i].kinopoisk_id or ''
@@ -123,7 +141,7 @@ require('json')
 				FilterType = 2
 			end
 		t.ExtParams = {FilterType = FilterType, AutoNumberFormat = AutoNumberFormat}
-		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('(страница '.. current .. ' из ' .. last .. ')', 0, t, 30000, 1+4+8+2)
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('страница '.. current .. ' из ' .. last, 0, t, 30000, 1+4+8+2)
 		if ret == -1 or not id then
 			return
 		end
