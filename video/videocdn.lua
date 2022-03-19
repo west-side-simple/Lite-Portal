@@ -1,6 +1,6 @@
--- видеоскрипт для видеобалансера "videocdn" https://videocdn.tv (15/03/22)
+-- видеоскрипт для видеобалансера "videocdn" https://videocdn.tv (19/03/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod - west_side
+-- mod - west_side (19/03/22)
 -- ## открывает подобные ссылки ##
 -- https://32.svetacdn.in/fnXOUDB9nNSO?kp_id=5928
 -- https://32.tvmovies.in/fnXOUDB9nNSO/tv-series/92
@@ -304,7 +304,7 @@ end
 		end
 
 		m_simpleTV.Control.CurrentAddress = retAdr
-		
+
 -- debug_in_file(retAdr .. '\n')
 	end
 	function Qlty_Videocdn()
@@ -411,14 +411,18 @@ end
 				_, id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите перевод - ' .. title, selected, t, 10000, 1 + 2 + 4 + 8)
 			end
 			id = id or selected + 1
-			transl = t[id].Address
+			transl = translate or t[id].Address
 		else
 			transl = t[1].Address
 		end
 	end
 	transl = translate or transl or '%d+'
+	translate = transl
+	m_simpleTV.User.Videocdn.translate = translate
+	m_simpleTV.User.Videocdn.title_translate = title_translate(translate)
 	local answer = answer:match('id="files" value="(.+)')
 		if not answer then return end
+
 	if tv_series then
 		answer = answer:match('"' .. transl .. '":"(.-)">')
 			if not answer then return end

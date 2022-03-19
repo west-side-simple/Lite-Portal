@@ -52,13 +52,14 @@
 		m_simpleTV.Http.Close(session)
 	return
 	end
+	local background, name_tmdb, year_tmdb, overview_tmdb, tmdb_id, tv
 	require('json')
 	answerd = answerd:gsub('(%[%])', '"nil"')
 	local tab = json.decode(answerd)
 	local background, name_tmdb, tmdb_id, tv = '', '', '', 0
 	if not tab and (not tab.movie_results[1] or tab.movie_results[1]==nil) and not tab.movie_results[1].backdrop_path and not tab.movie_results[1].poster_path
 	and not (tab.tv_results[1] or tab.tv_results[1]==nil) and not tab.tv_results[1].backdrop_path and not tab.tv_results[1].poster_path
-	then background = ''
+	then return '', '', '', '', '', ''
 	else
 	if tab.movie_results[1] then
 	background = tab.movie_results[1].backdrop_path or ''
@@ -121,7 +122,7 @@
 	local season,episode=m_simpleTV.User.ZF.CurAddress:match('season=(%d+).-episode=(%d+)')
 	local logo, title, year, overview, tmdbid, tv
 	local id_imdb,title_v,year_v,tv = imdbid(kpid)
-	if id_imdb and id_imdb~= '' and bg_imdb_id(id_imdb)	then
+	if id_imdb and id_imdb~= '' and bg_imdb_id(id_imdb)~= ''	then
 	logo, title, year, overview, tmdbid, tv = bg_imdb_id(imdbid(kpid))
 	if tv == 1 then
 	if not season or not episode then

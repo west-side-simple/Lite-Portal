@@ -113,12 +113,12 @@ end
 	local function unescape_html(str)
 	 return htmlEntities.decode(str)
 	end
-	local function answerZonaMovie()
+--[[	local function answerZonaMovie()
 		local rc, answer = m_simpleTV.Http.Request(session, {url = decode64('aHR0cDovL3pzb2xyMy56b25hc2VhcmNoLmNvbS9zb2xyL21vdmllL3NlbGVjdC8/d3Q9anNvbiZmbD1uYW1lX29yaWdpbmFsLHllYXIsc2VyaWFsLHJhdGluZ19raW5vcG9pc2ssbmFtZV9ydXMscmF0aW5nX2ltZGIsbW9iaV91cmwsbGFuZ3VhZ2VzX2ltZGIsbmFtZV9lbmcsYWJ1c2UsbW9iaV9saW5rX2lkLGRlc2NyaXB0aW9uJnE9aWQ6') .. kpid})
 			if rc ~= 200 then return end
 			if not answer:match('"year"') or not answer:match('^{') then return end
 	 return	answer
-	end
+	end--]]
 	local function answerdget(url)
 		if url:match('widget%.kinopoisk%.ru') then
 			rc, answer = m_simpleTV.Http.Request(session, {url = url})
@@ -397,7 +397,7 @@ end
 	answerd = answerd:gsub('(%[%])', '"nil"')
 	local tab = json.decode(answerd)
 	local background, name_tmdb, year_tmdb, overview_tmdb = '', '', '', ''
-	if not tab and (not tab.movie_results[1] or tab.movie_results[1]==nil) and not tab.movie_results[1].backdrop_path or not tab and not (tab.tv_results[1] or tab.tv_results[1]==nil) and not tab.tv_results[1].backdrop_path then background = '' else
+	if not tab and (not tab.movie_results[1] or tab.movie_results[1]==nil) and not tab.movie_results[1].backdrop_path or not tab and not (tab.tv_results[1] or tab.tv_results[1]==nil) and not tab.tv_results[1].backdrop_path then return '', '', '', '' else
 	if tab.movie_results[1] then
 	background = tab.movie_results[1].backdrop_path or ''
 	name_tmdb = tab.movie_results[1].title or ''
@@ -422,7 +422,7 @@ end
 	if imdbid(kpid)
 		then
 		id_imdb, title, year = imdbid(kpid)
-		if id_imdb ~= '' then
+		if id_imdb ~= '' and bg_imdb_id(id_imdb)~= '' then
 		background, name_tmdb, year_tmdb, overview_tmdb = bg_imdb_id(id_imdb)
 		end
 	end
