@@ -76,8 +76,8 @@
 	if not m_simpleTV.User.Rezka then
 		m_simpleTV.User.Rezka = {}
 	end
-	m_simpleTV.User.Videocdn.title = nil
-	m_simpleTV.User.Videocdn.year = nil
+	m_simpleTV.User.Rezka.title = nil
+	m_simpleTV.User.Rezka.year = nil
 	if inAdr:match('/embed/')
 	then m_simpleTV.User.Rezka.embed = inAdr:match('/embed/(.-)$') m_simpleTV.User.Rezka.embed = m_simpleTV.User.Rezka.embed:gsub('%?.-$','')
 	elseif inAdr:match('%&embed=')
