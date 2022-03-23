@@ -1,4 +1,4 @@
---kinogo portal - lite version west_side 18.03.22
+--kinogo portal - lite version west_side 22.03.22
 
 function run_lite_qt_kinogo()
 	local function getConfigVal(key)
@@ -143,11 +143,12 @@ function page_kinogo(url)
 			return
 		end
 		if ret == 1 then
-			retAdr = t[id].Address
+			kinogo_info(t[id].Address)
+--[[			retAdr = t[id].Address
 			m_simpleTV.Control.ChangeAddress = 'No'
 			m_simpleTV.Control.ExecuteAction(37)
 			m_simpleTV.Control.CurrentAddress = retAdr
-			m_simpleTV.Control.PlayAddress(retAdr)
+			m_simpleTV.Control.PlayAddress(retAdr)--]]
 		end
 		if ret == 2 then
 		if prev_pg then
@@ -182,7 +183,7 @@ function kinogo_info(url)
 	local all_tag_txt = all_tag:gsub('<a.->', ''):gsub('<div.->', ''):gsub('</div>', ''):gsub('<font.->', ''):gsub('</font>', ''):gsub('\n', ''):gsub('\b', ''):gsub('<br/><br/>', '<br>'):gsub('<br/><br/><br/>', '<br>'):gsub('         <br>', '')
 	local videodesc= '<table width="100%"><tr><td style="padding: 15px 15px 0px;"><img src="' .. poster .. '" height="470"></td><td style="padding: 15px 5px 0px; color: #AAAAAA; vertical-align: middle;"><h3><font color=#00FA9A>' .. title .. '</font></h3><h5>' .. all_tag_txt .. '</h5></td></tr></table><table width="100%"><tr><td style="padding: 0px 5px 5px; color: #FFFFFF; vertical-align: middle;"><h4>' .. overview .. '</h4></td></tr></table>'
 	videodesc = videodesc:gsub('"', '\"')
-
+	local all_plus = answer:match('<div class="relatednews">(.-)<div style="clear:both">') or ''
 	local t1,j={},2
 		t1[1] = {}
 		t1[1].Id = 1
@@ -204,12 +205,28 @@ function kinogo_info(url)
 		t1[j].Name = name
 		j=j+1
 		end
+		for w in all_plus:gmatch('<a.-</a>') do
+		local adr,name,logo = w:match('href="(.-)".-title="(.-)".-src="(.-)"')
+		local year
+		if not adr or not name or not logo then break end
+		t1[j]={}
+		t1[j].Id = j
+		t1[j].Address = adr
+		year = adr:match('%-(%d%d%d%d)%.html')
+		t1[j].Name = 'Похожий контент: ' .. name .. ((' (' .. year .. ')') or '')
+		t1[j].InfoPanelLogo = 'https://kinogo.cc' .. logo
+		t1[j].InfoPanelName = name .. ((' (' .. year .. ')') or '')
+		t1[j].InfoPanelShowTime = 10000
+		j=j+1
+		end
 		t1.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🢀 '}
 		t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' Play '}
 		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('KinoGo: ' .. title, 0, t1, 30000, 1 + 4 + 8 + 2)
 		if ret == 1 then
 			if id == 1 then
 			 kinogo_info(url)
+			elseif t1[id].Name:match('Похожий контент: ') then
+			 kinogo_info(t1[id].Address)
 			else
 			 page_kinogo(t1[id].Address)
 			end

@@ -301,6 +301,7 @@ end
 	desc1 = '<table width="100%" border="0"><tr><td style="padding: 15px 15px 5px;"><img src="' .. poster .. '" height="470"></td><td style="padding: 0px 5px 5px; color: #EBEBEB; vertical-align: middle;"><h4><font color=#00FA9A>' .. title_rus .. '</font></h4><h5><font color=#BBBBBB>' .. title_eng .. '</font></h5><h5><font color=#E0FFFF>' .. year .. ' • ' .. age .. ' • Кинопоиск: ' .. kpr .. ' • IMDb: ' .. imdbr .. '</font></h5><h5><font color=#E0FFFF>' .. all_time .. '</font></h5><h4><font color=#EBEBEB>' .. desc1:gsub('<br />','<p>') .. '</font></h4></td></tr></table>'
 	local answer1 = answer:match('<div class="FullstoryInfo">(.-)</div>') or ''
 	local answer2 = answer:match('<div class="FullstoryKadrFormImgAc">(.-)</div>') or ''
+	local answer3 = answer:match('<div class="RelatedFormTitle">(.-)<script') or ''
 	local title = title_rus .. ' (' .. year .. ')'
 	local t1,j={},2
 		t1[1] = {}
@@ -333,12 +334,26 @@ end
 		t1[j].InfoPanelShowTime = 10000
 		j=j+1
 		end
+		for w3 in answer3:gmatch('<img src=".-<a href=".-</a>') do
+		local logo,adr,name = w3:match('<img src="(.-)".-href="(.-)">(.-)<')
+		if not adr or not name then break end
+		t1[j] = {}
+		t1[j].Id = j
+		t1[j].Address = adr
+		t1[j].Name = 'Похожий контент: ' .. name:gsub('&#039;',"'"):gsub('&amp;',"&")
+		t1[j].InfoPanelLogo = 'https://ex-fs.net' .. logo:gsub('^https://ex%-fs%.net','')
+		t1[j].InfoPanelName = t1[j].Name
+		t1[j].InfoPanelShowTime = 10000
+		j=j+1
+		end
 		t1.ExtButton0 = {ButtonEnable = true, ButtonName = '🢀 '}
 		t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' Play'}
 		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('EX-FS: ' .. title, 0, t1, 30000, 1 + 4 + 8 + 2)
 		if ret == 1 then
 			if id == 1 then
 			media_info(inAdr)
+			elseif t1[id].Name:match('Похожий контент') then
+			media_info(t1[id].Address)
 			else
 			page_exfs(t1[id].Address .. '/')
 			end

@@ -1,4 +1,4 @@
---Rezka portal - lite version west_side 09.03.22
+--Rezka portal - lite version west_side 22.03.22
 
 local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
@@ -172,7 +172,7 @@ function collection_rezka()
 	local current_zerkalo = getConfigVal('zerkalo/rezka') or ''
 	if current_zerkalo ~= '' then
 	url = url:gsub('http.-//.-/', current_zerkalo)
-	end	
+	end
 	local t,i = {},1
 	for j=1,3 do
 		local rc,answer = m_simpleTV.Http.Request(session,{url=url .. 'page/' .. j .. '/'})
@@ -219,7 +219,7 @@ function collection_rezka_url(url)
 	local current_zerkalo = getConfigVal('zerkalo/rezka') or ''
 	if current_zerkalo ~= '' then
 	url = url:gsub('http.-//.-/', current_zerkalo)
-	end		
+	end
 	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
 		if rc ~= 200 then return '' end
 	local title = answer:match('<h1>(.-)</h1>') or 'Rezka collection'
@@ -293,7 +293,7 @@ function franchises_rezka(url)
 	local current_zerkalo = getConfigVal('zerkalo/rezka') or ''
 	if current_zerkalo ~= '' then
 	url = url:gsub('http.-//.-/', current_zerkalo)
-	end	
+	end
 	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
 		if rc ~= 200 then return '' end
 	local current_page = url:match('/page/(%d+)') or 1
@@ -371,7 +371,7 @@ function franchises_rezka_url(url)
 	local current_zerkalo = getConfigVal('zerkalo/rezka') or ''
 	if current_zerkalo ~= '' then
 	url = url:gsub('http.-//.-/', current_zerkalo)
-	end		
+	end
 	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
 		if rc ~= 200 then return '' end
 	local title = answer:match('<h1>Смотреть все(.-)</h1></div>') or 'Rezka franchises'
@@ -437,7 +437,7 @@ function person_rezka_work(url)
 	local current_zerkalo = getConfigVal('zerkalo/rezka') or ''
 	if current_zerkalo ~= '' then
 	url = url:gsub('http.-//.-/', current_zerkalo)
-	end		
+	end
 	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
 		if rc ~= 200 then return '' end
 	local title1 = answer:match('<h1><span class="t1" itemprop="name">(.-)</span>') or 'Rezka person'
@@ -505,7 +505,7 @@ function media_info_rezka(url)
 	local current_zerkalo = getConfigVal('zerkalo/rezka') or ''
 	if current_zerkalo ~= '' then
 	url = url:gsub('http.-//.-/', current_zerkalo)
-	end		
+	end
 	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
 		if rc ~= 200 then return '' end
 	local tooltip_body
@@ -536,6 +536,7 @@ function media_info_rezka(url)
 	desc_text = '<table width="100%" border="0"><tr><td style="padding: 15px 15px 5px;"><img src="' .. poster .. '" height="470"></td><td style="padding: 0px 5px 5px; color: #EBEBEB; vertical-align: middle;"><h4><font color=#00FA9A>' .. name_rus .. '</font></h4><h5><i><font color=#EBEBEB>' .. slogan .. '</font></i>  <b><font color=#E0FFFF>' .. mpaa .. '</font></b></h5><h5><font color=#BBBBBB>' .. name_eng .. '</font></h5><h5><font color=#E0FFFF>' .. year .. ' • ' .. country .. ' • Кинопоиск: ' .. kpr .. ' • IMDb: ' .. imdbr .. '</font></h5>' .. time_all .. '<h4><font color=#EBEBEB>' .. desc_text .. '</font></h4></td></tr></table>'
 	local answer1 = answer:match('<h2>Из серии</h2>:(.-)</tr>') or ''
 	local answer2 = answer:match('<div class="b%-sidetitle">(.-</a>)') or ''
+	local answer3 = answer:match('<div class="b%-sidelist__holder">(.-)<div id="addcomment%-title"') or ''
 	local title = name_rus .. ' (' .. year .. ')'
 	local t1,j={},2
 		t1[1] = {}
@@ -575,6 +576,18 @@ function media_info_rezka(url)
 		t1[j].InfoPanelShowTime = 10000
 		j=j+1
 		end
+		for w3 in answer3:gmatch('<a href=".-</div> </div>') do
+		local logo, item, adr, name, desc = w3:match('<img src="(.-)".-<i class="entity">(.-)</i>.-<a href="(.-)">(.-)</a> <div class="misc">(.-)</div> </div>')
+		if not logo or not item or not adr or not name or not desc then break end
+		t1[j] = {}
+		t1[j].Id = j
+		t1[j].Name = name .. ' (' .. desc .. ') - ' .. item
+		t1[j].Address = adr
+		t1[j].InfoPanelLogo = logo
+		t1[j].InfoPanelName = name .. ' (' .. desc .. ') - ' .. item
+		t1[j].InfoPanelShowTime = 10000
+		j=j+1
+		end
 		t1.ExtButton0 = {ButtonEnable = true, ButtonName = '🢀 '}
 		t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' Play '}
 		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('Rezka: ' .. title, 0, t1, 30000, 1 + 4 + 8 + 2)
@@ -587,7 +600,8 @@ function media_info_rezka(url)
 			franchises_rezka_url(t1[id].Address)
 			elseif t1[id].Address:match('/person/') then
 			person_rezka_work(t1[id].Address)
-
+			else
+			media_info_rezka(t1[id].Address)
 			end
 		end
 		if ret == 2 then
