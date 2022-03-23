@@ -200,6 +200,9 @@
 		 return
 		end
 	m_simpleTV.User.collaps.kinogo = inAdr:match('%&kinogo=(.-)$')
+	if m_simpleTV.User.collaps.kinogo then
+		m_simpleTV.User.westSide.PortalTable = m_simpleTV.User.collaps.kinogo
+	end
 	inAdr = inAdr:gsub('&kinopoisk', ''):gsub('&kinogo=.-$', '')
 	local rc, answer = m_simpleTV.Http.Request(session, {url = inAdr, headers = 'Referer: ' .. inAdr})
 		if rc ~= 200 then
