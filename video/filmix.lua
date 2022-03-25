@@ -1,6 +1,6 @@
--- видеоскрипт для сайта https://filmix.ac (11/03/22)
+-- видеоскрипт для сайта https://filmix.ac (25/03/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- west_side mod for lite
+-- west_side mod for lite (25/03/22)
 -- ## авторизация ##
 -- логин, пароль установить в 'Password Manager', для id - filmix
 -- ## необходим ##
@@ -454,7 +454,7 @@ end
 	if not adr or not name then break end
 	ts[j] = {}
 	ts[j].Id = j
-	ts[j].Name = 'Персона: ' .. name
+	ts[j].Name = 'В ролях: ' .. name
 	ts[j].Address = adr
 	j=j+1
 	end
@@ -477,10 +477,10 @@ end
 	if year then year = ', ' .. year else year = '' end
 	ts[j] = {}
 	ts[j].Id = j
-	ts[j].Name = name .. year
+	ts[j].Name = 'Похожий контент: ' .. name:gsub('%&nbsp%;',' ') .. year
 	ts[j].Address = adr
 	ts[j].InfoPanelLogo = logo
-	ts[j].InfoPanelName = 'Filmix медиаконтент: ' .. name
+	ts[j].InfoPanelName = 'Filmix медиаконтент: ' .. name:gsub('%&nbsp%;',' ') .. year
 	j=j+1
 	end
 -------------TabTorrent
@@ -492,6 +492,7 @@ end
 	ts[j].Address = tor .. '&' .. inAdr
 	end
 	m_simpleTV.User.filmix.TabSimilar = ts
+	m_simpleTV.User.westSide.PortalTable = m_simpleTV.User.filmix.TabSimilar
 --------------
 
 	local playerjs_url = answer:match('(modules/playerjs/[^\'"]+)')
