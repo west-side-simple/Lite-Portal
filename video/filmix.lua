@@ -326,7 +326,7 @@ end
 			if ret == 1 then
 				if t[id].Name:match('Жанр: ') then
 				ganres_content_filmix(t[id].Address)
-				elseif t[id].Name:match('Персона: ') or t[id].Name:match('Режиссер: ') then
+				elseif t[id].Name:match('В ролях: ') or t[id].Name:match('Режиссер: ') then
 				person_content_filmix(t[id].Address)
 				elseif t[id].Name:match('Подборка: ') then
 				collection_filmix_url(t[id].Address)
