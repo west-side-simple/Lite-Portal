@@ -36,8 +36,8 @@ end
 
 if m_simpleTV.Control.Reason=='Stopped' or m_simpleTV.Control.Reason=='Error' then
 
-  m_simpleTV.User.westSide.PortalTable=nil
- 
+  m_simpleTV.User.westSide.PortalTable=nil  
+  m_simpleTV.User.filmix.TabSimilar=nil 
   if m_simpleTV.User.westSide.PortalShowWindowId then
     m_simpleTV.Interface.RemoveExtMenu(m_simpleTV.User.westSide.PortalShowWindowId)
   end
