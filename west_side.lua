@@ -1,10 +1,10 @@
 --startup westSide portal
 --saved as utf-8 without bom
---wafee code, west_side updated 22.03.22
+--wafee code, west_side updated 25.03.22
 -------------------------------------------------------------------
 if m_simpleTV.User==nil then m_simpleTV.User={} end
 if m_simpleTV.User.westSide==nil then m_simpleTV.User.westSide={} end
-
+if m_simpleTV.User.filmix==nil then m_simpleTV.User.filmix={} end
 AddFileToExecute('events', m_simpleTV.MainScriptDir .. "user/westSide/events.lua")
 -------------------------------------------------------------------
 local function getConfigVal(key)
@@ -23,7 +23,9 @@ function show_portal_window()
 	m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
  end
  if m_simpleTV.User.westSide.PortalTable~=nil then
+ if m_simpleTV.User.filmix and m_simpleTV.User.filmix.TabSimilar then similar_filmix() else
    kinogo_info(m_simpleTV.User.westSide.PortalTable)
+ end  
  end
 end
 -------------------------------------------------------------------
