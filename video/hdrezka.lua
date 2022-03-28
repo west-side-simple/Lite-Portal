@@ -1,4 +1,4 @@
--- видеоскрипт для сайта https://rezka.ag (23/02/22)
+-- видеоскрипт для сайта https://rezka.ag (28/03/22)
 -- Copyright © 2017-2021 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
 -- mod west_side for lite version
 -- ## открывает подобные ссылки ##
@@ -28,6 +28,7 @@ local proxy = ''
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://hdrezka%..+')
 			and not m_simpleTV.Control.CurrentAddress:match('^http?://kinopub%.me.+')
 			and not m_simpleTV.Control.CurrentAddress:match('^http?://upivi%.com.+')
+			and not m_simpleTV.Control.CurrentAddress:match('^http?://metaivi%.com.+')
 			and not m_simpleTV.Control.CurrentAddress:match('^%$rezka')
 		then
 		 return
@@ -338,7 +339,7 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 	return background
 	end
 	local function get_best_stream(url)
-	local rc, answer = m_simpleTV.Http.Request(session, {url = url})	
+	local rc, answer = m_simpleTV.Http.Request(session, {url = url})
 		if rc ~= 200 then
 			showError('4')
 			m_simpleTV.Http.Close(session)
@@ -351,12 +352,12 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 	answer = answer:gsub('\\/', '/')
 	answer = answer:gsub('\\"', '"')
 	answer = answer:gsub('<!%-%-.-%-%->', ''):gsub('/%*.-%*/', '')
-	local playerjs_url = answer:match('src="([^"]+/js/playerjs[^"]+)')	
+	local playerjs_url = answer:match('src="([^"]+/js/playerjs[^"]+)')
 		if not playerjs_url then return end
-	m_simpleTV.User.rezka.playerjs_url = url:match('^http.-//[^/]+') .. playerjs_url	
-	local adr = answer:match('"streams":"[^"]+')	
+	m_simpleTV.User.rezka.playerjs_url = url:match('^http.-//[^/]+') .. playerjs_url
+	local adr = answer:match('"streams":"[^"]+')
 	if adr then
-	adr = rezkaDeSex(adr)	
+	adr = rezkaDeSex(adr)
 	adr = adr:match('%[1080p Ultra%](http.-://stream%.voidboost%..-%.m3u8)') or adr:match('%[1080p%](http.-://stream%.voidboost%..-%.m3u8)') or adr:match('%[720p%](http.-://stream%.voidboost%..-%.m3u8)') or adr:match('%[480p%](http.-://stream%.voidboost%..-%.m3u8)') or adr:match('%[360p%](http.-://stream%.voidboost%..-%.m3u8)') or adr:match('%[240p%](http.-://stream%.voidboost%..-%.m3u8)') or ''
 	else
 	adr = ''
