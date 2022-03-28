@@ -1,4 +1,4 @@
---Rezka portal - lite version west_side 22.03.22
+--Rezka portal - lite version west_side 28.03.22
 
 local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
@@ -78,6 +78,7 @@ function zerkalo_rezka()
 		{"https://rezkery.com/","https://rezkery.com/"},
 		{"http://upivi.com/","http://upivi.com/"},
 		{"http://kinopub.me/","http://kinopub.me/"},
+		{"http://metaivi.com/","http://metaivi.com/"},
 		}
 
 	local t0={}
