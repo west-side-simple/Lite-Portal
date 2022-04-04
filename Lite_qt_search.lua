@@ -1,4 +1,4 @@
--- Плагин поиска для lite portal - west_side 18.03.22
+-- Плагин поиска для lite portal - west_side 03.04.22
 -- необходимы скрипты Lite_qt_exfs.lua, ex-fs.lua, Lite_qt_tmdb.lua, Lite_qt_kinopub.lua, Lite_qt_filmix.lua - автор west_side
 
 function search()
@@ -140,6 +140,12 @@ m_simpleTV.Control.ExecuteAction(37)
   elseif t1[id].Name == 'YouTube' then search_youtube()
   end
   end
+  if ret == 3 then
+   search()
+  end
+  if ret == 2 then
+   run_westSide_portal()
+  end
 end
 
 function search_media()
@@ -265,7 +271,11 @@ function search_rezka()
 		return overview
 	end
 
-	local urld2 = 'https://rezkery.com/search?do=search&subaction=search&q=' .. m_simpleTV.Common.toPercentEncoding(search_ini:gsub('%-',' '))
+	local urld2 = 'https://rezkery.com/search?do=search&subaction=search&q=' .. search_ini
+		local current_zerkalo = m_simpleTV.Config.GetValue('zerkalo/rezka','LiteConf.ini') or ''
+	if current_zerkalo ~= '' then
+	urld2 = urld2:gsub('^http.-//.-/', current_zerkalo)
+	end
 	local rc2,answerd2 = m_simpleTV.Http.Request(session,{url=urld2})
 	if rc2~=200 then
 		m_simpleTV.Http.Close(session)
@@ -603,7 +613,7 @@ function search_kinogo()
 	t[i].InfoPanelLogo = 'https://kinogo.cc' .. logo
 	t[i].InfoPanelName = 'KinoGo info: ' .. title
 	t[i].InfoPanelShowTime = 30000
-	t[i].InfoPanelTitle = desc
+	t[i].InfoPanelTitle = desc:gsub('^\n     ','')
 	i = i + 1
 	end
 	local AutoNumberFormat, FilterType

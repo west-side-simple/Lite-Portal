@@ -1,4 +1,4 @@
---kinogo portal - lite version west_side 22.03.22
+--kinogo portal - lite version west_side 01.04.22
 
 function run_lite_qt_kinogo()
 	local function getConfigVal(key)
@@ -102,7 +102,7 @@ function page_kinogo(url)
 				t[i].Address = adr
 				t[i].InfoPanelName = 'KinoGo info: ' .. name
 				t[i].InfoPanelShowTime = 30000
-				t[i].InfoPanelTitle = overview
+				t[i].InfoPanelTitle = overview:gsub('^\n     ','')
 			    i = i + 1
 			end
 		local current =	url:match('page/(%d+)/') or 1
@@ -144,11 +144,6 @@ function page_kinogo(url)
 		end
 		if ret == 1 then
 			kinogo_info(t[id].Address)
---[[			retAdr = t[id].Address
-			m_simpleTV.Control.ChangeAddress = 'No'
-			m_simpleTV.Control.ExecuteAction(37)
-			m_simpleTV.Control.CurrentAddress = retAdr
-			m_simpleTV.Control.PlayAddress(retAdr)--]]
 		end
 		if ret == 2 then
 		if prev_pg then
@@ -180,8 +175,8 @@ function kinogo_info(url)
 	local overview = answer:match('<div itemprop="description"><i>(.-)</i></div>') or ''
 	overview = overview:gsub('<br>', '')
 	local all_tag = answer:match('<br>\n(.-)<div itemprop="description">') or ''
-	local all_tag_txt = all_tag:gsub('<a.->', ''):gsub('<div.->', ''):gsub('</div>', ''):gsub('<font.->', ''):gsub('</font>', ''):gsub('\n', ''):gsub('\b', ''):gsub('<br/><br/>', '<br>'):gsub('<br/><br/><br/>', '<br>'):gsub('         <br>', '')
-	local videodesc= '<table width="100%"><tr><td style="padding: 15px 15px 0px;"><img src="' .. poster .. '" height="470"></td><td style="padding: 15px 5px 0px; color: #AAAAAA; vertical-align: middle;"><h3><font color=#00FA9A>' .. title .. '</font></h3><h5>' .. all_tag_txt .. '</h5></td></tr></table><table width="100%"><tr><td style="padding: 0px 5px 5px; color: #FFFFFF; vertical-align: middle;"><h4>' .. overview .. '</h4></td></tr></table>'
+	local all_tag_txt = all_tag:gsub('<a.->', ''):gsub('<div.->', ''):gsub('</div>', ''):gsub('<font.->', ''):gsub('</font>', ''):gsub('\n', ''):gsub('\b', ''):gsub('<br/><br/>', '<br>'):gsub('<br/><br/><br/>', '<br>'):gsub('         <br>', ''):gsub('<br><br/>', '')
+	local videodesc= '<table width="100%"><tr><td style="padding: 5px 5px 0px;"><img src="' .. poster .. '" height="470"></td><td style="padding: 5px 5px 0px; color: #AAAAAA; vertical-align: middle;"><h3><font color=#00FA9A>' .. title .. '</font></h3><h5>' .. all_tag_txt .. '</h5></td></tr></table><table width="100%"><tr><td style="padding: 0px 5px 5px; color: #FFFFFF; vertical-align: middle;"><h4>' .. overview .. '</h4></td></tr></table>'
 	videodesc = videodesc:gsub('"', '\"')
 	local all_plus = answer:match('<div class="relatednews">(.-)<div style="clear:both">') or ''
 	local t1,j={},2

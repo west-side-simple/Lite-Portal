@@ -135,7 +135,7 @@ function show_mediainfo(channelId)
   str1 = str1 .. '</td></tr></table></body></html>'
 
  -- парсер названия
- t[1].Name = t[1].Name:gsub('BTV X%-Files HD', 'The X-Files 1993'):gsub('BTV  Ивановы%-Ивановы HD', 'Ивановы-Ивановы 2017'):gsub('BTV Игра престолов HD', 'Игра престолов 2011'):gsub('BTV Мистер Бин HD', 'Мистер Бин 1990'):gsub(' %- Украинский', '')
+ t[1].Name = t[1].Name:gsub('BTV X%-Files HD', 'The X-Files 1993'):gsub('BTV  Ивановы%-Ивановы HD', 'Ивановы-Ивановы 2017'):gsub('BTV Игра престолов HD', 'Игра престолов 2011'):gsub('BTV Мистер Бин HD', 'Мистер Бин 1990'):gsub(' %- Украинский', ''):gsub(' %(Color%)', '')
  local title_rus = t[1].Name:gsub(' /.-$', ''):gsub('%(4K%)', ''):gsub(' %(мини%-сериал%)', ''):gsub('%(%+18%)', ''):gsub('%(Special%)', ''):gsub(' %- ', ' – '):gsub(' %(.-%d+%)$', ''):gsub(' %d+$', ''):gsub('%(color%)', '')
  local year = t[1].Name:match('%(.-(%d+)%)$') or t[1].Name:match(' (%d+)$')
  local title_orig = t[1].Name:gsub('^.-/ ', ''):gsub('%(4K%)', ''):gsub('%(4%)', ''):gsub(' %(мини%-сериал%)', ''):gsub('%(%+18%)', ''):gsub('%(Special%)', ''):gsub(' %- ', ' – '):gsub('%(.-%d+%)$', ''):gsub(' %d+$', ''):gsub('%(color%)', '') or title_rus

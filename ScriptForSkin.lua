@@ -2,21 +2,21 @@
 function background_skin()
 	local currentbackground = m_simpleTV.Config.GetValue('mainView/logo/file','simpleTVConfig') or ''
 	local path = m_simpleTV.Common.GetMainPath(2) .. 'work/Channel/logo/Wallpapers/'
-	local dir = io.popen('chcp 1251|dir /a-d /b "' .. path .. '"')
-	local t,i,currentid = {},1,1
-	for filename in dir:lines() do
-	if not filename:match('%.jpg') and not filename:match('%.png') then break end
+	local t1,t,i,currentid = m_simpleTV.Common.DirectoryEntryList(path,'*.png;*.jpg','Files|NoDot|NoDotDot','Name|IgnoreCase|DirsFirst'),{},1,1
+    if t1~=nil then
+    for i=1,#t1 do
 	t[i] ={}
 	t[i].Id = i
-	t[i].Name = filename
-	t[i].Action = filename
-	t[i].InfoPanelLogo = m_simpleTV.Common.GetMainPath(2) .. 'work/Channel/logo/Wallpapers/' .. filename
+	t[i].Name = t1[i].fileName
+	t[i].Action = t1[i].fileName
+	t[i].InfoPanelLogo = m_simpleTV.Common.GetMainPath(2) .. 'work/Channel/logo/Wallpapers/' .. t1[i].fileName
 	t[i].InfoPanelTitle = 'Select background'
-	t[i].InfoPanelDesc = '<html><body ><table><tr><td width="100%"><center><img src="simpleTVImage:./work/Channel/logo/Wallpapers/' .. filename .. '" width="900"></td></tr></table></body></html>'
+	t[i].InfoPanelDesc = '<html><body ><table><tr><td width="100%"><center><img src="simpleTVImage:./work/Channel/logo/Wallpapers/' .. t1[i].fileName .. '" width="900"></td></tr></table></body></html>'
 	t[i].InfoPanelShowTime = 9000
-	if currentbackground == '../Channel/logo/Wallpapers/' .. filename then currentid = i end
+	if currentbackground == '../Channel/logo/Wallpapers/' .. t1[i].fileName then currentid = i end
 	i=i+1
-end
+	end
+    end
 	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Skins '}
 	t.ExtButton1 = {ButtonEnable = true, ButtonName = ' View '}
 	local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Select background',currentid-1,t,9000,1+4+8)
@@ -41,7 +41,6 @@ end
 	  m_simpleTV.Control.ExecuteAction(37)
 	  background_skin()
     end
-	dir:close()
 end
 -------------------------------------------------------------------
 function skin_schema_settings()
@@ -79,20 +78,21 @@ end
 
 m_simpleTV.Control.ExecuteAction(37)
 require'lfs'
+
 	local currentskin = m_simpleTV.Config.GetValue('skin/path','simpleTVConfig') or ''
 	local path = m_simpleTV.Common.GetMainPath(2) .. 'skin/'
-	local dir = io.popen('dir /ad /b "' .. path .. '"')
-
-	local t,i,currentid = {},1,1
-	for direname in dir:lines() do
+	local t1,t,i,currentid = m_simpleTV.Common.DirectoryEntryList(path,nil,'Dirs|NoDot|NoDotDot','Name|IgnoreCase|DirsFirst'),{},1,1
+    if t1~=nil then
+    for i=1,#t1 do
 	t[i] ={}
 	t[i].Id = i
-	t[i].Name,t[i].InfoPanelLogo,t[i].InfoPanelTitle,t[i].backgroundimage,t[i].osdcontrolpanelside = set_skin(direname)
-	t[i].Action = direname
+	t[i].Name,t[i].InfoPanelLogo,t[i].InfoPanelTitle,t[i].backgroundimage,t[i].osdcontrolpanelside = set_skin(t1[i].fileName)
+	t[i].Action = t1[i].fileName
 	t[i].InfoPanelDesc = '<html><body ><table><tr><td width="100%"><center><img src="simpleTVImage:' .. t[i].InfoPanelLogo .. '" width="700"></td></tr></table></body></html>'
 	t[i].InfoPanelShowTime = 10000
-	if currentskin == './skin/' .. direname then currentid = i end
+	if currentskin == './skin/' .. t1[i].fileName then currentid = i end
 	i=i+1
+	end
 	end
 
 	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Control '}

@@ -1,4 +1,4 @@
---Filmix portal - lite version west_side 11.03.22
+--Filmix portal - lite version west_side 27.03.22
 
 local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
@@ -31,7 +31,7 @@ function run_lite_qt_filmix()
 		{"https://filmix.ac/playlists/multfilms","Подборки мультов"},
 		{"","Избранное"},
 		{"","ПОИСК"},
-		{"","Filmix зеркало"},		
+		{"","Filmix зеркало"},
 		}
 
 	local t0={}
@@ -53,7 +53,7 @@ function run_lite_qt_filmix()
 			if t0[id].Name == 'ПОИСК' then
 				search_all()
 			elseif t0[id].Name == 'Filmix зеркало' then
-				zerkalo_filmix()				
+				zerkalo_filmix()
 			elseif t0[id].Name:match('одборки') then
 				collection_filmix(t0[id].Action)
 			elseif t0[id].Name:match('Избранное') then
@@ -585,10 +585,10 @@ function collection_filmix_url(url)
 			if not adr or not name or adr == '' then break end
 				t[i] = {}
 				t[i].Id = i
-				t[i].Name = name
+				t[i].Name = name:gsub('%&nbsp%;',' ')
 				t[i].Address = adr
 				t[i].InfoPanelLogo = logo
-				t[i].InfoPanelName = 'Filmix медиаконтент: ' .. name
+				t[i].InfoPanelName = 'Filmix медиаконтент: ' .. name:gsub('%&nbsp%;',' ')
 				t[i].InfoPanelTitle = desc
 				t[i].InfoPanelShowTime = 10000
 			i = i + 1
@@ -747,7 +747,7 @@ function person_content_filmix(url)
 			login = decode64('bWV2YWxpbA')
 			password = decode64('bTEyMzQ1Ng')
 		end
-		
+
 			local rc, answer = m_simpleTV.Http.Request(session, {body = 'login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login=submit', url = filmixsite, method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. filmixsite})
 
 ---------------
@@ -782,10 +782,10 @@ function person_content_filmix(url)
 		if year then year = ', ' .. year else year = '' end
 		t[j] = {}
 		t[j].Id = j
-		t[j].Name = name .. year
+		t[j].Name = name:gsub('%&nbsp%;',' ') .. year
 		t[j].Address = adr
 		t[j].InfoPanelLogo = logo
-		t[j].InfoPanelName = 'Filmix медиаконтент: ' .. name
+		t[j].InfoPanelName = 'Filmix медиаконтент: ' .. name:gsub('%&nbsp%;',' ')
 		j=j+1
 		end
 
