@@ -1,6 +1,6 @@
--- видеоскрипт для видеобалансера "Collaps" https://collaps.org (18/03/22)
+-- видеоскрипт для видеобалансера "Collaps" https://collaps.org (27/03/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod west_side
+-- mod west_side (27/03/22)
 -- ## открывает подобные ссылки ##
 -- https://api1603044906.kinogram.best/embed/movie/7059
 -- https://api1603044906.kinogram.best/embed/kp/5928
@@ -121,13 +121,13 @@
 				v.qlty = tonumber(v.qlty)
 				if v.qlty > 0 and v.qlty <= 180 then
 					v.qlty = 144
-				elseif v.qlty > 180 and v.qlty <= 300 then
+				elseif v.qlty > 180 and v.qlty <= 240 then
 					v.qlty = 240
-				elseif v.qlty > 300 and v.qlty <= 400 then
+				elseif v.qlty > 240 and v.qlty <= 400 then
 					v.qlty = 360
-				elseif v.qlty > 400 and v.qlty <= 500 then
+				elseif v.qlty > 400 and v.qlty <= 480 then
 					v.qlty = 480
-				elseif v.qlty > 500 and v.qlty <= 780 then
+				elseif v.qlty > 480 and v.qlty <= 780 then
 					v.qlty = 720
 				elseif v.qlty > 780 and v.qlty <= 1200 then
 					v.qlty = 1080

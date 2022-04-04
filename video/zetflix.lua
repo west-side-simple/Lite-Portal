@@ -1,7 +1,8 @@
--- видеоскрипт для сайта https://hdi.zetflix.online/ (10/02/22)
+-- видеоскрипт для сайта https://hdi.zetflix.online/ (03/04/22)
 -- west_side
 -- открывает подобные ссылки:
 -- https://hdi.zetflix.online/iplayer/videodb.php?kp=300
+-- https://hd.zetfix.online/iplayer/videodb.php?kp=1172074
 -- ##
 	if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 	if not m_simpleTV.Control.CurrentAddress:match('^https?://hdi%.zetflix%.online') then return end
@@ -138,7 +139,7 @@
 	title = title_v
 	year = year_v
 	end
-	rc,answer = m_simpleTV.Http.Request(session,{url = inAdr, method = 'get', headers = 'User-agent: ' .. ua .. '\nReferer: https://hdi.zetflix.online/iplayer/player.php'})
+	rc,answer = m_simpleTV.Http.Request(session,{url = inAdr:gsub('//hdi%.zetflix%.online/','//hd.zetfix.online/'), method = 'get', headers = 'User-agent: ' .. ua .. '\nReferer: https://hdi.zetflix.online/iplayer/player.php'})
 		if rc ~= 200 then return end
 	local function ZFIndex(t)
 		local lastQuality = tonumber(m_simpleTV.Config.GetValue('zf_qlty') or 5000)
@@ -157,6 +158,7 @@
 	 return index
 	end
 	local function GetZFAdr(urls)
+
 		local subt = urls:match("subtitle\':(.-)return pub")
 --		debug_in_file(subt .. '\n')
 		if subt then
@@ -245,10 +247,12 @@
 		m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = poster or logo, TypeBackColor = 0, UseLogo = 3, Once = 1})
 	end
 	local retAdr
+
 	retAdr = answer:match('file:"(.-)"')
 	if retAdr then setConfigVal('perevod/zf', '') end
 		if not retAdr then
 		retAdr = answer:match('file:%[(.-)%]%}')
+
 		if retAdr == '' then m_simpleTV.Control.ExecuteAction(102, 1) return end
 		local t1,i,current_p = {},1
 		for w in retAdr:gmatch('%{.-%}') do
@@ -259,6 +263,7 @@
 		t1[i].Address = file
 		t1[i].Name = name
 		if t1[i].Name == getConfigVal('perevod/zf') then current_p = i end
+
 		i=i+1
 		end
 		m_simpleTV.User.ZF.TabPerevod = t1
@@ -266,6 +271,7 @@
 	if current_p then
 	retAdr = t1[current_p].Address
 	title = title .. ' - ' .. t1[current_p].Name
+
 	else
 		local _, id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите озвучку - ' .. title, 0, t1, 5000, 1)
 		id = id or 1
@@ -287,7 +293,8 @@
 	m_simpleTV.Control.CurrentTitle_UTF8 = title .. ', ' .. year
 	m_simpleTV.Control.SetTitle(title .. ', ' .. year)
 	end
-	if imdb or (not imdb and tv~=1) then
+
+	if id_imdb or (not id_imdb and tv~=1) then
 	retAdr = GetZFAdr(retAdr)
 	end
 	if tv == 1	then

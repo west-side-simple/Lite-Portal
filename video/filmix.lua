@@ -1,6 +1,6 @@
--- видеоскрипт для сайта https://filmix.ac (25/03/22)
+-- видеоскрипт для сайта https://filmix.ac (27/03/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- west_side mod for lite (25/03/22)
+-- west_side mod for lite (27/03/22)
 -- ## авторизация ##
 -- логин, пароль установить в 'Password Manager', для id - filmix
 -- ## необходим ##

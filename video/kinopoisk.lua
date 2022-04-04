@@ -1,4 +1,4 @@
--- видеоскрипт для сайта http://www.kinopoisk.ru (15/02/22)
+-- видеоскрипт для сайта http://www.kinopoisk.ru (01/04/22)
 -- Copyright © 2017-2021 Nexterr | https://github.com/Nexterr/simpleTV
 -- mod west_side (add voidboost - VB Rezka streames)
 -- ## необходим ##
@@ -54,8 +54,8 @@ tname = {
  'ZF',
 -- 'Filmix',
  'CDN Movies',
--- 'Videoframe',
--- 'Hdvb',
+ 'Videoframe',
+ 'Hdvb',
  'Collaps',
  'Kodik',
 -- 'КиноПоиск онлайн',
@@ -265,8 +265,8 @@ end
 			rc, answer = m_simpleTV.Http.Request(session, {url = url})
 				if rc ~= 200 then return end
 			return answer:match('"path":"([^"]+)')
-		elseif url:match('delivembd') then
-			rc, answer = m_simpleTV.Http.Request(session, {url = url, headers = 'Referer: api.delivembd.ws/\nOrigin: api.delivembd.ws'})
+		elseif url:match('synchroncode') then
+			rc, answer = m_simpleTV.Http.Request(session, {url = url, headers = 'Referer: api.synchroncode.com'})
 				if rc ~= 200 then return end
 				if answer:match('embedHost') then
 				 return url
@@ -339,7 +339,7 @@ end
 				end
 			id = id or 1
 			return svar[id].Address
-		elseif url:match('delivembd') then
+		elseif url:match('synchroncode') then
 			return url
 		elseif url:match('vb17121coramclean') then
 			return answer
