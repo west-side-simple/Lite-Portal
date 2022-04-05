@@ -21,6 +21,15 @@
 	if not m_simpleTV.User then
 		m_simpleTV.User = {}
 	end
+	if not m_simpleTV.User.collaps then
+		m_simpleTV.User.collaps = {}
+	end
+	m_simpleTV.User.collaps.kinogo = nil
+	m_simpleTV.User.collaps.kinogo = inAdr:match('%&kinogo=(.-)$')
+	if m_simpleTV.User.collaps.kinogo then
+		m_simpleTV.User.westSide.PortalTable = m_simpleTV.User.collaps.kinogo
+	end
+	inAdr = inAdr:gsub('&kinopoisk', ''):gsub('&kinogo=.-$', '')
 	if not m_simpleTV.User.hdvb then
 		m_simpleTV.User.hdvb = {}
 	end
