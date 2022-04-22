@@ -1,12 +1,14 @@
--- видеоскрипт для видеобалансера "CDN Movies" https://cdnmovies.net (29/3/22)
+-- видеоскрипт для видеобалансера "CDN Movies" https://cdnmovies.net (18/4/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
 -- ## необходим ##
 -- модуль: /core/playerjs.lua
 -- ## открывает подобные ссылки ##
 -- http://moonwalk.cam/movie/4514
 -- http://moonwalk.cam/serial/5311
+-- https://700filmov.ru/serial/2042
 		if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 		if not m_simpleTV.Control.CurrentAddress:match('^https?://moonwalk%.cam')
+			and not m_simpleTV.Control.CurrentAddress:match('^https?://700filmov%.ru')
 			and not m_simpleTV.Control.CurrentAddress:match('^$cdnmovies')
 		then
 		 return
@@ -27,10 +29,17 @@
 	if not m_simpleTV.User.cdnmovies then
 		m_simpleTV.User.cdnmovies = {}
 	end
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; rv:99.0) Gecko/20100101 Firefox/99.0')
+		if not session then return end
+	m_simpleTV.Http.SetTimeout(session, 8000)
 	m_simpleTV.User.cdnmovies.DelayedAddress = nil
-	m_simpleTV.User.cdnmovies.startAdr = inAdr
-	local function showMsg(str)
-		local t = {text = 'CDN Movies ошибка: ' .. str, showTime = 1000 * 8, color = ARGB(255, 255, 102, 0), id = 'channelName'}
+	local function showMsg(str, msg)
+		local color
+		if not msg then
+			msg = 'CDN Movies ошибка: ' .. str
+			color = ARGB(255, 255, 102, 0)
+		end
+		local t = {text = msg, showTime = 1000 * 8, color = color, id = 'channelName'}
 		m_simpleTV.OSD.ShowMessageT(t)
 	end
 	local function getIndex(t)
@@ -52,14 +61,22 @@
 	local function getAdr(url)
 			if not url then return end
 		url = url:gsub('^$cdnmovies', '')
-		local t, i = {}, 1
-			for qlty, adr in url:gmatch('%[(%d+).-%]([^,]+)') do
-				t[i] = {}
-				t[i].Id = i
-				t[i].qlty = tonumber(qlty)
-				t[i].Address = adr:gsub('%.m3u8', '.mp4') .. '$OPT:NO-STIMESHIFT'
-				t[i].Name = qlty .. 'p'
-				i = i + 1
+		local rc, answer = m_simpleTV.Http.Request(session, {url = url})
+			if rc ~= 200 then return end
+		local base = url:match('.+/')
+		local t = {}
+			for w in answer:gmatch('#EXT%-X%-STREAM.-\n.-\n') do
+				local qlty = w:match('RESOLUTION=%d+x(%d+)')
+				local adr = w:match('\n(.+)')
+				if qlty and adr then
+					t[#t + 1] = {}
+					t[#t].Id = #t
+					t[#t].qlty = tonumber(qlty)
+					adr = adr:gsub('^[/.]+', base)
+					adr = adr:gsub(':hls:manifest.-$', '')
+					t[#t].Address = adr .. '$OPT:NO-STIMESHIFT'
+					t[#t].Name = qlty .. 'p'
+				end
 			end
 			if #t == 0 then return end
 		table.sort(t, function(a, b) return a.qlty < b.qlty end)
@@ -68,142 +85,102 @@
 		m_simpleTV.User.cdnmovies.Index = index
 	 return t[index].Address
 	end
-	local function trim(str)
-		str = string.match(str,'^%s*(.-)%s*$')
-	 return str
-	end
 	local function play(adr, title)
 		local retAdr = getAdr(adr)
-			if not retAdr then
-				m_simpleTV.Control.CurrentAddress = 'http://wonky.lostcut.net/vids/error_getlink.avi'
-			 return
-			end
+			if not retAdr then return end
 -- debug_in_file(retAdr .. '\n')
 		m_simpleTV.Control.SetTitle(title)
-		m_simpleTV.OSD.ShowMessageT({text = title, showTime = 1000 * 5, id = 'channelName'})
+		showMsg(nil, title)
 		m_simpleTV.Control.CurrentAddress = retAdr
 	end
-	local function transl()
-		local tab = m_simpleTV.User.cdnmovies.tab
-		local hash, t = {}, {}
+	local function transl(movie)
+		local tab = m_simpleTV.User.cdnmovies.tabEpisode
+		local transl_name = m_simpleTV.User.cdnmovies.transl_name or m_simpleTV.User.cdnmovies.tabEpisode[1].title
+		local transl_id = m_simpleTV.User.cdnmovies.transl_id
+		local found_transl_name
+		local t = {}
 			for i = 1, #tab do
-				local title = trim(tab[i].title)
-				if not hash[title] then
-					t[#t + 1] = tab[i]
-					hash[title] = true
-				end
-			end
-		local selected = m_simpleTV.User.cdnmovies.tr
-		local selected_dubl, selected_pro
-			for i = 1, #t do
-				t[i].Id = i
-				t[i].Address = t[i].file
-				local name = t[i].title
-				t[i].Name = name
-				if not selected then
-					if not selected_dubl
-						and (name:match('дублир') and not name:match('%[..%]'))
-					then
-						selected_dubl = i
-					end
-					if not selected_pro
-						and (name:match('фессион') and not name:match('%[..%]'))
-					then
-						selected_pro = i
-					end
-				end
-			end
-		selected = selected or selected_dubl or selected_pro or #t
-		t.ExtButton0 = {ButtonEnable = true, ButtonName = '🎞️'}
-		if m_simpleTV.User.paramScriptForSkin_buttonOk then
-			t.OkButton = {ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonOk}
-		end
-		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('перевод: ' .. m_simpleTV.User.cdnmovies.title, selected - 1, t, 10000, 1 + 2 + 4 + 8)
-			if ret == 2 then
-				m_simpleTV.Control.Restart(-2.0, true)
-			 return
-			end
-			if t[1].Address then
-				id = id or selected
-			elseif not id
-				and m_simpleTV.Control.GetState() == 0
-				and m_simpleTV.User.cdnmovies.DelayedAddress
-			then
-				m_simpleTV.Control.ExecuteAction(11)
-			 return
-			elseif not id
-				and m_simpleTV.Control.GetState() == 0
-			then
-				id = id or selected
-			elseif not id then
-			 return
-			end
-		m_simpleTV.User.cdnmovies.tr = id
-		m_simpleTV.User.cdnmovies.adr = t[id].Address
-	 return true
-	end
-	local function seasons()
-		local tab = m_simpleTV.User.cdnmovies.tab
-		local title = m_simpleTV.User.cdnmovies.title
-		local tr = m_simpleTV.User.cdnmovies.tr
-		local t, i = {}, 1
-			while tab[tr].folder[i] do
 				t[i] = {}
 				t[i].Id = i
-				t[i].Name = trim(tab[tr].folder[i].title)
-				i = i + 1
+				t[i].Address = tab[i].file
+				t[i].Name = tab[i].title
+				if t[i].Name == transl_name then
+					transl_id = i
+					found_transl_name = true
+				end
+			end
+			if #t == 0 then return end
+		m_simpleTV.User.cdnmovies.transl_name = transl_name or t[1].Name
+		if not transl_id or transl_id > #t or not found_transl_name then
+			transl_id = 1
+		end
+		m_simpleTV.User.cdnmovies.transl_id = transl_id
+		m_simpleTV.User.cdnmovies.transl = t
+		if movie then
+			m_simpleTV.User.cdnmovies.adr = t[1].Address
+		end
+	 return true
+	end
+	local function seasons(transl_menu)
+		local tab = m_simpleTV.User.cdnmovies.tab
+		local title = m_simpleTV.User.cdnmovies.title
+		local t = {}
+			for i = 1, #tab do
+				t[#t +1] = {}
+				t[#t].Id = #t
+				t[#t].Name = tab[#t].title
 			end
 			if #t == 0 then return end
 		if m_simpleTV.User.paramScriptForSkin_buttonOk then
 			t.OkButton = {ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonOk}
 		end
-		if m_simpleTV.User.paramScriptForSkin_buttonPrev then
-			t.ExtButton1 = {ButtonEnable = true, ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonPrev}
-		else
-			t.ExtButton1 = {ButtonEnable = true, ButtonName = '🢀'}
+		if not transl_menu then
+			t.ExtButton0 = {ButtonEnable = true, ButtonName = '🎞️'}
 		end
-		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('сезон: ' .. title, - 1, t, 10000, 1 + 2 + 4 + 8)
-			if ret == 3 then
-				if transl() then
-					serials_cdnmovies()
-				end
+		if m_simpleTV.User.paramScriptForSkin_buttonClose then
+			t.ExtButton1 = {ButtonEnable = true, ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonClose}
+		else
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = '✕'}
+		end
+		local season_chk = m_simpleTV.User.cdnmovies.season or 1
+		local fl = 0
+		if transl_menu and m_simpleTV.Control.GetState() == 0 then
+			fl = 8
+		end
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('сезоны - ' .. title, season_chk - 1, t, 10000, 1 + 2 + 4 + fl)
+			if ret == 2 and not transl_menu then
+				m_simpleTV.Control.Restart(-2.0, true)
 			 return
 			end
-			if not id
-				and m_simpleTV.Control.GetState() == 0
-				and m_simpleTV.User.cdnmovies.DelayedAddress
-			then
-				m_simpleTV.Control.ExecuteAction(11)
+			if (not id or ret == 3) and transl_menu then
+				m_simpleTV.Control.ExecuteAction(37)
 			 return
-			elseif not id
-				and m_simpleTV.Control.GetState() == 0
-			then
-				id = 1
-			elseif not id then
+			elseif ret == 3 and not transl_menu then
+				m_simpleTV.Control.ExecuteAction(37)
 			 return
 			end
+		id = id or 1
 		m_simpleTV.User.cdnmovies.season = id
 		m_simpleTV.User.cdnmovies.seasonName = ' (' .. t[id].Name .. ')'
 	 return true
 	end
 	local function episodes()
-		local tr = m_simpleTV.User.cdnmovies.tr
 		local tab = m_simpleTV.User.cdnmovies.tab
 		local season = m_simpleTV.User.cdnmovies.season
 		local t, i = {}, 1
-			while tab[tr].folder[season].folder[i] do
+			while tab[season].folder[i] do
 				t[i] = {}
 				t[i].Id = i
-				t[i].Name = tab[tr].folder[season].folder[i].title
-				t[i].Address = '$cdnmovies' .. tab[tr].folder[season].folder[i].file
+				t[i].Name = tab[season].folder[i].title
+				t[i].Address = '$cdnmovies' .. tab[season].folder[i].folder[1].file
+				t[i].Table = tab[season].folder[i].folder
 				i = i + 1
 			end
 			if #t == 0 then return end
 		local retAdr = getAdr(t[1].Address)
-			if not retAdr then
-				m_simpleTV.Control.CurrentAddress = 'http://wonky.lostcut.net/vids/error_getlink.avi'
-			 return
-			end
+			if not retAdr then return end
+		m_simpleTV.User.cdnmovies.tabEpisode = t[1].Table
+		transl()
 		m_simpleTV.User.cdnmovies.DelayedAddress = retAdr
 		local title = m_simpleTV.User.cdnmovies.title .. m_simpleTV.User.cdnmovies.seasonName
 		m_simpleTV.Control.SetTitle(title)
@@ -215,10 +192,10 @@
 		if m_simpleTV.User.paramScriptForSkin_buttonOk then
 			t.OkButton = {ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonOk}
 		end
-		if m_simpleTV.User.paramScriptForSkin_buttonPrev then
-			t.ExtButton1 = {ButtonEnable = true, ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonPrev, ButtonScript = 'serials_cdnmovies()'}
+		if m_simpleTV.User.paramScriptForSkin_buttonPlst then
+			t.ExtButton1 = {ButtonEnable = true, ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonPlst, ButtonScript = 'transl_cdnmovies()'}
 		else
-			t.ExtButton1 = {ButtonEnable = true, ButtonName = '🢀', ButtonScript = 'serials_cdnmovies()'}
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = '📋', ButtonScript = 'transl_cdnmovies()'}
 		end
 		t.ExtParams = {}
 		t.ExtParams.LuaOnCancelFunName = 'OnMultiAddressCancel_cdnmovies'
@@ -247,38 +224,77 @@
 		if m_simpleTV.User.paramScriptForSkin_buttonOk then
 			t.OkButton = {ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonOk}
 		end
+		if m_simpleTV.User.paramScriptForSkin_buttonPlst then
+			t.ExtButton1 = {ButtonEnable = true, ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonPlst, ButtonScript = 'transl_cdnmovies(true)'}
+		else
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = '📋', ButtonScript = 'transl_cdnmovies(true)'}
+		end
 		m_simpleTV.OSD.ShowSelect_UTF8('CDN Movies', 0, t, 10000, 64 + 32 + 128)
 		play(adr, title)
 	end
 	local function getData()
-		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; rv:98.0) Gecko/20100101 Firefox/98.0')
-			if not session then return end
-		m_simpleTV.Http.SetTimeout(session, 8000)
-		local url = inAdr:gsub('&kinopoisk.+', '')
+		local url = inAdr:gsub('&kinopoisk.+', ''):gsub('^http:', 'https:')
 		local rc, answer = m_simpleTV.Http.Request(session, {url = url, headers = 'Referer: https://cdnmovies.net/'})
-		m_simpleTV.Http.Close(session)
-			if rc ~= 200 then
-			 return 'это видео удалено'
-			end
+			if rc ~= 200 then return end
 		local file = answer:match('file:\'([^\']+)')
 			if not file then return end
-		local playerjs_url = answer:match('script src="([^"]+)')
-			if not playerjs_url then return end
-		local host = url:match('^https?://[^/]+')
-		if not playerjs_url:match('^https?://') then
-			playerjs_url = host .. playerjs_url
+		if file:match('^#') then
+			local playerjs_url = answer:match('script src="([^"]+)')
+				if not playerjs_url then return end
+			local host = url:match('^https?://[^/]+')
+			if not playerjs_url:match('^https?://') then
+				playerjs_url = host .. playerjs_url
+			end
+			file = playerjs.decode(file, playerjs_url)
+				if not file or file == '' then return end
+			file = m_simpleTV.Common.multiByteToUTF8(file)
 		end
-		local file = playerjs.decode(file, playerjs_url)
-			if not file or file == '' then return end
-		file = m_simpleTV.Common.multiByteToUTF8(file)
+		local titleAnswer = answer:match('<title>([^<]+)')
 		file = file:gsub('%[%]', '""')
 		local err, tab = pcall(json.decode, file)
 		local ser = file:match('folder')
-	 return tab, ser
+	 return tab, ser, titleAnswer
 	end
-	function serials_cdnmovies()
-		if seasons() then
-			episodes()
+	function transl_cdnmovies(movie)
+		local t = m_simpleTV.User.cdnmovies.transl
+			if not t then return end
+		m_simpleTV.Control.ExecuteAction(37)
+		if m_simpleTV.User.paramScriptForSkin_buttonOk then
+			t.OkButton = {ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonOk}
+		end
+		if m_simpleTV.User.paramScriptForSkin_buttonClose then
+			t.ExtButton1 = {ButtonEnable = true, ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonClose, ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
+		else
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = '✕', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
+		end
+		if not movie then
+			t.ExtButton0 = {ButtonEnable = true, ButtonName = 'Сезоны'}
+		end
+		local transl_id = m_simpleTV.User.cdnmovies.transl_id
+		m_simpleTV.User.cdnmovies.transl_name = m_simpleTV.User.cdnmovies.transl[transl_id].Name
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('Перевод', transl_id - 1, t, 10000, 1 + 2 + 4)
+		if ret == 1 then
+			local retAdr = getAdr(t[id].Address)
+				if not retAdr then return end
+			local position
+			if m_simpleTV.Control.GetState() == 0 then
+				position = 0
+			else
+				position = m_simpleTV.Control.GetPosition()
+			end
+			m_simpleTV.User.cdnmovies.transl_id = id
+			m_simpleTV.User.cdnmovies.transl_name = m_simpleTV.User.cdnmovies.transl[id].Name
+			m_simpleTV.Control.SetNewAddressT({address = retAdr, position = position})
+		end
+		if ret == 2 then
+			if seasons(true) then
+				m_simpleTV.User.cdnmovies.transl_id = nil
+				m_simpleTV.User.cdnmovies.transl_name = nil
+				episodes()
+			end
+		end
+		if (not id or ret == 3) and m_simpleTV.Control.GetState() == 0 then
+			m_simpleTV.Control.ExecuteAction(108)
 		end
 	end
 	function qlty_cdnmovies()
@@ -313,7 +329,7 @@
 				m_simpleTV.Control.SetNewAddressT({address = m_simpleTV.User.cdnmovies.DelayedAddress, position = 0})
 				local title = m_simpleTV.User.cdnmovies.episodeTitle
 				m_simpleTV.Control.SetTitle(title)
-				m_simpleTV.OSD.ShowMessageT({text = title, showTime = 1000 * 5, id = 'channelName'})
+				showMsg(nil, title)
 			end
 			m_simpleTV.User.cdnmovies.DelayedAddress = nil
 		end
@@ -326,12 +342,16 @@
 				and t.MultiName
 			then
 				title = t.MultiHeader .. ': ' .. t.MultiName
+				m_simpleTV.User.cdnmovies.tabEpisode = m_simpleTV.User.cdnmovies.tab[m_simpleTV.User.cdnmovies.season].folder[t.MultiIndex +1].folder
+				transl()
+				local transl_id = m_simpleTV.User.cdnmovies.transl_id
+				play(m_simpleTV.User.cdnmovies.tab[m_simpleTV.User.cdnmovies.season].folder[t.MultiIndex +1].folder[transl_id].file, title)
 			end
-			play(inAdr, title)
 		 return
 		end
-	local tab, ser = getData()
+	local tab, ser, titleAnswer = getData()
 		if type(tab) ~= 'table' then
+			m_simpleTV.Http.Close(session)
 			showMsg('нет данных')
 		 return
 		end
@@ -339,21 +359,27 @@
 	if title then
 		title = m_simpleTV.Common.fromPercentEncoding(title)
 	else
-		title = 'CDN Movies'
+		title = titleAnswer or 'CDN Movies'
 	end
 	m_simpleTV.User.cdnmovies.title = title
 	if m_simpleTV.Control.MainMode == 0 then
 		m_simpleTV.Control.ChangeChannelName(title, m_simpleTV.Control.ChannelID, false)
 	end
 	m_simpleTV.User.cdnmovies.tab = tab
-	m_simpleTV.User.cdnmovies.tr = nil
-	if transl() then
-		if ser then
-			serials_cdnmovies()
-		else
-			if m_simpleTV.Control.MainMode == 0 then
-				m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = '', TypeBackColor = 0, UseLogo = 0, Once = 1})
-			end
+	m_simpleTV.User.cdnmovies.transl = nil
+	m_simpleTV.User.cdnmovies.transl_id = nil
+	m_simpleTV.User.cdnmovies.season = nil
+	m_simpleTV.User.cdnmovies.transl_name = nil
+	if ser then
+		if seasons() then
+			episodes()
+		end
+	else
+		if m_simpleTV.Control.MainMode == 0 then
+			m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = '', TypeBackColor = 0, UseLogo = 0, Once = 1})
+		end
+		m_simpleTV.User.cdnmovies.tabEpisode = m_simpleTV.User.cdnmovies.tab
+		if transl(true) then
 			movie()
 		end
 	end
