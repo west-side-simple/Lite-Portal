@@ -1,4 +1,4 @@
---videocdn translations portal - lite version west_side 19.03.22
+--videocdn translations portal - lite version west_side 23.04.22
 
 function run_lite_qt_cdntr()
 
@@ -69,6 +69,7 @@ local function title_translate(translate)
 local url = 'aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvdHJhbnNsYXRpb25zP2FwaV90b2tlbj1vUzdXenZOZnhlNEs4T2NzUGpwQUlVNlh1MDFTaTBmbQ=='
 	local rc, answer = m_simpleTV.Http.Request(session, {url = decode64(url)})
 	require('json')
+	if not answer then return '' end
 	answer = answer:gsub('(%[%])', '"nil"')
 	local tab = json.decode(answer)
 	if not tab or not tab.data or not tab.data[1]
@@ -84,7 +85,7 @@ return ''
 end
 	local current_id = url:match('%&translation=(%d+)')
 	local current_tr = title_translate(current_id)
-	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0')
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 60000)
 

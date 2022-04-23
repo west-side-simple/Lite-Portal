@@ -1,4 +1,4 @@
---kinogo portal - lite version west_side 01.04.22
+--kinogo portal - lite version west_side 23.04.22
 
 function run_lite_qt_kinogo()
 	local function getConfigVal(key)
@@ -11,6 +11,8 @@ function run_lite_qt_kinogo()
 
 	local last_adr = getConfigVal('info/kinogo') or ''
 			local pll={
+		{"","Подборки KinoGo"},
+		{"/rekomenduem-posmotret/","KinoGo рекомендует"},
 		{"/filmy/","Фильмы - последние поступления"},
 		{"/filmy/genre-filmy-biograficheskiy/","Биография"},
 		{"/filmy/genre-filmy-boevik/","Боевик"},
@@ -66,6 +68,8 @@ function run_lite_qt_kinogo()
   if ret == 1 then
    if t[id].Name == 'ПОИСК' then
 	search()
+   elseif t[id].Name == 'Подборки KinoGo' then
+	kinogo()
    else
     page_kinogo('https://kinogo.cc' .. t[id].Action .. 'page/' .. 1 .. '/')
    end
@@ -76,6 +80,46 @@ function run_lite_qt_kinogo()
   if ret == 3 then
    run_westSide_portal()
   end
+end
+
+function kinogo()
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
+		if not session then return end
+	m_simpleTV.Http.SetTimeout(session, 60000)
+
+	local rc, answer = m_simpleTV.Http.Request(session, {url = 'https://kinogo.cc/podborki.html'})
+		if rc ~= 200 then return end
+		answer = answer:gsub('<!%-%-.-%-%->', ''):gsub('/%*.-%*/', '')
+		local answer1 = answer:match('<div class="oformlenie">(.-)</div>')
+		local t,i={},1
+			for w in answer1:gmatch('<a href.-</a>') do
+				local name = w:match('title="(.-)"')
+				local adr = w:match('href="(.-)"')
+				local logo = w:match('src="(.-)"')
+				if adr == '/collection-dc/' then name = name:gsub('BBC','DC') end
+				if not adr or not name then break end
+				t[i] = {}
+				t[i].Id = i
+				t[i].InfoPanelLogo = 'https://kinogo.cc' .. logo
+				t[i].Name = name:gsub('%&quot%;','"')
+				t[i].Address = 'https://kinogo.cc' .. adr
+				t[i].InfoPanelName = 'KinoGo подборка: ' .. name
+				t[i].InfoPanelShowTime = 30000
+			    i = i + 1
+			end
+
+		t.ExtButton0 = {ButtonEnable = true, ButtonName = '🢀'}
+
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('Подборки KinoGo (' .. #t .. ')', 0, t, 30000, 1+4+8+2)
+		if ret == -1 or not id then
+			return
+		end
+		if ret == 1 then
+			page_kinogo(t[id].Address)
+		end
+		if ret == 2 then
+		  run_lite_qt_kinogo()
+		end
 end
 
 function page_kinogo(url)
