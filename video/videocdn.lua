@@ -1,13 +1,13 @@
--- видеоскрипт для видеобалансера "videocdn" https://videocdn.tv (19/03/22)
+-- видеоскрипт для видеобалансера "videocdn" https://videocdn.tv (23/04/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod - west_side (19/03/22)
+-- mod - west_side (23/04/22)
 -- ## открывает подобные ссылки ##
 -- https://32.svetacdn.in/fnXOUDB9nNSO?kp_id=5928
 -- https://32.tvmovies.in/fnXOUDB9nNSO/tv-series/92
 -- https://32.tvmovies.in/fnXOUDB9nNSO/movie/22080
 -- http://32.svetacdn.in/fnXOUDB9nNSO/movie/36905
 -- ## домен ##
-local domen = 'http://58.svetacdn.in'
+local domen = 'http://5678.svetacdn.in'
 -- '' - по умолчанию
 -- 'http://58.svetacdn.in' (пример)
 -- ## прокси ##
@@ -85,6 +85,7 @@ local function title_translate(translate)
 local url = 'aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvdHJhbnNsYXRpb25zP2FwaV90b2tlbj1vUzdXenZOZnhlNEs4T2NzUGpwQUlVNlh1MDFTaTBmbQ=='
 	local rc, answer = m_simpleTV.Http.Request(session, {url = decode64(url)})
 	require('json')
+	if not answer then return '' end
 	answer = answer:gsub('(%[%])', '"nil"')
 	local tab = json.decode(answer)
 	if not tab or not tab.data or not tab.data[1]
@@ -104,7 +105,7 @@ end
 	end
 	m_simpleTV.Control.ChangeAddress = 'Yes'
 	m_simpleTV.Control.CurrentAddress = ''
-	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; rv:96.0) Gecko/20100101 Firefox/96.0', proxy, false)
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; rv:99.0) Gecko/20100101 Firefox/99.0', proxy, false)
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 12000)
 	if not m_simpleTV.User then
@@ -221,8 +222,8 @@ end
 			url = url:gsub('^%[', '')
 		end
 		local t = {}
-			for adr in url:gmatch('%](//[^%s]+%.m3u8)') do
-				local qlty = adr:match('/(%d+)%.m3u8')
+			for adr in url:gmatch('%](//[^%s]+%.mp4)') do
+				local qlty = adr:match('/(%d+)%.mp4')
 				if qlty then
 					t[#t + 1] = {}
 					t[#t].qlty = tonumber(qlty)
@@ -231,7 +232,7 @@ end
 				end
 			end
 			if #t == 0 then return end
-		local adr1080 = t[1].Address:gsub('/%d+.m3u8', '/1080.m3u8')
+		local adr1080 = t[1].Address:gsub('/%d+.mp4', '/1080.mp4')
 		local rc, answer = m_simpleTV.Http.Request(session, {url = adr1080, method = 'head'})
 		if rc == 200 then
 			t[#t + 1] = {}
