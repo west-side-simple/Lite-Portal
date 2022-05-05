@@ -30,6 +30,7 @@ tname = {
 -- сортировать: поменять порядок строк
 -- отключить: поставить в начале строки --
  'Videocdn',
+ 'Videoapi', 
  'VB',
  'ZF',
 -- 'Filmix',
@@ -50,6 +51,7 @@ tname = {
 -- сортировать: поменять порядок строк
 -- отключить: поставить в начале строки --
  'Videocdn',
+ 'Videoapi',  
  'VB',
  'ZF',
 -- 'Filmix',
@@ -129,10 +131,14 @@ end
 				if rc ~= 200 then return end
 				if not answer:match('"stream_type":"HLS","url":"%a') then return end
 			return url
-		elseif url:match('svetacdn') then
+		elseif url:match('PXk2QGbvEVmS') then
 			rc, answer = m_simpleTV.Http.Request(session, {url = url})
 				if rc ~= 200 then return end
 			return url
+		elseif url:match('kNKj47MkBgLS') then
+			rc, answer = m_simpleTV.Http.Request(session, {url = url})
+				if rc ~= 200 then return end
+			return url	
 		elseif url:match('cdnmovies%.net') then
 			rc, answer = m_simpleTV.Http.Request(session, {url = url})
 				if rc ~= 200 then return end
@@ -292,8 +298,10 @@ end
 			return answer
 		elseif url:match('ivi%.ru') then
 			return answer
-		elseif url:match('svetacdn') then
+		elseif url:match('PXk2QGbvEVmS') then
 			return answer
+		elseif url:match('kNKj47MkBgLS') then
+			return answer	
 		elseif url:match('cdnmovies%.net') then
 			return answer
 		elseif url:match('kodikapi%.com') then
@@ -458,6 +466,8 @@ end
 				turl[i] = {adr = decode64('aHR0cHM6Ly9hcGkuaXZpLnJ1L21vYmlsZWFwaS9zZWFyY2gvdjUvP2ZpZWxkcz1rcF9pZCxpZCxkcm1fb25seSZmYWtlPTAmcXVlcnk9'), tTitle = 'Фильмы и сериалы с ivi.ru', tLogo = 'http://saledeal.ru/wp-content/uploads/2019/09/ivi.png'}
 			elseif tname[i] == 'Videocdn' then
 				turl[i] = {adr = decode64('aHR0cHM6Ly84MjA5LnN2ZXRhY2RuLmluL1BYazJRR2J2RVZtUz9rcF9pZD0') .. kpid, tTitle = 'Большая база фильмов и сериалов', tLogo = logo_k}
+			elseif tname[i] == 'Videoapi' and id_imdb and id_imdb ~= '' then
+				turl[i] = {adr = decode64('aHR0cHM6Ly81MTAyLnN2ZXRhY2RuLmluL2tOS2o0N01rQmdMUz9pbWRiX2lkPQ==') .. id_imdb, tTitle = 'Большая база фильмов и сериалов', tLogo = logo_k}	
 			elseif tname[i] == 'Collaps' then
 				turl[i] = {adr = 'http://api.' .. os.time() .. decode64('LmRlbGl2ZW1iZC53cy9lbWJlZC9rcC8') .. kpid, tTitle = 'Большая база фильмов и сериалов', tLogo = logo_k}
 			elseif tname[i] == 'CDN Movies' then

@@ -1,4 +1,4 @@
--- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (15/02/22) - автор west_side
+-- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (01/05/22) - автор west_side
 -- необходим действующий аккаунт на сайте https://kino.pub
 -- работает в связке со скриптом Lite_qt_kinopub.lua - автор west_side
 -- необходимо сгенерировать cookies в браузере Mozilla, дополнение cookies.txt.
@@ -10,14 +10,17 @@
 	if not inAdr:match('https?://kino%.pub')
 	and not inAdr:match('^%,')
 	then return end
-
+local proxy = 'http://proxy-nossl.antizapret.prostovpn.org:29976'
+-- '' - нет
+-- 'http://proxy-nossl.antizapret.prostovpn.org:29976' (пример)
+-- ##
 	m_simpleTV.OSD.ShowMessageT({text = '', showTime = 1000, id = 'channelName'})
 	kinopub_search = inAdr:match('^%,(.-)$') or ''
 	kinopub_search = m_simpleTV.Common.multiByteToUTF8(kinopub_search,1251)
 	if kinopub_search ~= '' then inAdr = 'https://kino.pub/item/search?query=' .. m_simpleTV.Common.toPercentEncoding(kinopub_search) end
 	m_simpleTV.Control.ChangeAdress = 'Yes'
 	m_simpleTV.Control.CurrentAdress = ''
-	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0', proxy, false)
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 16000)
 local tooltip_body
@@ -447,7 +450,7 @@ else
 	logo = bg_imdb_id(imdb_id)
 	end
 
-	if m_simpleTV.Control.MainMode == 0 then
+	if m_simpleTV.Control.MainMode == 0 and logo then
 		m_simpleTV.Interface.SetBackground({BackColor = 0, BackColorEnd = 255, PictFileName = logo, TypeBackColor = 0, UseLogo = 3, Once = 1})
 		m_simpleTV.Control.ChangeChannelLogo(logo, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
 		m_simpleTV.Control.ChangeChannelName(title:gsub('&#039;',"'"):gsub('&amp;',"&"), m_simpleTV.Control.ChannelID, false)
@@ -518,7 +521,7 @@ else
 		else
 		t.ExtButton1 = {ButtonEnable = true, ButtonName = '🧾', ButtonScript = 'tags_kinopub(\'' .. answer3 .. '\')'}
 		end
-		m_simpleTV.OSD.ShowSelect_UTF8(se_name, e-1, t, 8000, 32 + 64 + 128)
+		m_simpleTV.OSD.ShowSelect_UTF8(se_name, e-1, t, 8000, 32 + 64)
 
 	else
 --------------not serial
