@@ -50,7 +50,7 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 	if zerkalo and zerkalo ~= '' then
 	inAdr = inAdr:gsub('^http.-://.-/',zerkalo)
 	end
-	local inAdr1 = inAdr:gsub('$rezka.-$','')
+	local inAdr1 = inAdr:gsub('%$rezka.-$','')
 	m_simpleTV.OSD.ShowMessageT({text = '', showTime = 1000, id = 'channelName'})
 	local logo = 'https://static.hdrezka.ac/templates/hdrezka/images/avatar.png'
 	if m_simpleTV.Control.MainMode == 0 then
@@ -387,8 +387,8 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 	else kp_id = '' end
 		return adr,poster,title,desc_text,'<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
 	end
-	local function play(retAdr, title)
-		if retAdr:match('^.-$rezka') then
+	local function play(retAdr, title, id)
+		if retAdr:match('%$rezkaid') then
 			retAdr = rezkaGetStream(retAdr)
 				if not retAdr then
 					m_simpleTV.Http.Close(session)
@@ -535,7 +535,7 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 	if inAdr:match('$rezka') then
 		local season, episode = inAdr:match('%&season=(%d+)%&episode=(%d+)')
 		title = title .. ' Сезон ' .. season .. ', Серия ' .. episode
-		play(inAdr, title)
+		play(inAdr, title, id)
 		return
 	end
 	m_simpleTV.Control.SetTitle(title)
