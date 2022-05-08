@@ -1,4 +1,4 @@
---Rezka portal - lite version west_side 28.03.22
+--Rezka portal - lite version west_side 08.05.22
 
 local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
@@ -19,14 +19,39 @@ function run_lite_qt_rezka()
 	end
 
 	local last_adr = getConfigVal('info/rezka') or ''
-	local tt = {
+	local tt = {}
+	if io.open(m_simpleTV.MainScriptDir .. 'user/TVSources/m3u/out_Franchises.m3u', 'r') and ExaminFranchisesRezka() == true
+	then
+	    tt = {
+		{"","Rezka New"},
+		{"","Коллекции"},
+		{"","Франшизы: Фильмы"},
+		{"","Франшизы: Мультфильмы"},
+		{"","Франшизы: Сериалы"},
+		{"","Франшизы: Аниме"},
+		{"","Обновление Франшиз"},
+		{"","ПОИСК"},
+		{"","Rezka зеркало"},
+		}
+	elseif ExaminFranchisesRezka() == true
+	then
+		tt = {
+		{"","Rezka New"},
+		{"","Коллекции"},
+		{"","Франшизы"},
+		{"","Обновление Франшиз"},
+		{"","ПОИСК"},
+		{"","Rezka зеркало"},
+		}
+    else
+		tt = {
 		{"","Rezka New"},
 		{"","Коллекции"},
 		{"","Франшизы"},
 		{"","ПОИСК"},
 		{"","Rezka зеркало"},
 		}
-
+	end
 	local t0={}
 		for i=1,#tt do
 			t0[i] = {}
@@ -51,8 +76,20 @@ function run_lite_qt_rezka()
 				last_rezka()
 			elseif t0[id].Name == 'Коллекции' then
 				collection_rezka()
-			elseif t0[id].Name == 'Франшизы' then
-				franchises_rezka('https://rezka.ag/franchises/page/48/')
+			elseif t0[id].Name:match('Франшизы') then
+				if t0[id].Name:match('Фильмы') then
+				franchises_rezka_ganre('Фильмы')
+				elseif t0[id].Name:match('Мультфильмы') then
+				franchises_rezka_ganre('Мультфильмы')
+				elseif t0[id].Name:match('Сериалы') then
+				franchises_rezka_ganre('Сериалы')
+				elseif t0[id].Name:match('Аниме') then
+				franchises_rezka_ganre('Аниме')
+				else
+				franchises_rezka('https://rezka.ag/franchises/page/50/')
+				end
+			elseif t0[id].Name == 'Обновление Франшиз' then
+				UpdateFranchisesRezka()
 			end
 		end
 		if ret == 2 then
@@ -79,6 +116,8 @@ function zerkalo_rezka()
 		{"http://upivi.com/","http://upivi.com/"},
 		{"http://kinopub.me/","http://kinopub.me/"},
 		{"http://metaivi.com/","http://metaivi.com/"},
+		{"http://rd8j1em1zxge.org/","http://rd8j1em1zxge.org/"},
+		{"http://m85rnv8njgwv.org/","http://m85rnv8njgwv.org/"},		
 		}
 
 	local t0={}
@@ -311,6 +350,7 @@ function franchises_rezka(url)
 	end
 	end
 	local t,i = {},1
+
 		for w in answer:gmatch('<div class="b%-content__collections_item".-</div></div>') do
 			local adr,logo,num,name = w:match('url="(.-)".-src="(.-)".-tooltip">(%d+).-"title">(.-)<')
 			if not adr or not name then break end
@@ -322,6 +362,7 @@ function franchises_rezka(url)
 				t[i].InfoPanelShowTime = 10000
 			i=i+1
 		end
+
 	local t1 = {}
 		t1 = table_reverse(t)
 		for i = 1, #t1 do
@@ -337,7 +378,7 @@ function franchises_rezka(url)
 		t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' Next '}
 	end
 		t1.ExtParams = {FilterType = 1, AutoNumberFormat = '%1. %2'}
-		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите франшизу Rezka (' .. #t1 .. ') - стр. ' .. 49-tonumber(current_page) .. ' из 48',0,t1,10000,1+4+8+2)
+		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Франшизы Rezka - стр. ' .. 51-tonumber(current_page) .. ' из 50',0,t1,10000,1+4+8+2)
 		if ret == -1 or not id then
 			return
 		end
@@ -355,6 +396,39 @@ function franchises_rezka(url)
 		if ret == 3 and right and right ~= ''
 		then
 			franchises_rezka(right)
+		end
+end
+
+function franchises_rezka_ganre(ganre)
+	local file = io.open(m_simpleTV.MainScriptDir .. 'user/TVSources/m3u/out_Franchises.m3u', 'r')
+	local answer = file:read('*a')
+	file:close()
+	local t,i = {},1
+		for w in answer:gmatch('EXTINF:.-\n.-\n') do
+		local grp,logo,name,adr = w:match('group%-title="(.-)".-tvg%-logo="(.-)".-%,(.-)\n(.-)\n')
+		if not grp or not logo or not name or not adr then break end
+		if grp == ganre then
+				t[i] = {}
+				t[i].Id = i
+				t[i].Name = name
+				t[i].Address = adr
+				t[i].InfoPanelLogo = logo
+				t[i].InfoPanelName = 'Rezka franchise: ' .. name
+				t[i].InfoPanelShowTime = 10000
+			i=i+1
+		end
+		end
+		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🢀 '}
+		t.ExtParams = {FilterType = 1, AutoNumberFormat = '%1. %2'}
+		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Франшизы: ' .. ganre .. ' (' .. #t .. ')',0,t,10000,1+4+8+2)
+		if ret == -1 or not id then
+			return
+		end
+		if ret == 1 then
+			franchises_rezka_url(t[id].Address)
+		end
+		if ret == 2 then
+			run_lite_qt_rezka()
 		end
 end
 
@@ -421,6 +495,32 @@ if package.loaded['tvs_core'] and package.loaded['tvs_func'] then
             tvs_func.OSD_mess('', -2)
          end
     end
+end
+end
+
+function UpdateFranchisesRezka()
+if package.loaded['tvs_core'] and package.loaded['tvs_func'] then
+    local tmp_sources = tvs_core.tvs_GetSourceParam() or {}
+    for SID, v in pairs(tmp_sources) do
+         if v.name:find('Franchises')
+		 then
+		    tvs_core.UpdateSource(SID, false)
+            tvs_func.OSD_mess('', -2)
+         end
+    end
+end
+end
+
+function ExaminFranchisesRezka()
+if package.loaded['tvs_core'] and package.loaded['tvs_func'] then
+    local tmp_sources = tvs_core.tvs_GetSourceParam() or {}
+    for SID, v in pairs(tmp_sources) do
+         if v.name:find('Franchises')
+		 then
+			return true
+         end
+    end
+	return false
 end
 end
 
