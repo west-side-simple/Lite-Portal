@@ -1,15 +1,14 @@
--- видеоскрипт для видеобалансера "Videoapi" https://Videoapi.tv (05/05/22)
+-- видеоскрипт для видеобалансера "Videoapi" https://Videoapi.tv (08/05/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod - west_side (30/04/22)
+-- mod - west_side (08/05/22)
 -- ## открывает подобные ссылки ##
--- https://32.svetacdn.in/fnXOUDB9nNSO?kp_id=5928
--- https://32.tvmovies.in/fnXOUDB9nNSO/tv-series/92
--- https://32.tvmovies.in/fnXOUDB9nNSO/movie/22080
--- http://32.svetacdn.in/fnXOUDB9nNSO/movie/36905
+-- https://5102.svetacdn.in/kNKj47MkBgLS/tv-series/12231
+-- https://5102.svetacdn.in/kNKj47MkBgLS/movie/664
+-- https://5102.svetacdn.in/kNKj47MkBgLS?imdb_id=tt0120663
 -- ## домен ##
 local domen = 'http://5102.svetacdn.in'
 -- '' - по умолчанию
--- 'http://58.svetacdn.in' (пример)
+-- 'http://5102.svetacdn.in' (пример)
 -- ## прокси ##
 local proxy = ''
 -- '' - нет
@@ -17,7 +16,6 @@ local proxy = ''
 		if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 		if not m_simpleTV.Control.CurrentAddress:match('^https?://[%w%.]*Videoapi%.')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/kNKj47MkBgLS')
---			and not m_simpleTV.Control.CurrentAddress:match('^https?://[%w%.]*svetacdn%.')
 			and not m_simpleTV.Control.CurrentAddress:match('^$videoapi')
 		then
 		 return
@@ -107,7 +105,7 @@ end
 	end
 	m_simpleTV.Control.ChangeAddress = 'Yes'
 	m_simpleTV.Control.CurrentAddress = ''
-	
+
 	if not m_simpleTV.User then
 		m_simpleTV.User = {}
 	end
@@ -132,6 +130,7 @@ end
 	m_simpleTV.User.Videoapi.title_translate = title_translate(translate)
 	end
 	local imdb_id, kp_id
+	if inAdr:match('%?imdb_id=') then m_simpleTV.User.Videoapi.embed = inAdr:match('%?imdb_id=(.-)$') end
 	if inAdr:match('&embed=')
 	then m_simpleTV.User.Videoapi.embed = inAdr:match('&embed=(.-)$')
 	end
@@ -227,7 +226,7 @@ end
 				if qlty then
 					t[#t + 1] = {}
 					t[#t].qlty = tonumber(qlty)
-					t[#t].Address = adr:gsub('^//', 'http://')
+					t[#t].Address = adr:gsub('^//', 'http://'):gsub(':hls:manifest.-$','')
 					t[#t].Name = qlty .. 'p'
 				end
 			end
@@ -431,7 +430,6 @@ end
 
 	if tv_series then
 		answer = answer:match('"' .. transl .. '":"(.-)">') or answer:match('"' .. transl .. '":(.-)">')
-		
 			if not answer then return end
 		require 'json'
 		local du = answer:match('#(%w+)')
