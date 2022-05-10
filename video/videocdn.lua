@@ -1,4 +1,4 @@
--- видеоскрипт для видеобалансера "videocdn" https://videocdn.tv (05/05/22)
+-- видеоскрипт для видеобалансера "videocdn" https://videocdn.tv (08/05/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
 -- mod - west_side (30/04/22)
 -- ## открывает подобные ссылки ##
@@ -63,18 +63,22 @@ local function bg_imdb_id(imdb_id)
 	require('json')
 	answerd = answerd:gsub('(%[%])', '"nil"')
 	local tab = json.decode(answerd)
-	local background, name_tmdb, year_tmdb, overview_tmdb = '', '', '', ''
+	local background, name_tmdb, year_tmdb, overview_tmdb, tv, id = '', '', '', '', 0, ''
 	if not tab and (not tab.movie_results[1] or tab.movie_results[1]==nil) and not tab.movie_results[1].backdrop_path or not tab and not (tab.tv_results[1] or tab.tv_results[1]==nil) and not tab.tv_results[1].backdrop_path then background = '' else
 	if tab.movie_results[1] then
 	background = tab.movie_results[1].backdrop_path or ''
 	name_tmdb = tab.movie_results[1].title or ''
 	year_tmdb = tab.movie_results[1].release_date or ''
 	overview_tmdb = tab.movie_results[1].overview or ''
+	tv = 0
+	id = tab.movie_results[1].id
 	elseif tab.tv_results[1] then
 	background = tab.tv_results[1].backdrop_path or ''
 	name_tmdb = tab.tv_results[1].name or ''
 	year_tmdb = tab.tv_results[1].first_air_date or ''
 	overview_tmdb = tab.tv_results[1].overview or ''
+	tv = 1
+	id = tab.tv_results[1].id
 	end
 	end
 	if year_tmdb and year_tmdb ~= '' then
@@ -82,7 +86,7 @@ local function bg_imdb_id(imdb_id)
 	else year_tmdb = 0 end
 	if background and background ~= nil and background ~= '' then background = 'http://image.tmdb.org/t/p/original' .. background end
 	if background == nil then background = '' end
-	return background, name_tmdb, year_tmdb, overview_tmdb
+	return background, name_tmdb, year_tmdb, overview_tmdb, tv, id
 end
 local function title_translate(translate)
 local url = 'aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvdHJhbnNsYXRpb25zP2FwaV90b2tlbj1vUzdXenZOZnhlNEs4T2NzUGpwQUlVNlh1MDFTaTBmbQ=='
@@ -108,12 +112,15 @@ end
 	end
 	m_simpleTV.Control.ChangeAddress = 'Yes'
 	m_simpleTV.Control.CurrentAddress = ''
-	
+
 	if not m_simpleTV.User then
 		m_simpleTV.User = {}
 	end
 	if not m_simpleTV.User.Videocdn then
 		m_simpleTV.User.Videocdn = {}
+	end
+	if not m_simpleTV.User.TMDB then
+		m_simpleTV.User.TMDB = {}
 	end
 	if not m_simpleTV.User.Videocdn.qlty then
 		m_simpleTV.User.Videocdn.qlty = tonumber(m_simpleTV.Config.GetValue('Videocdn_qlty') or '10000')
@@ -126,6 +133,8 @@ end
 	m_simpleTV.User.Videocdn.year = nil
 	m_simpleTV.User.Videocdn.embed = nil
 	m_simpleTV.User.Videocdn.overview = nil
+	m_simpleTV.User.TMDB.Id = nil
+	m_simpleTV.User.TMDB.tv = nil
 	end
 	local translate = inAdr:match('%?translation=(%d+)')
 	if translate then
@@ -148,7 +157,8 @@ end
 	if kp_id then imdb_id, title_v, year_v = imdbid(kp_id) end
 	local logo = 'https://videocdn.tv/favicon.png'
 	if imdb_id and imdb_id~='' and bg_imdb_id(imdb_id) and bg_imdb_id(imdb_id)~='' then
-	m_simpleTV.User.Videocdn.background, m_simpleTV.User.Videocdn.title, m_simpleTV.User.Videocdn.year, m_simpleTV.User.Videocdn.overview = bg_imdb_id(imdb_id)
+	m_simpleTV.User.Videocdn.background, m_simpleTV.User.Videocdn.title, m_simpleTV.User.Videocdn.year, m_simpleTV.User.Videocdn.overview, m_simpleTV.User.TMDB.tv, m_simpleTV.User.TMDB.Id = bg_imdb_id(imdb_id)
+	m_simpleTV.User.westSide.PortalTable = m_simpleTV.User.TMDB.Id .. ',' .. m_simpleTV.User.TMDB.tv
 	m_simpleTV.Control.ChangeChannelLogo(m_simpleTV.User.Videocdn.background, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
 	m_simpleTV.Interface.SetBackground({BackColor = 0, BackColorEnd = 255, PictFileName = m_simpleTV.User.Videocdn.background, TypeBackColor = 0, UseLogo = 3, Once = 1})
 	end
