@@ -1,4 +1,4 @@
--- видеоскрипт для сайта https://rezka.ag (08/05/22)
+-- видеоскрипт для сайта https://rezka.ag (04/06/22)
 -- Copyright © 2017-2021 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
 -- mod west_side for lite version
 -- ## открывает подобные ссылки ##
@@ -37,7 +37,7 @@ local proxy = ''
 		end
 local tooltip_body
 if m_simpleTV.Config.GetValue('mainOsd/showEpgInfoAsWindow', 'simpleTVConfig') then tooltip_body = ''
-else tooltip_body = 'bgcolor="#434750"'
+else tooltip_body = 'bgcolor="#182633"'
 end
 local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")

@@ -1,6 +1,6 @@
--- видеоскрипт для сайта https://filmix.ac (27/03/22)
+-- видеоскрипт для сайта https://filmix.ac (03/06/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- west_side mod for lite (27/03/22)
+-- west_side mod for lite (03/06/22)
 -- ## авторизация ##
 -- логин, пароль установить в 'Password Manager', для id - filmix
 -- ## необходим ##
@@ -24,7 +24,7 @@ local zer = m_simpleTV.Config.GetValue('zerkalo/filmix', 'LiteConf.ini') or ''
 		end
 local tooltip_body
 if m_simpleTV.Config.GetValue('mainOsd/showEpgInfoAsWindow', 'simpleTVConfig') then tooltip_body = ''
-else tooltip_body = 'bgcolor="#434750"'
+else tooltip_body = 'bgcolor="#182633"'
 end
 local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
@@ -525,7 +525,7 @@ end
 		t1[1].InfoPanelShowTime = 20000
 		t1[1].InfoPanelLogo = poster
 		t1[1].InfoPanelTitle = overview
-		t1[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
+		t1[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc:gsub('<a.-trailer%.png.->','') .. '</body></html>'
 		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'Видео недоступно', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
 		similar_filmix()
 		else
@@ -640,7 +640,7 @@ end
 					t[i].InfoPanelShowTime = 20000
 					t[i].InfoPanelLogo = poster
 					t[i].InfoPanelTitle = overview
-					t[i].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
+					t[i].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc:gsub('<a.-trailer%.png.->','') .. '</body></html>'
 					i = i + 1
 				end
 				if i == 1 then
@@ -658,7 +658,7 @@ end
 					t[i].InfoPanelShowTime = 20000
 					t[i].InfoPanelLogo = poster
 					t[i].InfoPanelTitle = overview
-					t[i].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
+					t[i].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc:gsub('<a.-trailer%.png.->','') .. '</body></html>'
 					i = i + 1
 				end
 				if i == 1 then
@@ -698,7 +698,7 @@ end
 		t1[1].InfoPanelShowTime = 20000
 		t1[1].InfoPanelLogo = poster
 		t1[1].InfoPanelTitle = overview
-		t1[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
+		t1[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc:gsub('<a.-trailer%.png.->','') .. '</body></html>'
 		t1.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Quality_filmix()'}
 		t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🧾 Теги ', ButtonScript = 'similar_filmix()'}
 		m_simpleTV.OSD.ShowSelect_UTF8('Filmix', 0, t1, 5000, 32 + 64 + 128)

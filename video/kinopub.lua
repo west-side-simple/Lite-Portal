@@ -28,9 +28,12 @@ if m_simpleTV.Config.GetValue('mainOsd/showEpgInfoAsWindow', 'simpleTVConfig') t
 else tooltip_body = 'bgcolor="#434750"'
 end
 local function bg_imdb_id(imdb_id)
+local session1 = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
+		if not session then return end
+	m_simpleTV.Http.SetTimeout(session, 16000)
 --#!!nexterr code!!#--
 local urld = 'https://api.themoviedb.org/3/find/' .. imdb_id .. decode64('P2FwaV9rZXk9ZDU2ZTUxZmI3N2IwODFhOWNiNTE5MmVhYWE3ODIzYWQmbGFuZ3VhZ2U9cnUmZXh0ZXJuYWxfc291cmNlPWltZGJfaWQ')
-local rc1,answerd = m_simpleTV.Http.Request(session,{url=urld})
+local rc1,answerd = m_simpleTV.Http.Request(session1,{url=urld})
 if rc1~=200 then
   m_simpleTV.Http.Close(session)
   return

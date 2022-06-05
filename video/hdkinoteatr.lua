@@ -77,5 +77,13 @@ end
 	else
 	m_simpleTV.Control.CurrentAdress = retAdr
 	end
+	if not m_simpleTV.User then
+		m_simpleTV.User = {}
+	end	
+	if not m_simpleTV.User.TMDB then
+		m_simpleTV.User.TMDB = {}
+	end	
+	m_simpleTV.User.westSide.PortalTable,m_simpleTV.User.TMDB.tv,m_simpleTV.User.TMDB.Id=nil,nil,nil
+	
 	dofile(m_simpleTV.MainScriptDir .. "user\\video\\video.lua")
 -- debug_in_file(retAdr .. '\n')
