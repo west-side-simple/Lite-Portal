@@ -1,4 +1,4 @@
---Filmix portal - lite version west_side 27.03.22
+--Filmix portal - lite version west_side 05.06.22
 
 local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
@@ -361,7 +361,7 @@ function ganres_content_filmix(url)
 			sim[j].Name = sim_title
 			sim[j].Address = sim_adr
 			sim[j].InfoPanelLogo = sim_img
-			sim[j].InfoPanelName = 'Filmix медиаконтент: ' .. sim_title
+			sim[j].InfoPanelName = 'Filmix: ' .. sim_title
 			sim[j].InfoPanelShowTime = 10000
 			j = j + 1
 		end
@@ -378,7 +378,7 @@ function ganres_content_filmix(url)
 				t[i].Name = name
 				t[i].Address = adr
 				t[i].InfoPanelLogo = logo
-				t[i].InfoPanelName = 'Filmix медиаконтент: ' .. name
+				t[i].InfoPanelName = 'Filmix: ' .. name
 				t[i].InfoPanelTitle = desc
 				t[i].InfoPanelShowTime = 10000
 			i = i + 1
@@ -502,7 +502,7 @@ function collection_filmix(url)
 	t.ExtButton1 = {ButtonEnable = true, ButtonName = ''}
 	end
 	t.ExtParams = {FilterType = 1, AutoNumberFormat = '%1. %2'}
-		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите коллекцию Filmix (' .. #t .. ') ' .. title .. ' ' .. title1,0,t,10000,1+4+8+2)
+		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Filmix (' .. #t .. ') ' .. title .. ' ' .. title1,0,t,10000,1+4+8+2)
 		if ret == -1 or not id then
 			return
 		end
@@ -602,7 +602,7 @@ function collection_filmix_url(url)
 	t.ExtButton1 = {ButtonEnable = true, ButtonName = ''}
 	end
 	t.ExtParams = {FilterType = 1, AutoNumberFormat = '%1. %2'}
-		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите медиаконтент Filmix (' .. #t .. ') ' .. title .. ': ' .. title1 .. ' - страница ' .. page,0,t,10000,1+4+8+2)
+		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Filmix (' .. #t .. ') ' .. title1 .. ' - стр. ' .. page,0,t,10000,1+4+8+2)
 		if ret == -1 or not id then
 			return
 		end
@@ -694,7 +694,7 @@ function person_filmix(url)
 				t[i].Name = name
 				t[i].Address = adr
 				t[i].InfoPanelLogo = logo
-				t[i].InfoPanelName = 'Filmix персоны: ' .. name
+				t[i].InfoPanelName = 'Filmix: ' .. name
 				t[i].InfoPanelTitle = desc
 				t[i].InfoPanelShowTime = 10000
 			i = i + 1
@@ -708,7 +708,7 @@ function person_filmix(url)
 	t.ExtButton1 = {ButtonEnable = true, ButtonName = ''}
 	end
 	t.ExtParams = {FilterType = 1, AutoNumberFormat = '%1. %2'}
-		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8(title .. ' (' .. #t .. ') ' .. title1 .. ' - страница ' .. page,0,t,10000,1+4+8+2)
+		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8(title .. ' (' .. #t .. ') ' .. title1 .. ' - стр. ' .. page,0,t,10000,1+4+8+2)
 		if ret == -1 or not id then
 			return
 		end
@@ -785,13 +785,13 @@ function person_content_filmix(url)
 		t[j].Name = name:gsub('%&nbsp%;',' ') .. year
 		t[j].Address = adr
 		t[j].InfoPanelLogo = logo
-		t[j].InfoPanelName = 'Filmix медиаконтент: ' .. name:gsub('%&nbsp%;',' ')
+		t[j].InfoPanelName = 'Filmix: ' .. name:gsub('%&nbsp%;',' ')
 		j=j+1
 		end
 
 	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🢀 '}
 	t.ExtParams = {FilterType = 1, AutoNumberFormat = '%1. %2'}
-		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите медиаконтент Filmix (' .. #t .. ') ' .. title,0,t,10000,1+4+8+2)
+		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Filmix (' .. #t .. ') ' .. title,0,t,10000,1+4+8+2)
 		if ret == -1 or not id then
 			return
 		end

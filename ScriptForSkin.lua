@@ -136,7 +136,17 @@ local t = {}
     end
 end
 -------------------------------------------------------------------
-
+ local t={}
+ t.utf8 = true
+ t.name = 'Skin settings'
+ t.luastring = 'skin_schema_settings()'
+ t.lua_as_scr = true
+ t.key = string.byte('E')
+ t.ctrlkey = 4
+ t.location = 0
+ t.image= m_simpleTV.MainScriptDir_UTF8 .. 'user/show_mi/emptyLogo.png'
+ m_simpleTV.Interface.AddExtMenuT(t)
+------------------------------------------------------------------- 
 	if not m_simpleTV.User then
 		m_simpleTV.User = {}
 	end
@@ -225,14 +235,3 @@ if need > 0 then
 	m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.5" src="http://m24.do.am/images/liteportal.png"' , text = str6 ,  color = ARGB(255, 255, 255, 255), showTime = 1700 * 10})
 end
 end
-
- local t={}
- t.utf8 = true
- t.name = 'Skin settings'
- t.luastring = 'skin_schema_settings()'
- t.lua_as_scr = true
- t.key = string.byte('E')
- t.ctrlkey = 4
- t.location = 0
- t.image= m_simpleTV.MainScriptDir_UTF8 .. 'user/show_mi/emptyLogo.png'
- m_simpleTV.Interface.AddExtMenuT(t)

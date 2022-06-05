@@ -1,6 +1,6 @@
 --startup westSide portal
 --saved as utf-8 without bom
---wafee code, west_side updated 25.03.22
+--wafee code, west_side updated 05.06.22
 -------------------------------------------------------------------
 if m_simpleTV.User==nil then m_simpleTV.User={} end
 if m_simpleTV.User.westSide==nil then m_simpleTV.User.westSide={} end
@@ -23,9 +23,12 @@ function show_portal_window()
 	m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
  end
  if m_simpleTV.User.westSide.PortalTable~=nil then
- if m_simpleTV.User.filmix and m_simpleTV.User.filmix.TabSimilar then similar_filmix() else
+ if m_simpleTV.User.filmix and m_simpleTV.User.filmix.TabSimilar then similar_filmix()
+ elseif m_simpleTV.User.TMDB.Id and m_simpleTV.User.TMDB.tv then
+ media_info_tmdb(m_simpleTV.User.TMDB.Id,m_simpleTV.User.TMDB.tv)
+ else
    kinogo_info(m_simpleTV.User.westSide.PortalTable)
- end  
+ end
  end
 end
 -------------------------------------------------------------------
@@ -67,6 +70,7 @@ function run_westSide_portal()
  m_simpleTV.Control.ExecuteAction(37)
  local tt1={
  {'Поиск',''},
+ {'Закладки',''}, 
  {'TMDb',''},
  {'EX-FS',''},
  {'Rezka',''},
@@ -93,7 +97,11 @@ function run_westSide_portal()
   elseif t1[id].Name == 'Filmix' then run_lite_qt_filmix()
   elseif t1[id].Name == 'Kinopub' then run_lite_qt_kinopub()
   elseif t1[id].Name == 'YouTube' then run_youtube_portal()
-  elseif t1[id].Name == 'Поиск' then search()
+  elseif t1[id].Name == 'Поиск' then 
+--  search()
+  dofile(m_simpleTV.MainScriptDir_UTF8 .. 'user\\westSidePortal\\GUI\\showDialog.lua')
+  elseif t1[id].Name == 'Закладки' then 
+  m_simpleTV.Control.ExecuteAction(100)
   elseif t1[id].Name == 'Медиабазы' then mediabaze()
   elseif t1[id].Name:match('SimpleTV') then highlight()
   elseif t1[id].Name == 'Переводы' then run_lite_qt_cdntr()

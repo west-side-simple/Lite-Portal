@@ -1,4 +1,4 @@
-
+-- show mediainfo westSide (07.05.22)
 function show_mediainfo(channelId)
  if channelId==-1 then return end
 
@@ -58,6 +58,7 @@ function show_mediainfo(channelId)
    then
    epgTitle = epgT[1].Title
    epgDesc  = epgT[1].Desc
+   epgCategory = epgT[1].Category
    StartFor = epgT[1].StartPr:gsub('-$--$--$', '')
    EndFor   = epgT[1].EndPr
   end
@@ -79,6 +80,7 @@ function show_mediainfo(channelId)
    then
    epgTitle1 = epgT1[1].Title
    epgDesc1  = epgT1[1].Desc
+   epgCategory1 = epgT1[1].Category
   end
 --	else return
  end
@@ -101,11 +103,12 @@ function show_mediainfo(channelId)
  prendtime = (EndForH * 60 + EndForM) - (timeH * 60 + timeM)
  if prendtime < 0 then prendtime = prendtime + 24 * 60 end
  end
-
+  if epgCategory and epgCategory ~= '' then epgCategory = '<font color="#BBBBBB">' .. epgCategory .. '</font><p>' else epgCategory = '' end
+  if epgCategory1 and epgCategory1 ~= '' then epgCategory1 = ' (' .. epgCategory1 .. ')' else epgCategory1 = '' end
   local str1, str2 = '<td style="padding: 10px 10px 0px; color: #EBEBEB;" valign="middle"><h3><font color="#00FF7F">' .. t[1].Name .. '</font></h3>', ''
   local titleepg, yearepg, str3, backgroundepg
   if epgTitle then
-		str1 = str1 .. '<h4><i><font color="#BBBBBB">' .. epgTitle ..  '</font></i><p><font color="#CD7F32">(' .. StartForH .. ':' .. StartForM .. ' - '  .. EndForH .. ':' .. EndForM .. ')</font> <b>' .. prtime .. ' мин.</b></h4>' .. '</td></tr></table>'
+		str1 = str1 .. '<h4><i><font color="#BBBBBB">' .. epgTitle ..  '</font></i><p>' .. epgCategory .. '<font color="#CD7F32">(' .. StartForH .. ':' .. StartForM .. ' - '  .. EndForH .. ':' .. EndForM .. ')</font> <b>' .. prtime .. ' мин.</b></h4>' .. '</td></tr></table>'
 	titleepg = clean_title(epgTitle)
   end
 
@@ -126,10 +129,10 @@ function show_mediainfo(channelId)
    end
   end
 
-  str1 = '<html><body bgcolor="#434750"><table width="100%"><tr><td style="padding: 10px 10px 0px; color: #EBEBEB;">' .. '<img src="' .. logo .. '" width="300">' .. '</td>' .. str1
+  str1 = '<html><body bgcolor="#182633"><table width="100%"><tr><td style="padding: 10px 10px 0px; color: #EBEBEB;">' .. '<img src="' .. logo .. '" width="300">' .. '</td>' .. str1
 
   if epgTitle1 then
-   str1 = str1 .. '<p><h4><font color="#CD7F32">далее: </font><i><font color="#BBBBBB">' .. epgTitle1 ..  '</font></i></h4>'
+   str1 = str1 .. '<p><h4><font color="#CD7F32">далее: </font><i><font color="#BBBBBB">' .. epgTitle1 .. epgCategory1 .. '</font></i></h4>'
   end
 
   str1 = str1 .. '</td></tr></table></body></html>'
@@ -194,7 +197,7 @@ function show_mediainfo(channelId)
  if not str2 or str2 == '' then
  str = str1
  else
- str2 = '<html><body bgcolor="#434750">' .. info_fox(title_orig:gsub(' $', ''),year,logo) .. '</body></html>'
+ str2 = '<html><body bgcolor="#182633">' .. info_fox(title_orig:gsub(' $', ''),year,logo) .. '</body></html>'
  str = str2
  end
 --  debug_in_file(str)
@@ -203,7 +206,7 @@ end
 --добавление кнопки в плейлист, кроме указанных в таблице исключений
 
 --таблица исключений
-local tab = {"Media Portal 24","Radio","Radcap","YandexTV","TVSources","FMPlay Streams","Zaycev FM","101RU","DFM,RMC,RU Radio","PCradio","Digitally Imported","RadioTunes","Classicalradio","Rockradio","Jazzradio","TuneIn","Radio Record","Multimediaholding","FMPlay","Love Radio","RadioOboz","FLAC Radio","EMG"}
+local tab = {"Media Portal 24","Radio","Radcap","YandexTV","TVSources","FMPlay Streams","Zaycev FM","101RU","DFM,RMC,RU Radio","PCradio","Digitally Imported","RadioTunes","Classicalradio","Rockradio","Jazzradio","TuneIn","Radio Record1","Multimediaholding","FMPlay","Love Radio","RadioOboz","FLAC Radio","EMG"}
 
 --создаем таблицу tt и заносим в нее ExtFilterID исключая ExtFilter из таблицы t
 local tt={}

@@ -1,4 +1,4 @@
---Rezka portal - lite version west_side 08.05.22
+--Rezka portal - lite version west_side 04.06.22
 
 local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
@@ -410,7 +410,7 @@ function franchises_rezka_ganre(ganre)
 		if grp == ganre then
 				t[i] = {}
 				t[i].Id = i
-				t[i].Name = name
+				t[i].Name = name:gsub('Все части мультфильма ',''):gsub('Все части мультсериала ',''):gsub('Все мультфильмы про ','Про '):gsub('Все мультфильмы франшизы ',''):gsub('Все мультфильмы ',''):gsub('Все части фильма ',''):gsub('Все части сериала ',''):gsub('все части сериала ',''):gsub('Все части документального сериала ',''):gsub('Все фильмы про ','Про '):gsub('Все части франшизы ',''):gsub('Все части аниме ',''):gsub('Все мультфильмы серии ',''):gsub('Все фильмы серии ',''):gsub('%%2C','!')
 				t[i].Address = adr
 				t[i].InfoPanelLogo = logo
 				t[i].InfoPanelName = 'Rezka franchise: ' .. name
@@ -611,7 +611,7 @@ function media_info_rezka(url)
 		if rc ~= 200 then return '' end
 	local tooltip_body
 	if m_simpleTV.Config.GetValue('mainOsd/showEpgInfoAsWindow', 'simpleTVConfig') then tooltip_body = ''
-	else tooltip_body = 'bgcolor="#434750"'
+	else tooltip_body = 'bgcolor="#182633"'
 	end
 	answer = answer:gsub('<!%-%-.-%-%->', ''):gsub('/%*.-%*/', '')
 	local poster = answer:match('<div class="b%-sidecover"> <a href="([^"]+)') or answer:match('property="og:image" content="([^"]+)') or ''

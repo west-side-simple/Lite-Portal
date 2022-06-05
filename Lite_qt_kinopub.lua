@@ -1,4 +1,4 @@
---Kinopub portal - lite version west_side 17.02.22
+--Kinopub portal - lite version west_side 01.05.22
 function run_lite_qt_kinopub()
 
 	local tt = {
@@ -46,8 +46,11 @@ function run_lite_qt_kinopub()
 end
 
 function show_select(inAdr)
-
-	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
+local proxy = 'http://proxy-nossl.antizapret.prostovpn.org:29976'
+-- '' - нет
+-- 'http://proxy-nossl.antizapret.prostovpn.org:29976' (пример)
+-- ##
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0', proxy, false)
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 16000)
 
@@ -205,8 +208,11 @@ function show_select(inAdr)
 end
 
 function show_selection(inAdr)
-
-	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
+local proxy = 'http://proxy-nossl.antizapret.prostovpn.org:29976'
+-- '' - нет
+-- 'http://proxy-nossl.antizapret.prostovpn.org:29976' (пример)
+-- ##
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0', proxy, false)
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 16000)
 

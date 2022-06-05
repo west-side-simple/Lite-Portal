@@ -1,5 +1,77 @@
 --TMDb portal - lite version west_side 11.03.22
 
+local function findrutor(name, id)
+	local session2 = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36', proxy, true)
+		if not session2 then return '' end
+	m_simpleTV.Http.SetTimeout(session2, 12000)
+	local url_ru = 'http://rutor.info/search/0/0/000/0/' .. m_simpleTV.Common.toPercentEncoding(name)
+	local rc_ru, answer_ru = m_simpleTV.Http.Request(session2, {url = url_ru})
+	if rc_ru~=200 then
+	return ''
+	end
+
+	local t, i, str_ru = {}, 1, ''
+	answer_ru = answer_ru:gsub('\n','')
+	answer_ru = answer_ru:match('<table width=".-</table>')
+	if answer_ru then
+	for w in answer_ru:gmatch('<tr class=".-</tr>') do
+--	if w:match('BDR') then
+	local adr, item, sids, pirs = w:match('<a href="(/torrent/.-)">(.-)<.-alt="S" />(.-)<.-class="red">(.-)<')
+	if adr then adr = 'http://rutor.info' .. adr end
+	if item and item:match('^(.-) /') and item:match('^(.-) /'):gsub('ё','е') == name:gsub('ё','е') or item and item:match('^(.-) %(') and item:match('^(.-) %('):gsub('ё','е') == name:gsub('ё','е') then
+	str_ru = str_ru .. '<table width="100%"><tr><td width="' .. masshtab*150 .. '"><img src="simpleTVImage:./luaScr/user/westSide/icons/rutor.png" height = "' .. masshtab*30 .. '"></td><td style="padding: 15px 15px 5px;"><h5><a href = "simpleTVLua:m_simpleTV.Control.PlayAddress(\'' .. adr .. '&tmdb=' .. id .. '\')" style="color: #EBEBEB; text-decoration: none;">' .. item .. '</a></td><td width="' .. masshtab*100 .. '"> ✅ ' .. sids .. '<br> 🔻 ' .. pirs .. '</h5></td></tr></table><hr>'
+	end
+--	end
+	i=i+1
+	end
+	end
+	return str_ru
+end
+
+local function findrutracker(name, id)
+
+	local ret, login, pass = pm.GetTestPassword('rutracker', 'rutracker', true)
+		if not login or not pass or login == '' or password == '' then
+	--		showError('2\в дополнении "Password Manager"\nвведите логин и пароль для rutracker')
+		 return ''
+		end
+	m_simpleTV.Http.Close(session)
+	local session1 = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36', proxy, true)
+		if not session1 then return '' end
+	m_simpleTV.Http.SetTimeout(session1, 12000)
+	m_simpleTV.Http.SetRedirectAllow(session1, false)
+	local url = 'https://rutracker.org/forum/login.php'
+	login = m_simpleTV.Common.toPercentEncoding(login)
+	pass = m_simpleTV.Common.toPercentEncoding(pass)
+
+	local rc, answer = m_simpleTV.Http.Request(session1, {method = 'post', url = url, headers = '\nReferer: ' .. inAdr .. '\nContent-Type: application/x-www-form-urlencoded', body = 'login_username=' .. login .. '&login_password=' .. pass .. '&login=%E2%F5%EE%E4'})
+		if rc ~= 302 then
+			m_simpleTV.Http.Close(session1)
+	--		showError('3\nперелогинтесь в браузере\nили пароль/логин неверны')
+		 return ''
+		end
+	m_simpleTV.Http.SetRedirectAllow(session1, true)
+	local url_rt = 'https://rutracker.org/forum/tracker.php?nm=' .. m_simpleTV.Common.toPercentEncoding(name)
+	local rc_rt, answer_rt = m_simpleTV.Http.Request(session1, {url = url_rt})
+	if rc_rt~=200 then
+	return ''
+	end
+
+	local t, i, str_rt = {}, 1, ''
+	answer_rt = m_simpleTV.Common.multiByteToUTF8(answer_rt)
+	for w in answer_rt:gmatch('<tr id=".-</tr>') do
+	if w:match('HD Video') then
+	local adr, item, sids, pirs = w:match('class="med tLink ts%-text hl%-tags bold" href="(.-)">(.-)<.-<b class="seedmed">(%d+).-title="Личи">(%d+)<')
+	if adr then adr = 'https://rutracker.org/forum/' .. adr end
+	if item and item:match('^(.-) /') and item:match('^(.-) /'):gsub('ё','е') == name:gsub('ё','е') or item and item:match('^(.-) %(') and item:match('^(.-) %('):gsub('ё','е') == name:gsub('ё','е') then
+	str_rt = str_rt .. '<table width="100%"><tr><td width="' .. masshtab*150 .. '"><img src="simpleTVImage:./luaScr/user/westSide/icons/rutracker.png" height = "' .. masshtab*30 .. '"></td><td style="padding: 15px 15px 5px;"><h5><a href = "simpleTVLua:m_simpleTV.Control.PlayAddress(\'' .. adr .. '&tmdb=' .. id .. '\')" style="color: #EBEBEB; text-decoration: none;">' .. item .. '</a></td><td width="' .. masshtab*100 .. '"> ✅ ' .. sids .. '<br> 🔻 ' .. pirs .. '</h5></td></tr></table><hr>'
+	end
+	end
+	i=i+1
+	end
+	return str_rt
+end
+
 local function find_movie(title)
 local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then return end
@@ -1001,7 +1073,7 @@ local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; r
 	m_simpleTV.Http.SetTimeout(session, 60000)
 	local tooltip_body
 	if m_simpleTV.Config.GetValue('mainOsd/showEpgInfoAsWindow', 'simpleTVConfig') then tooltip_body = ''
-	else tooltip_body = 'bgcolor="#434750"'
+	else tooltip_body = 'bgcolor="#182633"'
 	end
 local urltm, titul_tmdb_media, tmdb_media
 if tv == 0 then
@@ -1085,7 +1157,7 @@ if tab and tab.genres then
 
 		if tv == 1 then imdb_id = imdbid(tmdbid) end
 
-		videodesc= '<table width="100%"><tr><td style="padding: 15px 15px 5px;"><img src="' .. poster .. '" height="470"></td><td style="padding: 0px 5px 5px; color: #FFFFFF; vertical-align: middle;"><h3><font color=#00FA9A>' .. ru_name .. '</font></h3><h4><i><font color=#CCCCCC>' .. slogan .. '</font></i></h4><h4><font color=#BBBBBB>' .. orig_name .. '</font></h4><h4><font color=#E0FFFF>' .. country .. ' • ' .. year .. '</font></h4><h4><font color=#EBEBEB>' .. genre .. '</font></h4><h4>' .. overview .. '</h4></td></tr></table>'
+		videodesc= '<table width="100%"><tr><td style="padding: 15px 15px 5px;"><img src="' .. poster .. '" height="470"></td><td style="padding: 0px 5px 5px; color: #FFFFFF; vertical-align: middle;"><h3><font color=#00FA9A>' .. ru_name .. '</font></h3><h4><i><font color=#CCCCCC>' .. slogan .. '</font></i></h4><h4><font color=#BBBBBB>' .. orig_name .. '</font></h4><h4><font color=#E0FFFF>' .. country .. ' • ' .. year .. '</font></h4><h4><font color=#EBEBEB>' .. genre .. '</font></h4></td></tr></table><table width="100%"><tr><td style="padding: 0px 15px 5px;" color: #FFFFFF;><h4><font color=#EBEBEB>' .. overview .. '</font></h4></td></tr></table>'
 		videodesc = videodesc:gsub('"', '\"')
 
 	local t1,j={},2
