@@ -1,6 +1,6 @@
--- видеоскрипт для видеобалансера "Hdvb" https://hdvb.tv (20/4/22)
+-- видеоскрипт для видеобалансера "Hdvb" https://hdvb.tv (16/06/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod west_side (22/04/22)
+-- mod west_side (16/06/22)
 -- ## открывает подобные ссылки ##
 -- https://vid1647324294.vb17121coramclean.pw/movie/c77fd8d3ec03509000778d9af49f8d86/iframe
 -- https://vid1648222294.vb17121coramclean.pw/serial/77de2d434d279e861121237797af59a26ae2a19b53718d36ce15bcca908eaed2/iframe
@@ -29,6 +29,7 @@
 		m_simpleTV.User.collaps = {}
 	end
 	m_simpleTV.User.collaps.kinogo = nil
+	m_simpleTV.User.collaps.ua = nil
 	m_simpleTV.User.collaps.kinogo = inAdr:match('%&kinogo=(.-)$')
 	if m_simpleTV.User.collaps.kinogo then
 		m_simpleTV.User.westSide.PortalTable = m_simpleTV.User.collaps.kinogo

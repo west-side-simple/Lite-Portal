@@ -1,4 +1,4 @@
--- видеоскрипт для сайта https://rezka.ag (04/06/22)
+-- видеоскрипт для сайта https://rezka.ag (15/06/22)
 -- Copyright © 2017-2021 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
 -- mod west_side for lite version
 -- ## открывает подобные ссылки ##
@@ -29,6 +29,7 @@ local proxy = ''
 			and not m_simpleTV.Control.CurrentAddress:match('^http?://kinopub%.me.+')
 			and not m_simpleTV.Control.CurrentAddress:match('^http?://upivi%.com.+')
 			and not m_simpleTV.Control.CurrentAddress:match('^http?://metaivi%.com.+')
+			and not m_simpleTV.Control.CurrentAddress:match('^https?://hdrezka19139%.org.+')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://rd8j1em1zxge%.org.+')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://m85rnv8njgwv%.org.+')
 			and not m_simpleTV.Control.CurrentAddress:match('^%$rezka')

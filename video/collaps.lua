@@ -1,6 +1,6 @@
--- видеоскрипт для видеобалансера "Collaps" https://collaps.org (27/03/22)
+-- видеоскрипт для видеобалансера "Collaps" https://collaps.org (15/06/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod west_side (27/03/22)
+-- mod west_side (15/06/22)
 -- ## открывает подобные ссылки ##
 -- https://api1603044906.kinogram.best/embed/movie/7059
 -- https://api1603044906.kinogram.best/embed/kp/5928
@@ -30,6 +30,7 @@
 		m_simpleTV.User.collaps = {}
 	end
 	m_simpleTV.User.collaps.kinogo = nil
+	m_simpleTV.User.collaps.ua = nil
 	local title
 	if m_simpleTV.User.collaps.episode then
 		local index = m_simpleTV.Control.GetMultiAddressIndex()
@@ -104,11 +105,11 @@
 	end
 	local function GetcollapsAdr(url)
 		url = url:gsub('^$collaps', '')
-		-- url = GetChiperUrl(url)
+--		 url = GetChiperUrl(url)
 		local rc, answer = m_simpleTV.Http.Request(session, {url = url})
 			if rc ~= 200 then return end
 		local t = {}
-			for w, adr in answer:gmatch('EXT%-X%-STREAM%-INF(.-)\n(.-%.m3u8)') do
+			for w, adr in answer:gmatch('EXT%-X%-STREAM%-INF(.-)\n(.-)\n') do
 				local qlty = w:match('RESOLUTION=%d+x(%d+)')
 				if adr and w:match('AUDIO="audio0"') and qlty then
 					t[#t + 1] = {}
@@ -150,7 +151,7 @@
 		end
 			for i = 1, #t do
 				t[i].Id = i
-				t[i].Address = t[i].Address:gsub('%.m3u8$', '-a' .. transl ..'.m3u8')
+				t[i].Address = t[i].Address:gsub('%.m3u8', '-a' .. transl ..'.m3u8')
 			end
 		m_simpleTV.User.collaps.Tab = t
 		local index = collapsIndex(t)
@@ -163,6 +164,9 @@
 		local index = collapsIndex(t)
 		if m_simpleTV.User.collaps.kinogo then
 		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Info ', ButtonScript = 'kinogo_info(\'' .. m_simpleTV.User.collaps.kinogo .. '\')'}
+		end
+		if m_simpleTV.User.collaps.ua then
+		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Info ', ButtonScript = 'ua_info(\'' .. m_simpleTV.User.collaps.ua .. '\')'}
 		end
 		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' ✕ ', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
 
@@ -200,10 +204,14 @@
 		 return
 		end
 	m_simpleTV.User.collaps.kinogo = inAdr:match('%&kinogo=(.-)$')
+	m_simpleTV.User.collaps.ua = inAdr:match('%&kino4ua=(.-)$')
 	if m_simpleTV.User.collaps.kinogo then
 		m_simpleTV.User.westSide.PortalTable = m_simpleTV.User.collaps.kinogo
 	end
-	inAdr = inAdr:gsub('&kinopoisk', ''):gsub('&kinogo=.-$', '')
+	if m_simpleTV.User.collaps.ua then
+		m_simpleTV.User.westSide.PortalTable = m_simpleTV.User.collaps.ua
+	end
+	inAdr = inAdr:gsub('&kinopoisk', ''):gsub('&kinogo=.-$', ''):gsub('&kino4ua=.-$', '')
 	local rc, answer = m_simpleTV.Http.Request(session, {url = inAdr, headers = 'Referer: ' .. inAdr})
 		if rc ~= 200 then
 			showMsg('collaps ошибка: 1', ARGB(255, 255, 102, 0))
@@ -320,4 +328,5 @@
 		t1.ExtButton1 = {ButtonEnable = true, ButtonName = '✕', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
 		m_simpleTV.OSD.ShowSelect_UTF8('Collaps', 0, t1, 10000, 64 + 32 + 128)
 	end
+--	debug_in_file(inAdr .. '\n')
 	play(inAdr, title)

@@ -1,4 +1,4 @@
--- видеоскрипт поиска медиаконтента на видеобалансере Rezka (09/03/22)
+-- видеоскрипт поиска медиаконтента на видеобалансере Rezka (16/06/22)
 -- autor westSide
 		if m_simpleTV.Control.ChangeAdress ~= 'No' then return end
 	local inAdr = m_simpleTV.Control.CurrentAdress
@@ -8,7 +8,7 @@
 		 return
 		end
 
-		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3809.87 Safari/537.36')
+		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:96.0) Gecko/20100101 Firefox/96.0')
 		if not session then return end
 		m_simpleTV.Http.SetTimeout(session, 12000)
 
@@ -313,6 +313,13 @@ end
 		m_simpleTV.Http.Close(session)
 	return
 	end
+	if not answerd2:match('<div class="b%-content__inline_item".-</div> </div></div>')then
+	rc2,answerd2 = m_simpleTV.Http.Request(session,{url=urld2})
+	if rc2~=200 then
+		m_simpleTV.Http.Close(session)
+	return
+	end
+	end
 	answerd2 = answerd2:gsub('<!%-%-.-%-%->', ''):gsub('/%*.-%*/', '')
 	local t, i = {}, 1
 	for w in answerd2:gmatch('<div class="b%-content__inline_item".-</div> </div></div>') do
@@ -349,7 +356,7 @@ end
 		m_simpleTV.Control.ChangeChannelLogo(logo, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
 	end
 
-	if not inAdr:match('^#https') then
+	if not inAdr:match('^#http') then
 
 	rezka_search = m_simpleTV.Common.multiByteToUTF8(rezka_search,1251)
 
@@ -566,7 +573,7 @@ end
 	m_simpleTV.Control.CurrentAddress = retAdr
 	dofile(m_simpleTV.MainScriptDir_UTF8 .. 'user\\video\\video.lua')
 	-- debug_in_file(retAdr .. '\n')
-	elseif inAdr:match('^#https') and inAdr:match('/person/') then
+	elseif inAdr:match('^#http') and inAdr:match('/person/') then
 
 		local t2, title, poster1, nm2 = GetPersonWork(rezka_search)
 		if not t2 or not title then

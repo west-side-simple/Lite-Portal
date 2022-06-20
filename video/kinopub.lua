@@ -1,4 +1,4 @@
--- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (01/05/22) - автор west_side
+-- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (15/06/22) - автор west_side
 -- необходим действующий аккаунт на сайте https://kino.pub
 -- работает в связке со скриптом Lite_qt_kinopub.lua - автор west_side
 -- необходимо сгенерировать cookies в браузере Mozilla, дополнение cookies.txt.
@@ -25,7 +25,7 @@ local proxy = 'http://proxy-nossl.antizapret.prostovpn.org:29976'
 	m_simpleTV.Http.SetTimeout(session, 16000)
 local tooltip_body
 if m_simpleTV.Config.GetValue('mainOsd/showEpgInfoAsWindow', 'simpleTVConfig') then tooltip_body = ''
-else tooltip_body = 'bgcolor="#434750"'
+else tooltip_body = 'bgcolor="#182633"'
 end
 local function bg_imdb_id(imdb_id)
 local session1 = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
@@ -446,13 +446,14 @@ else
 	local desc_text = answer:match('id="plot">(.-)<') or ''
 	local videodesc = info_fox(title:gsub('&#039;',"'"):gsub('&amp;',"&"):gsub(' %(.-$',''):gsub(' /.-$',''),year,logo)
 	local imdb_id = answer:match('href="http://www%.imdb%.com/title/(.-)"')
+	local logo1
 	if imdb_id then
 --ошибки базы
 	imdb_id=imdb_id:gsub('tt0596345','tt1596345')
 --
-	logo = bg_imdb_id(imdb_id)
+	logo1 = bg_imdb_id(imdb_id)
 	end
-
+    if logo1 and logo1~='' then logo = logo1 end
 	if m_simpleTV.Control.MainMode == 0 and logo then
 		m_simpleTV.Interface.SetBackground({BackColor = 0, BackColorEnd = 255, PictFileName = logo, TypeBackColor = 0, UseLogo = 3, Once = 1})
 		m_simpleTV.Control.ChangeChannelLogo(logo, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')

@@ -1,4 +1,4 @@
--- видеоскрипт для воспроизведения коллекций из TMDb (23/11/21)
+-- видеоскрипт для воспроизведения коллекций из TMDb (09/06/22)
 -- открывает подобные ссылки:
 -- collection_tmdb=645
 -- автор west_side
@@ -111,7 +111,7 @@
 	end
 	end
 	if t[1] and t[1].Address then m_simpleTV.Control.CurrentAddress = t[1].Address end
-
+    t.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🢀 ', ButtonScript = 'collection_TMDb(\'' .. tmdbcolid .. '\')'}
 	m_simpleTV.OSD.ShowSelect_UTF8(title, 0, t, 8000, 2 + 64)
 
 	m_simpleTV.Control.SetTitle(title)
