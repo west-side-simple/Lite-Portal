@@ -1,4 +1,4 @@
--- Плагин поиска для lite portal - west_side 03.04.22
+-- Плагин поиска для lite portal - west_side 16.06.22
 -- необходимы скрипты Lite_qt_exfs.lua, ex-fs.lua, Lite_qt_tmdb.lua, Lite_qt_kinopub.lua, Lite_qt_filmix.lua - автор west_side
 
 function search()
@@ -261,7 +261,11 @@ function search_rezka()
 	if not m_simpleTV.Control.CurrentAdress then
 		m_simpleTV.Control.SetTitle(title1)
 	end
-	local function infodesc_rezka(adr1)
+	local zerkalo = m_simpleTV.Config.GetValue('zerkalo/rezka',"LiteConf.ini") or ''
+	if zerkalo == '' then
+	zerkalo = 'https://rezka.ag/'
+	end
+		local function infodesc_rezka(adr1)
 		local rc3,answeradr = m_simpleTV.Http.Request(session,{url=adr1})
 		if rc3~=200 then
 			m_simpleTV.Http.Close(session)
@@ -269,17 +273,20 @@ function search_rezka()
 		end
 		overview = answeradr:match('"og:description" content="(.-)"%s*/>') or ''
 		return overview
-	end
+		end
 
-	local urld2 = 'https://rezkery.com/search?do=search&subaction=search&q=' .. search_ini
-		local current_zerkalo = m_simpleTV.Config.GetValue('zerkalo/rezka','LiteConf.ini') or ''
-	if current_zerkalo ~= '' then
-	urld2 = urld2:gsub('^http.-//.-/', current_zerkalo)
-	end
+	local urld2 = zerkalo .. 'search?do=search&subaction=search&q=' .. m_simpleTV.Common.toPercentEncoding(search_ini:gsub('%-',' '))
 	local rc2,answerd2 = m_simpleTV.Http.Request(session,{url=urld2})
 	if rc2~=200 then
 		m_simpleTV.Http.Close(session)
 	return
+	end
+	if not answerd2:match('<div class="b%-content__inline_item".-</div> </div></div>')then
+	rc2,answerd2 = m_simpleTV.Http.Request(session,{url=urld2})
+	if rc2~=200 then
+		m_simpleTV.Http.Close(session)
+	return
+	end
 	end
 	answerd2 = answerd2:gsub('<!%-%-.-%-%->', ''):gsub('/%*.-%*/', '')
 	local t, i = {}, 1

@@ -129,7 +129,7 @@ function show_mediainfo(channelId)
    end
   end
 
-  str1 = '<html><body bgcolor="#182633"><table width="100%"><tr><td style="padding: 10px 10px 0px; color: #EBEBEB;">' .. '<img src="' .. logo .. '" width="300">' .. '</td>' .. str1
+  str1 = '<html><body bgcolor="#182633"><table width="100%"><tr><td style="padding: 10px 10px 0px; color: #EBEBEB;">' .. '<img src="' .. logo .. '" width="450">' .. '</td>' .. str1
 
   if epgTitle1 then
    str1 = str1 .. '<p><h4><font color="#CD7F32">далее: </font><i><font color="#BBBBBB">' .. epgTitle1 .. epgCategory1 .. '</font></i></h4>'

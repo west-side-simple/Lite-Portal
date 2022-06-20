@@ -1,6 +1,6 @@
 --startup westSide portal
 --saved as utf-8 without bom
---wafee code, west_side updated 05.06.22
+--wafee code, west_side updated 20.06.22
 -------------------------------------------------------------------
 if m_simpleTV.User==nil then m_simpleTV.User={} end
 if m_simpleTV.User.westSide==nil then m_simpleTV.User.westSide={} end
@@ -26,7 +26,11 @@ function show_portal_window()
  if m_simpleTV.User.filmix and m_simpleTV.User.filmix.TabSimilar then similar_filmix()
  elseif m_simpleTV.User.TMDB.Id and m_simpleTV.User.TMDB.tv then
  media_info_tmdb(m_simpleTV.User.TMDB.Id,m_simpleTV.User.TMDB.tv)
- else
+ elseif m_simpleTV.User.collaps.ua then
+   ua_info(m_simpleTV.User.westSide.PortalTable)
+ elseif m_simpleTV.User.hdua.serial then
+   ua_serial()
+ elseif m_simpleTV.User.collaps.kinogo then
    kinogo_info(m_simpleTV.User.westSide.PortalTable)
  end
  end
@@ -70,7 +74,7 @@ function run_westSide_portal()
  m_simpleTV.Control.ExecuteAction(37)
  local tt1={
  {'Поиск',''},
- {'Закладки',''}, 
+ {'Закладки',''},
  {'TMDb',''},
  {'EX-FS',''},
  {'Rezka',''},
@@ -78,6 +82,7 @@ function run_westSide_portal()
  {'Kinopub',''},
  {'Переводы',''},
  {'KinoGo',''},
+ {'UA',''},
  {'YouTube',''},
  {'Медиабазы',''},
  {'SimpleTV - видеоинструкции',''},
@@ -97,15 +102,16 @@ function run_westSide_portal()
   elseif t1[id].Name == 'Filmix' then run_lite_qt_filmix()
   elseif t1[id].Name == 'Kinopub' then run_lite_qt_kinopub()
   elseif t1[id].Name == 'YouTube' then run_youtube_portal()
-  elseif t1[id].Name == 'Поиск' then 
+  elseif t1[id].Name == 'Поиск' then
 --  search()
   dofile(m_simpleTV.MainScriptDir_UTF8 .. 'user\\westSidePortal\\GUI\\showDialog.lua')
-  elseif t1[id].Name == 'Закладки' then 
+  elseif t1[id].Name == 'Закладки' then
   m_simpleTV.Control.ExecuteAction(100)
   elseif t1[id].Name == 'Медиабазы' then mediabaze()
   elseif t1[id].Name:match('SimpleTV') then highlight()
   elseif t1[id].Name == 'Переводы' then run_lite_qt_cdntr()
   elseif t1[id].Name == 'KinoGo' then run_lite_qt_kinogo()
+  elseif t1[id].Name == 'UA' then run_lite_qt_ua()
   end
   end
 end

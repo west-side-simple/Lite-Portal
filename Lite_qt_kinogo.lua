@@ -1,4 +1,4 @@
---kinogo portal - lite version west_side 23.04.22
+--kinogo portal - lite version west_side 09.06.22
 
 function run_lite_qt_kinogo()
 	local function getConfigVal(key)
@@ -207,7 +207,7 @@ function kinogo_info(url)
 	m_simpleTV.Http.SetTimeout(session, 60000)
 	local tooltip_body
 	if m_simpleTV.Config.GetValue('mainOsd/showEpgInfoAsWindow', 'simpleTVConfig') then tooltip_body = ''
-	else tooltip_body = 'bgcolor="#434750"'
+	else tooltip_body = 'bgcolor="#182633"'
 	end
 	local rc, answer = m_simpleTV.Http.Request(session, {url = url})
 		if rc ~= 200 then return end
@@ -220,7 +220,7 @@ function kinogo_info(url)
 	overview = overview:gsub('<br>', '')
 	local all_tag = answer:match('<br>\n(.-)<div itemprop="description">') or ''
 	local all_tag_txt = all_tag:gsub('<a.->', ''):gsub('<div.->', ''):gsub('</div>', ''):gsub('<font.->', ''):gsub('</font>', ''):gsub('\n', ''):gsub('\b', ''):gsub('<br/><br/>', '<br>'):gsub('<br/><br/><br/>', '<br>'):gsub('         <br>', ''):gsub('<br><br/>', '')
-	local videodesc= '<table width="100%"><tr><td style="padding: 5px 5px 0px;"><img src="' .. poster .. '" height="470"></td><td style="padding: 5px 5px 0px; color: #AAAAAA; vertical-align: middle;"><h3><font color=#00FA9A>' .. title .. '</font></h3><h5>' .. all_tag_txt .. '</h5></td></tr></table><table width="100%"><tr><td style="padding: 0px 5px 5px; color: #FFFFFF; vertical-align: middle;"><h4>' .. overview .. '</h4></td></tr></table>'
+	local videodesc= '<table width="100%"><tr><td style="padding: 5px 5px 0px;"><img src="' .. poster .. '" height="470"></td><td style="padding: 5px 5px 0px; color: #AAAAAA; vertical-align: middle;"><h3><font color=#00FA9A>' .. title .. '</font></h3><h5>' .. all_tag_txt .. '</h5></td></tr></table><table width="100%"><tr><td style="padding: 0px 5px 0px; color: #FFFFFF; vertical-align: middle;"><h4>' .. overview .. '</h4></td></tr></table>'
 	videodesc = videodesc:gsub('"', '\"')
 	local all_plus = answer:match('<div class="relatednews">(.-)<div style="clear:both">') or ''
 	local t1,j={},2
