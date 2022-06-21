@@ -1,4 +1,4 @@
--- Плагин поиска для lite portal - west_side 16.06.22
+-- Плагин поиска для lite portal - west_side 21.06.22
 -- необходимы скрипты Lite_qt_exfs.lua, ex-fs.lua, Lite_qt_tmdb.lua, Lite_qt_kinopub.lua, Lite_qt_filmix.lua - автор west_side
 
 function search()
@@ -116,6 +116,7 @@ m_simpleTV.Control.ExecuteAction(37)
 	{'KinoGo',''},
 	{'Kinopub',''},
 	{'YouTube',''},
+	{'VideoCDN',''},
 	}
 
   local t1={}
@@ -138,6 +139,7 @@ m_simpleTV.Control.ExecuteAction(37)
   elseif t1[id].Name == 'KinoGo' then search_kinogo()
   elseif t1[id].Name == 'Kinopub' then show_select('https://kino.pub/item/search?query=' .. search_ini)
   elseif t1[id].Name == 'YouTube' then search_youtube()
+  elseif t1[id].Name == 'VideoCDN' then m_simpleTV.Control.PlayAddress('*' .. m_simpleTV.Common.UTF8ToMultiByte(m_simpleTV.Common.fromPercentEncoding(search_ini)))
   end
   end
   if ret == 3 then
