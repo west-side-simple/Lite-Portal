@@ -1,4 +1,4 @@
---UA portal - lite version west_side 20.06.22
+--UA portal - lite version west_side 24.06.22
 
 function run_lite_qt_ua()
 	local function getConfigVal(key)
@@ -11,7 +11,7 @@ function run_lite_qt_ua()
 
 	local last_adr = getConfigVal('info/kino4ua') or ''
 			local pll={
-		{"/filmy/","Фильми - надходження"},
+		{"/filmy/","Фільми - надходження"},
 		{"/filmy/vitchyzniani/","Вітчизняні"},
 		{"/filmy/boyovik/","Бойовик"},
 		{"/filmy/viyskovi/","Військовий"},
@@ -92,9 +92,9 @@ function page_ua(url)
 				t[i] = {}
 				t[i].Id = i
 				t[i].InfoPanelLogo = 'https://kino4ua.com' .. logo
-				t[i].Name = name:gsub('%&quot%;','"') .. ' (' .. year .. ')'
+				t[i].Name = name:gsub('%&quot%;','"'):gsub('%&#039%;','`') .. ' (' .. year .. ')'
 				t[i].Address = adr
-				t[i].InfoPanelName = 'UA info: ' .. name:gsub('%&quot%;','"') .. ' (' .. year .. ')'
+				t[i].InfoPanelName = 'UA info: ' .. name:gsub('%&quot%;','"'):gsub('%&#039%;','`') .. ' (' .. year .. ')'
 				t[i].InfoPanelShowTime = 30000
 				t[i].InfoPanelTitle = overview:gsub('<.->','')
 			    i = i + 1
@@ -181,9 +181,9 @@ function ua_info(url)
 		t1[1].Address = ''
 		t1[1].Name = '.: info :.'
 		t1[1].InfoPanelLogo = poster
-		t1[1].InfoPanelName = title .. ': UA info'
-		t1[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
-		t1[1].InfoPanelTitle = desc
+		t1[1].InfoPanelName = title:gsub('%&#039%;','`') .. ': UA info'
+		t1[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc:gsub('%&#039%;','`') .. '</body></html>'
+		t1[1].InfoPanelTitle = desc:gsub('%&#039%;','`')
 		t1[1].InfoPanelShowTime = 10000
 
         for w in all_tag:gmatch('<a.-</a>') do
@@ -192,8 +192,8 @@ function ua_info(url)
 		t1[j]={}
 		t1[j].Id = j
 		t1[j].Address = adr
-		if adr:match('/actors/') then name = 'Актор: ' .. name end
-		if adr:match('/director/') then name = 'Режисер: ' .. name end
+		if adr:match('/actors/') then name = 'Актор: ' .. name:gsub('%&#039%;','`') end
+		if adr:match('/director/') then name = 'Режисер: ' .. name:gsub('%&#039%;','`') end
 		t1[j].Name = name
 		j=j+1
 		end
@@ -203,16 +203,16 @@ function ua_info(url)
 		t1[j]={}
 		t1[j].Id = j
 		t1[j].Address = adr
-		t1[j].Name = 'Схожий контент: ' .. name
+		t1[j].Name = 'Схожий контент: ' .. name:gsub('%&#039%;','`')
 		t1[j].InfoPanelLogo = 'https://kino4ua.com' .. logo
-		t1[j].InfoPanelName = name
+		t1[j].InfoPanelName = name:gsub('%&#039%;','`')
 		t1[j].InfoPanelShowTime = 10000
 		j=j+1
 		end
 
 		t1.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🢀 '}
 		t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' Play '}
-		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('UA: ' .. title, 0, t1, 30000, 1 + 4 + 8 + 2)
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('UA: ' .. title:gsub('%&#039%;','`'), 0, t1, 30000, 1 + 4 + 8 + 2)
 		if ret == 1 then
 			if id == 1 then
 			 ua_info(url)

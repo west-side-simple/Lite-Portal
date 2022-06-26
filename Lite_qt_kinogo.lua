@@ -1,4 +1,4 @@
---kinogo portal - lite version west_side 09.06.22
+--kinogo portal - lite version west_side 21.06.22
 
 function run_lite_qt_kinogo()
 	local function getConfigVal(key)
@@ -217,7 +217,7 @@ function kinogo_info(url)
 	local poster = answer:match('itemprop="image" src="(.-)"')
 	poster = 'https://kinogo.cc/' .. poster
 	local overview = answer:match('<div itemprop="description"><i>(.-)</i></div>') or ''
-	overview = overview:gsub('<br>', '')
+	overview = overview:gsub('<br>', ''):gsub('\n                ',''):gsub('<.->','')
 	local all_tag = answer:match('<br>\n(.-)<div itemprop="description">') or ''
 	local all_tag_txt = all_tag:gsub('<a.->', ''):gsub('<div.->', ''):gsub('</div>', ''):gsub('<font.->', ''):gsub('</font>', ''):gsub('\n', ''):gsub('\b', ''):gsub('<br/><br/>', '<br>'):gsub('<br/><br/><br/>', '<br>'):gsub('         <br>', ''):gsub('<br><br/>', '')
 	local videodesc= '<table width="100%"><tr><td style="padding: 5px 5px 0px;"><img src="' .. poster .. '" height="470"></td><td style="padding: 5px 5px 0px; color: #AAAAAA; vertical-align: middle;"><h3><font color=#00FA9A>' .. title .. '</font></h3><h5>' .. all_tag_txt .. '</h5></td></tr></table><table width="100%"><tr><td style="padding: 0px 5px 0px; color: #FFFFFF; vertical-align: middle;"><h4>' .. overview .. '</h4></td></tr></table>'
