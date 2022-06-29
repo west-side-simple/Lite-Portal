@@ -1,4 +1,4 @@
--- видеоскрипт для сайта https://filmix.ac (03/06/22)
+-- видеоскрипт для сайта https://filmix.ac (28/06/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
 -- west_side mod for lite (03/06/22)
 -- ## авторизация ##
@@ -408,7 +408,7 @@ end
 	answer = answer:gsub('\n', ' ')
 
 	title = answer:match('<title>(.-)</title>') or 'Filmix'
-	title = title:gsub('[%s]?/.+', ''):gsub('[%s]?%(.+', ''):gsub('смотреть онлай.+', ''):gsub('[%s]$', '')
+	title = title:gsub('[%s]?/.+', ''):gsub('[%s]?%(.+', ''):gsub('смотреть онлай.+', ''):gsub('[%s]$', ''):gsub('%&nbsp%;',' ')
 	local overview = answer:match('<div class="full%-story">(.-)</div>') or ''
 	overview = overview:gsub('<.->','')
 	local year = answer:match('<a itemprop="copyrightYear".->(.-)</a>') or 0
