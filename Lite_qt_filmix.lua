@@ -1,4 +1,4 @@
---Filmix portal - lite version west_side 05.06.22
+--Filmix portal - lite version west_side 28.06.22
 
 local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
@@ -358,7 +358,7 @@ function ganres_content_filmix(url)
 		if not sim_adr or not sim_title then break end
 			sim[j] = {}
 			sim[j].Id = j
-			sim[j].Name = sim_title
+			sim[j].Name = sim_title:gsub('%&nbsp%;',' ')
 			sim[j].Address = sim_adr
 			sim[j].InfoPanelLogo = sim_img
 			sim[j].InfoPanelName = 'Filmix: ' .. sim_title
@@ -375,7 +375,7 @@ function ganres_content_filmix(url)
 			if not adr or not name or adr == '' then break end
 				t[i] = {}
 				t[i].Id = i
-				t[i].Name = name
+				t[i].Name = name:gsub('%&nbsp%;',' ')
 				t[i].Address = adr
 				t[i].InfoPanelLogo = logo
 				t[i].InfoPanelName = 'Filmix: ' .. name
