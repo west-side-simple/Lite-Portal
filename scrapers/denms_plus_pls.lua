@@ -1,4 +1,4 @@
--- скрапер TVS для загрузки плейлиста "DENMS TV" http://denms.tplinkdns.com/ (10/06/21)
+-- скрапер TVS для загрузки плейлиста "DENMS TV" http://denms.tplinkdns.com/ (22/07/21)
 -- логин, пароль установить в 'Password Manager', для ID - denms
 
 -- ## Переименовать каналы ##
@@ -9,7 +9,11 @@ local filter = {
 
 	module('denms_plus_pls', package.seeall)
 	local my_src_name = 'DENMS TV - StarNet (A)'
-
+	
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML,like Gecko) Chrome/81.0.3785.143 Safari/537.36')
+		if not session then return end
+	m_simpleTV.Http.SetTimeout(session, 8000)
+		
 	local function ProcessFilterTableLocal(t)
 		if not type(t) == 'table' then return end
 		for i = 1, #t do
@@ -23,14 +27,14 @@ local filter = {
 	 return t
 	end
 	function GetSettings()
-	 return {name = my_src_name, sortname = '', scraper = '', m3u = 'out_' .. my_src_name .. '.m3u', logo = '../Channel/logo/extFiltersLogo/denms.png', TypeSource = 1, TypeCoding = 1, DeleteM3U = 1, RefreshButton = 0, AutoBuild = 0, AutoBuildDay = {0, 0, 0, 0, 0, 0, 0}, LastStart = 0, TVS = {add = 0, FilterCH = 0, FilterGR = 0, GetGroup = 0, LogoTVG = 0}, STV = {add = 1, ExtFilter = 1, FilterCH = 1, FilterGR = 1, GetGroup = 1, HDGroup = 0, AutoSearch = 1, AutoNumber = 0, NumberM3U = 0, GetSettings = 1, NotDeleteCH = 0, TypeSkip = 1, TypeFind = 1, TypeMedia = 0, RemoveDupCH = 1}}
+	 return {name = my_src_name, sortname = '', scraper = '', m3u = 'out_' .. my_src_name .. '.m3u', logo = '../Channel/logo/extFiltersLogo/denms.png', TypeSource = 1, TypeCoding = 1, DeleteM3U = 1, RefreshButton = 0, AutoBuild = 0, AutoBuildDay = {0, 0, 0, 0, 0, 0, 0}, LastStart = 0, TVS = {add = 0, FilterCH = 0, FilterGR = 0, GetGroup = 0, LogoTVG = 0}, STV = {add = 1, ExtFilter = 1, FilterCH = 1, FilterGR = 1, GetGroup = 1, HDGroup = 0, AutoSearch = 1, AutoSearchLogo =1, AutoNumber = 0, NumberM3U = 0, GetSettings = 1, NotDeleteCH = 0, TypeSkip = 1, TypeFind = 1, TypeMedia = 0, RemoveDupCH = 1}}
 	end
 	function GetVersion()
 	 return 2, 'UTF-8'
 	end
-	
+
 	local function findtok()
-	local url= decode64('aHR0cDovL3Rva2VuLnN0Yi5tZC9hcGkvRmx1c3NvbmljL3N0cmVhbS9QUk9UVl9DSElTSU5BVV9IMjY0L21ldGFkYXRhLmpzb24=')
+	local url= decode64('aHR0cHM6Ly90b2tlbi5zdGIubWQvYXBpL0ZsdXNzb25pYy9zdHJlYW0vTklDS0VMT0RFT05fSDI2NC9tZXRhZGF0YS5qc29u')
 	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
 		if rc~=200 then
 		return ''
@@ -42,9 +46,9 @@ local filter = {
 		return tab.variants[1].url:gsub('^.-token=','')
 		else
 		return ''
-		end	
+		end
 	end
-	
+
 	local function LoadFromFile(pls, pls_name)
 		local answer
 			local res, login, password, header = xpcall(function() require('pm') return pm.GetPassword('denms') end, err)
@@ -61,10 +65,8 @@ local filter = {
 	file:close()
 	end
 	end
-		
-		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML,like Gecko) Chrome/81.0.3785.143 Safari/537.36')
-			if not session then return end
-		m_simpleTV.Http.SetTimeout(session, 8000)
+
+
 		local tok = findtok()
 		answer = answer .. '\n'
 		local t, i = {}, 1
@@ -72,13 +74,13 @@ local filter = {
 			for w in answer:gmatch('%#EXTINF:.-\n.-\n') do
 				local title = w:match(',(.-)\n')
 				local adr = w:match('\n(.-)\n')
-				local logo = w:match('tvg%-logo="(.-)"')				
+				local logo = w:match('tvg%-logo="(.-)"')
 					if not adr or not title then break end
 				t[i] = {}
 				t[i].name = title
 				t[i].address = adr .. tok
-				t[i].group = w:match('group%-title="([^"]+)') or 'DENMS TV'	
-				t[i].RawM3UString = w:match('(catchup.-),')				
+				t[i].group = w:match('group%-title="([^"]+)') or 'DENMS TV'
+				t[i].RawM3UString = w:match('(catchup.-),')
 				t[i].logo = logo
 				if not pls:match('18') or pls:match('18') and t[i].group ~= 'Эротика' then
 				i = i + 1

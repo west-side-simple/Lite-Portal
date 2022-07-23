@@ -1,9 +1,9 @@
--- скрапер TVS для загрузки плейлиста "Franchises" https://rezka.ag/franchises/ (06/04/22)
+-- скрапер TVS для загрузки плейлиста "Franchises" https://hdrezka.ag/franchises/ (23/07/22)
 -- west_side
 -- ## необходим ##
 -- видеоскрипт: hdrezka.lua - mod west_side for lite version
 -- ## Переименовать каналы ##
-local filter = {	
+local filter = {
 	}
 -- ##
 	local my_src_name = 'Franchises'
@@ -36,18 +36,19 @@ local filter = {
 	m_simpleTV.Http.SetTimeout(session, 30000)
 
 	local function LoadFromSite()
+	local zerkalo = m_simpleTV.Config.GetValue('zerkalo/rezka','LiteConf.ini') or 'https://hdrezka.ag/'
 	local t,i = {},1
 	for j=1,53 do
-		local rc,answer = m_simpleTV.Http.Request(session,{url= 'https://rezka.ag/franchises/' .. 'page/' .. j .. '/'})
+		local rc,answer = m_simpleTV.Http.Request(session,{url= zerkalo .. 'franchises/' .. 'page/' .. j .. '/'})
 		if rc ~= 200 then return '' end
 		for w in answer:gmatch('<div class="b%-content__collections_item".-</div></div>') do
 			local adr,logo,num,name = w:match('url="(.-)".-src="(.-)".-tooltip">(%d+).-"title">(.-)<')
 			local grp = 'Фильмы'
-            local grp_logo = 'http://m24.do.am/images/drama.png'						
+            local grp_logo = 'http://m24.do.am/images/drama.png'
 			if not adr or not name then break end
-					t[i] = {}					
+					t[i] = {}
 					t[i].name = name
-					t[i].address = adr					
+					t[i].address = adr
 					t[i].logo = logo
 					if name:match('аниме') then grp = 'Аниме' grp_logo = 'http://m24.do.am/images/anime.png'
 					elseif name:match('мультсериал') then grp = 'Мультфильмы' grp_logo = 'http://m24.do.am/Logo/mult.png'
@@ -58,11 +59,11 @@ local filter = {
 					t[i].group = grp
 					t[i].group_logo = grp_logo
 				showMsg('Загрузка: ' .. j .. ' / ' .. i, ARGB(255, 153, 255, 153))
-				debug_in_file(i .. ' (' .. j .. '), ' .. t[i].name .. '\n','c://1/frch.txt')
+--				debug_in_file(i .. ' (' .. j .. '), ' .. t[i].name .. '\n','c://1/frch.txt')
 				i=i+1
 			end
 		j=j+1
-	end	
+	end
 	if #t == 0 then return end
 	 return t
 	end
