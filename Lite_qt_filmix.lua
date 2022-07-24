@@ -1,4 +1,4 @@
---Filmix portal - lite version west_side 28.06.22
+--Filmix portal - lite version west_side 09.07.22
 
 local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
@@ -87,6 +87,7 @@ function zerkalo_filmix()
 		{'https://filmix.gay','https://filmix.gay'},
 		{'https://filmix.love','https://filmix.love'},
 		{'https://filmix.beer','https://filmix.beer'},
+		{'https://filmix.tech','https://filmix.tech'},
 		}
 
 	local t0={}
@@ -527,6 +528,7 @@ function collection_filmix_url(url)
 	local title = 'Коллекция'
 	local filmixsite = m_simpleTV.Config.GetValue('zerkalo/filmix', 'LiteConf.ini') or 'https://filmix.ac'
 	url = url:gsub('https?://filmix%..-/', filmixsite .. '/')
+	
 	local page = url:match('/page/(%d+)/') or 1
 	if not m_simpleTV.Control.CurrentAdress then
 		m_simpleTV.Control.SetTitle(title)
@@ -534,6 +536,10 @@ function collection_filmix_url(url)
 	local t,i,j = {},1,1
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
 		if not session then return end
+	local res, login, password, header = xpcall(function() require('pm') return pm.GetPassword('filmix') end, err)
+	local rc, answer = m_simpleTV.Http.Request(session, {body = 'login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login=submit', url = filmixsite, method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. filmixsite})	
+		
+		
 	m_simpleTV.Http.SetTimeout(session, 8000)
 
 	if not m_simpleTV.Control.CurrentAdress then

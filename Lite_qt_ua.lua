@@ -1,4 +1,4 @@
---UA portal - lite version west_side 24.06.22
+--UA portal - lite version west_side 30.06.22
 
 function run_lite_qt_ua()
 	local function getConfigVal(key)

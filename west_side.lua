@@ -1,6 +1,6 @@
 --startup westSide portal
 --saved as utf-8 without bom
---wafee code, west_side updated 20.06.22
+--wafee code, west_side updated 24.07.22
 -------------------------------------------------------------------
 if m_simpleTV.User==nil then m_simpleTV.User={} end
 if m_simpleTV.User.westSide==nil then m_simpleTV.User.westSide={} end
@@ -69,11 +69,61 @@ function mediabaze()
 	run_westSide_portal()
   end
 end
+--------------------------------------
+function KP_Get_History()
 
+-- wafee code for history
+
+    local recentName = getConfigVal('kp_history/title') or ''
+    local recentAddress = getConfigVal('kp_history/adr') or ''
+	local recentLogo = getConfigVal('kp_history/logo') or ''
+       
+     local t,i={},1
+
+   if recentName~='' and recentLogo~='' and recentAddress~='' and recentIndex~='' then   
+     for w in string.gmatch(recentName,"[^,]+") do
+       t[i] = {}
+       t[i].Id = i
+       t[i].Name = w
+	   t[i].InfoPanelName = w
+	   t[i].InfoPanelShowTime = 10000
+       i=i+1 
+     end
+     i=1
+     for w in string.gmatch(recentAddress,"[^,]+") do
+       t[i].Address = w
+	   t[i].InfoPanelTitle = w:match('%&bal=(.-)$')
+       i=i+1   
+     end
+	 i=1
+     for w in string.gmatch(recentLogo,"[^,]+") do
+       t[i].InfoPanelLogo = w 
+       i=i+1   
+     end
+   end
+   t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Portal '}
+   t.ExtButton1 = {ButtonEnable = true, ButtonName = ' Cleane '}
+   local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Кинопоиск: История просмотра',0,t,9000,1+4+8)
+   if id==nil then return end
+   if ret==1 then 
+      m_simpleTV.Control.PlayAddressT({address = t[id].Address})
+   end
+   if ret==2 then
+	  run_westSide_portal()
+   end
+   if ret==3 then
+      setConfigVal('kp_history/title','')
+	  setConfigVal('kp_history/logo','')
+	  setConfigVal('kp_history/adr','')
+	  run_westSide_portal()
+   end   
+   end
+--------------------------------------------------   
 function run_westSide_portal()
  m_simpleTV.Control.ExecuteAction(37)
  local tt1={
  {'Поиск',''},
+ {'Кинопоиск: История',''},
  {'Закладки',''},
  {'TMDb',''},
  {'EX-FS',''},
@@ -82,6 +132,7 @@ function run_westSide_portal()
  {'Kinopub',''},
  {'Переводы',''},
  {'KinoGo',''},
+ {'KinoKong',''},
  {'UA',''},
  {'YouTube',''},
  {'Медиабазы',''},
@@ -107,10 +158,12 @@ function run_westSide_portal()
   dofile(m_simpleTV.MainScriptDir_UTF8 .. 'user\\westSidePortal\\GUI\\showDialog.lua')
   elseif t1[id].Name == 'Закладки' then
   m_simpleTV.Control.ExecuteAction(100)
+  elseif t1[id].Name == 'Кинопоиск: История' then KP_Get_History()
   elseif t1[id].Name == 'Медиабазы' then mediabaze()
   elseif t1[id].Name:match('SimpleTV') then highlight()
   elseif t1[id].Name == 'Переводы' then run_lite_qt_cdntr()
   elseif t1[id].Name == 'KinoGo' then run_lite_qt_kinogo()
+  elseif t1[id].Name == 'KinoKong' then run_lite_qt_kinokong()
   elseif t1[id].Name == 'UA' then run_lite_qt_ua()
   end
   end

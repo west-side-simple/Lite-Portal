@@ -1,4 +1,4 @@
---TMDb portal - lite version west_side 11.03.22
+--TMDb portal - lite version west_side 21.07.22
 
 local function findrutor(name, id)
 	local session2 = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36', proxy, true)
@@ -1092,7 +1092,7 @@ if rc3~=200 then
 end
 require('json')
 answertm = answertm:gsub('(%[%])', '"nil"')
-local tab, promo, genre, country = json.decode(answertm), '', '', ''
+local tab, promo, genre, country, rating = json.decode(answertm), '', '', '', ''
 
 	if tab.poster_path and tab.poster_path ~= 'null' then
 	poster = tab.poster_path
@@ -1152,7 +1152,7 @@ if tab and tab.genres then
  else
  genre = ''
  end
-
+ rating = tostring(rating):match('(%d%.%d)') or tostring(rating):match('(%d)') or '0'
         local imdb_id = tab.imdb_id
 
 		if tv == 1 then imdb_id = imdbid(tmdbid) end
