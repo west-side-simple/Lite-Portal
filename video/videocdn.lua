@@ -1,6 +1,6 @@
--- видеоскрипт для видеобалансера "videocdn" https://videocdn.tv (08/05/22)
+-- видеоскрипт для видеобалансера "videocdn" https://videocdn.tv (13/07/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod - west_side (30/04/22)
+-- mod - west_side (13/07/22)
 -- ## открывает подобные ссылки ##
 -- https://32.svetacdn.in/fnXOUDB9nNSO?kp_id=5928
 -- https://32.tvmovies.in/fnXOUDB9nNSO/tv-series/92
@@ -18,6 +18,8 @@ local proxy = ''
 		if not m_simpleTV.Control.CurrentAddress:match('^https?://[%w%.]*videocdn%.')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/fnXOUDB9nNSO')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/PXk2QGbvEVmS')
+			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/CtpKt94RDwED')
+			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/Z9w3z4ZBIQxF')
 --			and not m_simpleTV.Control.CurrentAddress:match('^https?://[%w%.]*svetacdn%.')
 			and not m_simpleTV.Control.CurrentAddress:match('^$videocdn')
 		then
@@ -166,9 +168,9 @@ end
 		m_simpleTV.User.Videocdn.title = title_v
 		m_simpleTV.User.Videocdn.year = year_v
 	end
-	if not m_simpleTV.User.Videocdn.background or m_simpleTV.User.Videocdn.background=='' then
-		m_simpleTV.Control.ChangeChannelLogo(logo, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
-	end
+--	if not m_simpleTV.User.Videocdn.background or m_simpleTV.User.Videocdn.background=='' then
+--		m_simpleTV.Control.ChangeChannelLogo(logo, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
+--	end
 	local title
 	if m_simpleTV.User.Videocdn.Tabletitle then
 		local index = m_simpleTV.Control.GetMultiAddressIndex()
@@ -353,7 +355,11 @@ end
 	t[i] = {}
 	t[i].Id = i
 	if tonumber(t1[i].Address) == tonumber(m_simpleTV.User.Videocdn.translate) then current_id = i end
+	if m_simpleTV.User.Videocdn.embed then
 	t[i].Address = m_simpleTV.User.Videocdn.adr .. '?translation=' .. t1[i].Address .. '&embed=' .. m_simpleTV.User.Videocdn.embed
+	else
+	t[i].Address = m_simpleTV.User.Videocdn.adr .. '?translation=' .. t1[i].Address
+	end
 	t[i].Name = t1[i].Name
 	end
 	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_Videocdn()'}

@@ -1,6 +1,6 @@
--- видеоскрипт для сайта http://www.kinopoisk.ru (06/05/22)
+-- видеоскрипт для сайта http://www.kinopoisk.ru (24/07/22)
 -- Copyright © 2017-2021 Nexterr | https://github.com/Nexterr/simpleTV
--- mod west_side (add VB, ZF, Videoapi) - (06/05/22)
+-- mod west_side (add VB, ZF, Videoapi) - (24/07/22)
 -- ## необходимы ##
 -- видеоскрипты: yandex-vod.lua, kodik.lua, filmix.lua, videoframe.lua, seasonvar.lua
 -- iviru.lua, videocdn.lua, hdvb-vb.lua, collaps.lua, cdnmovies.lua, voidboost.lua, videoapi.lua, zetflix.lua
@@ -23,6 +23,113 @@ local proxy = ''
 -- '' - нет
 -- 'https://proxy-nossl.antizapret.prostovpn.org:29976' (пример)
 -- ## источники ##
+local function getConfigVal(key)
+ return m_simpleTV.Config.GetValue(key,'LiteConf.ini')
+end
+
+local function setConfigVal(key,val)
+  m_simpleTV.Config.SetValue(key,val,'LiteConf.ini')
+end
+
+local function find_in_history(kpid)
+local recentAddress = getConfigVal('kp_history/adr') or ''
+     local t,i={},1
+	 for w in string.gmatch(recentAddress,"[^,]+") do
+	   local kp_id,bal = w:match('(%d+).-%&bal=(.-)$')
+--	   debug_in_file('fromRecentAddress = ' .. kp_id .. ' ' .. bal .. ' ' .. recentAddress .. '\n','c://1/kp.txt')
+	   t[i] = {}
+	   t[i].Address = w
+       if kp_id == kpid then
+	   return bal
+	   end
+       i=i+1
+     end
+return ''
+end
+--------------------------------------
+function add_to_history(adr,title,logo)
+
+-- wafee code for history
+	local cur_max
+	local max_history = m_simpleTV.Config.GetValue('openFrom/maxRecentItem','simpleTVConfig') or 15
+    local recentName = getConfigVal('kp_history/title') or ''
+    local recentAddress = getConfigVal('kp_history/adr') or ''
+	local recentLogo = getConfigVal('kp_history/logo') or ''
+     local t={}
+     local tt={}
+     local i=2
+	 t[1] = {}
+     t[1].Id = 1
+     t[1].Name = title
+	 t[1].Address = adr
+	 t[1].Logo = logo
+   if recentName~='' and recentLogo~='' and recentAddress~='' then
+
+     for w in string.gmatch(recentName,"[^,]+") do
+       t[i] = {}
+       t[i].Id = i
+       t[i].Name = w
+       i=i+1
+     end
+     i=2
+     for w in string.gmatch(recentAddress,"[^,]+") do
+       t[i].Address = w
+       i=i+1
+     end
+	 i=2
+     for w in string.gmatch(recentLogo,"[^,]+") do
+       t[i].Logo = w
+       i=i+1
+     end
+
+     local function isExistAdr()
+       for i=2,#t do
+         if adr:gsub('%&bal=.-$','')==t[i].Address:gsub('%&bal=.-$','') then
+           return true, i
+         end
+       end
+       return false
+     end
+
+     local isExist,i=isExistAdr()
+     if isExist then
+       table.remove(t,i)
+     end
+
+     recentName=''
+     recentAddress = ''
+     recentLogo = ''
+
+	 if #t <= tonumber(max_history) then
+		cur_max = #t
+	 else
+		cur_max = tonumber(max_history)
+	 end
+
+     for i=1,cur_max  do
+      local name = t[i].Name
+      t[i].Name = t[i].Name:gsub('@@@@@',',')
+      recentName = recentName .. name .. ','
+      recentAddress = recentAddress .. t[i].Address .. ','
+	  recentLogo = recentLogo .. t[i].Logo .. ','
+      t[i].Id = i
+--      debug_in_file('fromOSDmenu = ' .. t[i].Id .. ' ' .. t[i].Name .. ' ' .. t[i].Address .. '\n','c://1/kp.txt')
+     end
+
+	 setConfigVal('kp_history/title',recentName)
+	 setConfigVal('kp_history/logo',recentLogo)
+	 setConfigVal('kp_history/adr',recentAddress)
+
+	 else
+
+	 setConfigVal('kp_history/title',title .. ',')
+	 setConfigVal('kp_history/logo',logo .. ',')
+	 setConfigVal('kp_history/adr',adr .. ',')
+
+   end
+end
+
+--------------------------------------
 local tname = {}
 if not m_simpleTV.Config.GetValue('mediabaze', 'LiteConf.ini') or tonumber(m_simpleTV.Config.GetValue('mediabaze', 'LiteConf.ini')) == 1 then
 -- сокращенная база
@@ -32,7 +139,7 @@ tname = {
  'Videocdn',
  'VB',
  'ZF',
- 'Videoapi',  
+ 'Videoapi',
 -- 'Filmix',
 -- 'CDN Movies',
 -- 'Videoframe',
@@ -51,14 +158,14 @@ tname = {
 -- отключить: поставить в начале строки --
  'Videocdn',
  'VB',
- 'ZF', 
+ 'ZF',
 -- 'Filmix',
  'CDN Movies',
  'Videoframe',
  'Hdvb',
  'Collaps',
  'Kodik',
- 'Videoapi',   
+ 'Videoapi',
 -- 'КиноПоиск онлайн',
 -- 'Seasonvar',
 -- 'ivi',
@@ -108,7 +215,11 @@ end
 	local kpid = inAdr:match('.+%-(%d+)') or inAdr:match('/film//?(%d+)') or inAdr:match('%d+')
 		if not kpid then return end
 	local turl, svar, t, rett, Rt = {}, {}, {}, {}, {}
-	local rc, answer, retAdr, title, orig_title, year, kp_r, imdb_r, zonaAbuse, zonaUrl, zonaSerial, zonaId, zonaDesc, logourl, eng_title, languages_imdb
+	local rc, answer, retAdr, title, orig_title, year, kp_r, imdb_r, zonaAbuse, zonaUrl, zonaSerial, zonaId, zonaDesc, logourl, eng_title, languages_imdb, current_bal
+	local current_id = 1
+	inAdr = inAdr:gsub('%&bal=.-$','')
+	current_bal = find_in_history(kpid)
+
 	local usvar, i, u = 1, 1, 1
 	local function unescape_html(str)
 	 return htmlEntities.decode(str)
@@ -130,7 +241,7 @@ end
 		elseif url:match('kNKj47MkBgLS') then
 			rc, answer = m_simpleTV.Http.Request(session, {url = url})
 				if rc ~= 200 then return end
-			return url	
+			return url
 		elseif url:match('cdnmovies%.net') then
 			rc, answer = m_simpleTV.Http.Request(session, {url = url})
 				if rc ~= 200 then return end
@@ -292,7 +403,7 @@ end
 		elseif url:match('PXk2QGbvEVmS') then
 			return answer
 		elseif url:match('kNKj47MkBgLS') then
-			return answer	
+			return answer
 		elseif url:match('cdnmovies%.net') then
 			return answer
 		elseif url:match('kodikapi%.com') then
@@ -456,7 +567,7 @@ end
 			elseif tname[i] == 'Videocdn' then
 				turl[i] = {adr = decode64('aHR0cHM6Ly84MjA5LnN2ZXRhY2RuLmluL1BYazJRR2J2RVZtUz9rcF9pZD0') .. kpid, tTitle = 'Большая база фильмов и сериалов', tLogo = logo_k}
 			elseif tname[i] == 'Videoapi' then
-				turl[i] = {adr = decode64('aHR0cHM6Ly81MTAyLnN2ZXRhY2RuLmluL2tOS2o0N01rQmdMUz9pbWRiX2lkPQ==') .. id_imdb, tTitle = 'Большая база фильмов и сериалов', tLogo = logo_k}	
+				turl[i] = {adr = decode64('aHR0cHM6Ly81MTAyLnN2ZXRhY2RuLmluL2tOS2o0N01rQmdMUz9pbWRiX2lkPQ==') .. id_imdb, tTitle = 'Большая база фильмов и сериалов', tLogo = logo_k}
 			elseif tname[i] == 'Collaps' then
 				turl[i] = {adr = 'http://api.' .. os.time() .. decode64('LmRlbGl2ZW1iZC53cy9lbWJlZC9rcC8') .. kpid, tTitle = 'Большая база фильмов и сериалов', tLogo = logo_k}
 			elseif tname[i] == 'CDN Movies' then
@@ -489,24 +600,32 @@ end
 			end
 			t[i].InfoPanelShowTime = 30000
 		end
+
 		for _, v in pairs(t) do
-			if v.answer then v.Id = u rett[u] = v u = u + 1 end
+			if v.answer then
+			v.Id = u
+			if current_bal and v.Name == current_bal then current_id = u end
+			rett[u] = v
+			u = u + 1
+			end
 		end
 	end
+
 	local function selectmenu()
 		rett.ExtParams = {FilterType = 2}
 
 			rett.ExtButton1 = {ButtonEnable = true, ButtonName = '🔎 Rezka'}
 
 		m_simpleTV.OSD.ShowMessageT({text = '', showTime = 1000, id = 'channelName'})
-		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('🎞 ' .. title .. ' (' .. year .. ')', 0, rett, 8000, 1 + 2)
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('🎞 ' .. title .. ' (' .. year .. ')', current_id-1, rett, 8000, 1 + 2)
 			if ret == 3 then
 				m_simpleTV.Config.SetValue('search/media',m_simpleTV.Common.toPercentEncoding(title),'LiteConf.ini')
 				search_rezka()
 			end
 
-		id = id or 1
-		retAdr = getAdr(rett[id].answer, rett[id].Address)
+			id = id or 1
+			add_to_history(inAdr .. '&bal=' .. rett[id].Name,title .. ' (' .. year .. ')',rett[id].InfoPanelLogo)
+			retAdr = getAdr(rett[id].answer, rett[id].Address)
 
 		if retAdr == -1 then
 			selectmenu()
@@ -536,5 +655,7 @@ end
 	retAdr = retAdr:gsub('^//', 'http://')
 	if retAdr:match('svetacdn%.') then retAdr = retAdr .. '&embed=' .. kpid end
 	m_simpleTV.Control.CurrentAddress = retAdr
+
+
 	dofile(m_simpleTV.MainScriptDir_UTF8 .. 'user\\video\\video.lua')
 -- debug_in_file(retAdr .. '\n')

@@ -1,4 +1,4 @@
--- видеоскрипт для сайтов http://www.hdkinoteatr.com  https://kinogo.cc/ (18/03/21)
+-- видеоскрипт для сайтов http://www.hdkinoteatr.com  https://kinogo.cc/ (02/07/22)
 -- необходимы скрипты: collaps (autor - nexterr)
 -- открывает подобные ссылки:
 -- http://www.hdkinoteatr.com/drama/28856-vse_ispravit.html
@@ -35,15 +35,15 @@ end
 		m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = background, TypeBackColor = 0, UseLogo = 3, Once = 1})
 		m_simpleTV.Control.ChangeChannelLogo(poster, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
 		m_simpleTV.Control.ChangeChannelName(title, m_simpleTV.Control.ChannelID, false)
-	end	
+	end
 	local retAdr
 	local t,i = {},1
-	for w in answer:gmatch('<iframe src=.-</iframe>') do
-		adr = w:match('<iframe src=(.-) ')
-		if not adr or adr:match('/trailer/') or adr:match('token=') then break end
+	for w in answer:gmatch('<iframe.-</iframe>') do
+		adr = w:match('<iframe(.-)</iframe>')
+		if not adr or adr:match('youtube') or adr:match('/trailer/') or adr:match('token=') or adr:match('kinogo') then break end
 		t[i] = {}
-		t[i].Address = adr:gsub('"',''):gsub('^//', 'http://'):gsub('/iframe%?.+', '/iframe'):gsub('vb17120ayeshajenkins','vb17121coramclean'):gsub('%?host=kinogo%.cc.-$','')
-		if adr:match('/embed/') then t[i].Name = 'Collaps' else t[i].Name = 'HDVB' end
+		t[i].Address = adr:gsub('^.-//', 'https://'):gsub(' .-$', ''):gsub('"',''):gsub('^//', 'http://'):gsub('/iframe%?.+', '/iframe'):gsub('vb17120ayeshajenkins','vb17121coramclean'):gsub('%?host=kinogo%.cc.-$',''):gsub('%?d=kinogo%.cc.-$','')
+		if adr:match('/embed/') then t[i].Name = 'Collaps' elseif adr:match('svetacdn') then t[i].Name = 'VideoCDN' else t[i].Name = 'HDVB' end
 		i=i+1
 	end
 		local hash, res = {}, {}
@@ -57,7 +57,7 @@ end
 		for i = 1, #res do
 			res[i].Id = i
 		end
-	if #res and #res > 1 then	
+	if #res and #res > 1 then
 	local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('🎞 ' .. title, 0, res, 8000, 1 + 2)
 		id = id or 1
 		retAdr = res[id].Address
@@ -79,7 +79,7 @@ end
 	end
 	if not m_simpleTV.User then
 		m_simpleTV.User = {}
-	end	
+	end
 	if not m_simpleTV.User.TMDB then
 		m_simpleTV.User.TMDB = {}
 	end
@@ -88,6 +88,6 @@ end
 	end
 
 	m_simpleTV.User.westSide.PortalTable,m_simpleTV.User.TMDB.tv,m_simpleTV.User.TMDB.Id,m_simpleTV.User.hdua.serial=nil,nil,nil,nil
-	
+
 	dofile(m_simpleTV.MainScriptDir .. "user\\video\\video.lua")
 -- debug_in_file(retAdr .. '\n')

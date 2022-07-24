@@ -1,6 +1,6 @@
--- видеоскрипт для сайта https://filmix.ac (28/06/22)
+-- видеоскрипт для сайта https://filmix.ac (23/07/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- west_side mod for lite (03/06/22)
+-- west_side mod for lite (23/07/22)
 -- ## авторизация ##
 -- логин, пароль установить в 'Password Manager', для id - filmix
 -- ## необходим ##
@@ -255,7 +255,7 @@ end
 			header = m_simpleTV.Common.UTF8ToMultiByte(header)
 			header = header:gsub('%c', ''):gsub('[\\/"%*:<>%|%?]+', ' '):gsub('%s+', ' '):gsub('^%s*', ''):gsub('%s*$', '')
 			local fileEnd = ' (filmix ' .. os.date('%d.%m.%y') ..').m3u'
-			local folder = m_simpleTV.Common.GetMainPath(2) .. m_simpleTV.Common.UTF8ToMultiByte('сохраненые плейлисты/')
+			local folder = m_simpleTV.Common.GetMainPath(2) .. m_simpleTV.Common.UTF8ToMultiByte('сохраненные плейлисты/')
 			lfs.mkdir(folder)
 			local folderAk = folder .. 'filmix/'
 			lfs.mkdir(folderAk)
@@ -297,6 +297,8 @@ end
 		local index = filmixIndex(t)
 		if not m_simpleTV.User.filmix.isVideo then
 			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' 💾 Выгрузка ', ButtonScript = 'SavefilmixPlaylist()'}
+		else
+			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Filmix ', ButtonScript = 'run_lite_qt_filmix()'}
 		end
 		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🧾 Теги ', ButtonScript = 'similar_filmix()'}
 		if #t > 0 then
@@ -309,7 +311,11 @@ end
 				end
 			end
 			if ret == 2 then
+			if not m_simpleTV.User.filmix.isVideo then
 				SavefilmixPlaylist()
+			else
+				run_lite_qt_filmix()
+			end
 			end
 			if ret == 3 then
 				similar_filmix()

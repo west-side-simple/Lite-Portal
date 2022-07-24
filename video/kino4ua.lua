@@ -1,4 +1,4 @@
--- видеоскрипт для сайта https://kino4ua.com/ (20/06/22)
+-- видеоскрипт для сайта https://kino4ua.com/ (30/06/22)
 -- необходимы скрипты: ashdi (autor - westSide), collaps (autor - nexterr)
 -- открывает подобные ссылки:
 -- https://kino4ua.com/749-titank.html
@@ -26,7 +26,7 @@ end
 		 return
 		end
 	local title = answer:match('<h1 itemprop="name">(.-)</h1>') or answer:match('<title>(.-)</title>')
-	title = title:gsub(' дивитися онлайн.-$', '')
+	title = title:gsub(' дивитися онлайн.-$', ''):gsub('%&#039%;','`')
 	local poster = answer:match('<meta property="og:image" content="(.-)"')
 	poster = 'https://kino4ua.com/uploads/posts/' .. poster
 	local desc = answer:match('<meta name="description" content="(.-)"')

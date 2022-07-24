@@ -1,15 +1,14 @@
--- видеоскрипт для балансера ashdi (20/06/22)
--- необходим plugin: videotrack (autor - wafee)
+-- видеоскрипт для балансера ashdi (11/07/22) author - westSide
+-- необходим plugin: videotrack (author - wafee)
 -- открывает подобные ссылки:
 -- https://ashdi.vip/vod/396?geoblock=ru
 
-		if m_simpleTV.Control.ChangeAdress ~= 'No' then return end
+	if m_simpleTV.Control.ChangeAdress ~= 'No' then return end
 	local inAdr = m_simpleTV.Control.CurrentAdress
-		if not inAdr then return end
-		if not inAdr:match('^https?://ashdi%.vip')
-		then return end
---	m_simpleTV.Control.ChangeAdress = 'Yes'
---	m_simpleTV.Control.CurrentAdress = ''
+	if not inAdr then return end
+	if not inAdr:match('^https?://ashdi%.vip') then return end
+	m_simpleTV.Control.ChangeAdress = 'Yes'
+	m_simpleTV.Control.CurrentAdress = ''
 	if not m_simpleTV.User then
 		m_simpleTV.User = {}
 	end
@@ -43,7 +42,7 @@ local function GetInfo(Adr)
 		 return
 		end
 	local title = answer:match('<h1 itemprop="name">(.-)</h1>') or answer:match('<title>(.-)</title>')
-	title = title:gsub(' дивитися онлайн.-$', '')
+	title = title:gsub(' дивитися онлайн.-$', ''):gsub('%&#039%;','`')
 	local poster = answer:match('<meta property="og:image" content="(.-)"')
 	poster = 'https://kino4ua.com/uploads/posts/' .. poster
 	local desc = answer:match('<meta name="description" content="(.-)"')
@@ -88,11 +87,11 @@ local seriaua = getConfigVal('ua/seria') or 1
 		if #t > 0 then
 			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Info ', ButtonScript = 'ua_info(\'' .. kino4ua .. '\')'}
 			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' Portal ', ButtonScript = 'run_westSide_portal()'}
+			t.ExtParams = {FilterType = 2, StopOnError = 1, StopAfterPlay = 0, PlayMode = 1}
 			local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('Серії', tonumber(seriaua)-1, t, 5000, 1 + 4 + 8 + 2)
 			if ret == 1 then
                 setConfigVal('ua/seria',t[id].Address:match('%d+$'))
 				m_simpleTV.Control.PlayAddress(t[id].Address)
-
 			end
 			if ret == 2 then
 				ua_info(kino4ua)
@@ -129,11 +128,23 @@ end
 			end
 			j=j+1
 		end
-		local _, id = m_simpleTV.OSD.ShowSelect_UTF8(title1 .. ', ' .. trans, tonumber(seriaua)-1 or 0, t, 10000, 1 + 2)
+		if seriaua and tonumber(seriaua) > #t then
+			m_simpleTV.OSD.ShowMessageT({text = 'Просмотрен последний эпизод', color = ARGB(255, 255, 100, 0), showTime = 1000 * 10, id = 'channelName'})
+			ua_info(kino4ua:gsub('%&seriaua=.-$',''))
+			return
+		end
+		if not kino4ua:match('%&seriaua=') then
+			t.ExtParams = {FilterType = 2, StopOnError = 1, StopAfterPlay = 0, PlayMode = 1}
+		local _, id = m_simpleTV.OSD.ShowSelect_UTF8(title1 .. ', ' .. trans, tonumber(seriaua)-1 or 0, t, 10000, 1 + 4 + 8 + 2)
 			id = id or tonumber(seriaua) or 1
 		 	retAdr = t[id].Address
 			setConfigVal('ua/seria',id)
 			title1 = title1:gsub(' %(.-$', '') .. ' - ' .. trans .. ' (' .. t[id].Name .. ')'
+			else
+			retAdr = t[tonumber(seriaua)].Address
+			setConfigVal('ua/seria',tonumber(seriaua))
+			title1 = title1:gsub(' %(.-$', '') .. ' - ' .. trans .. ' (' .. t[tonumber(seriaua)].Name .. ')'
+			end
 			m_simpleTV.User.hdua.serial = t
 			m_simpleTV.User.collaps.ua = nil
 			m_simpleTV.User.westSide.PortalTable = m_simpleTV.User.hdua.serial
