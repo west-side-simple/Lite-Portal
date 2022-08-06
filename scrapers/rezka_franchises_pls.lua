@@ -1,4 +1,4 @@
--- скрапер TVS для загрузки плейлиста "Franchises" https://hdrezka.ag/franchises/ (23/07/22)
+-- скрапер TVS для загрузки плейлиста "Franchises" https://hdrezka.ag/franchises/ (02/08/22)
 -- west_side
 -- ## необходим ##
 -- видеоскрипт: hdrezka.lua - mod west_side for lite version
@@ -36,11 +36,22 @@ local filter = {
 	m_simpleTV.Http.SetTimeout(session, 30000)
 
 	local function LoadFromSite()
-	local zerkalo = m_simpleTV.Config.GetValue('zerkalo/rezka','LiteConf.ini') or 'https://hdrezka.ag/'
+	local zerkalo = m_simpleTV.Config.GetValue('zerkalo/rezka','LiteConf.ini') or ''
+	if zerkalo == '' then zerkalo = 'https://hdrezka.ag/' end
 	local t,i = {},1
-	for j=1,53 do
+	for j=1,55 do
 		local rc,answer = m_simpleTV.Http.Request(session,{url= zerkalo .. 'franchises/' .. 'page/' .. j .. '/'})
-		if rc ~= 200 then return '' end
+		if rc ~= 200 then
+			m_simpleTV.Common.Sleep(500)
+			rc,answer = m_simpleTV.Http.Request(session,{url= zerkalo .. 'franchises/' .. 'page/' .. j .. '/'})
+		end
+		if rc ~= 200 then
+			m_simpleTV.Common.Sleep(500)
+			rc,answer = m_simpleTV.Http.Request(session,{url= zerkalo .. 'franchises/' .. 'page/' .. j .. '/'})
+		end
+		if rc ~= 200 then
+			return t
+		end
 		for w in answer:gmatch('<div class="b%-content__collections_item".-</div></div>') do
 			local adr,logo,num,name = w:match('url="(.-)".-src="(.-)".-tooltip">(%d+).-"title">(.-)<')
 			local grp = 'Фильмы'

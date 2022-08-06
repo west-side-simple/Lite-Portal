@@ -1,4 +1,4 @@
--- скрапер TVS для top плейлистов сайта https://filmix.co от west_side (22/07/22)
+-- скрапер TVS для top плейлистов сайта https://filmix.co от west_side (02/08/22)
 
 	module('filmix_WS_pls', package.seeall)
 	local my_src_name = 'Filmix Best'
@@ -46,7 +46,7 @@
 			local filmixurl = 'https://filmix.ac/' .. playlist .. '/page/' .. page .. '/'
 
 			local rc, filmixanswer = m_simpleTV.Http.Request(sessionFilmix, {url = filmixurl:gsub('/page/1/','')})
-			if rc ~= 200 then m_simpleTV.Common.Sleep(60000) page_all = page_all - 1 end
+			if rc ~= 200 then m_simpleTV.Common.Sleep(30000) page_all = page_all - 1 end
 
 			filmixanswer = m_simpleTV.Common.multiByteToUTF8(filmixanswer)
 			str = str .. filmixanswer:gsub('\n', ' ')
