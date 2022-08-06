@@ -1,4 +1,4 @@
---Rezka portal - lite version west_side 14.06.22
+--Rezka portal - lite version west_side 29.07.22
 
 local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
@@ -86,7 +86,7 @@ function run_lite_qt_rezka()
 				elseif t0[id].Name:match('Аниме') then
 				franchises_rezka_ganre('Аниме')
 				else
-				franchises_rezka('https://rezka.ag/franchises/page/50/')
+				franchises_rezka('https://hdrezka.ag/franchises/page/50/')
 				end
 			elseif t0[id].Name == 'Обновление Франшиз' then
 				UpdateFranchisesRezka()
@@ -112,13 +112,14 @@ function zerkalo_rezka()
 	local current_zerkalo_id = 0
 	local tt = {
 		{"","Без зеркала"},
-		{"https://rezkery.com/","https://rezkery.com/"},
-		{"http://upivi.com/","http://upivi.com/"},
-		{"http://kinopub.me/","http://kinopub.me/"},
-		{"http://metaivi.com/","http://metaivi.com/"},
-		{"http://rd8j1em1zxge.org/","http://rd8j1em1zxge.org/"},
-		{"http://m85rnv8njgwv.org/","http://m85rnv8njgwv.org/"},
+--		{"https://rezkery.com/","https://rezkery.com/"},
+--		{"http://upivi.com/","http://upivi.com/"},
+--		{"http://kinopub.me/","http://kinopub.me/"},
+--		{"http://metaivi.com/","http://metaivi.com/"},
+--		{"http://rd8j1em1zxge.org/","http://rd8j1em1zxge.org/"},
+--		{"http://m85rnv8njgwv.org/","http://m85rnv8njgwv.org/"},
 		{"https://hdrezka19139.org/","https://hdrezka19139.org/"},
+		{"https://hdrezkabnbrts.net/","https://hdrezkabnbrts.net/"},
 		}
 
 	local t0={}
@@ -164,7 +165,7 @@ function last_rezka()
 	if current_zerkalo ~= '' then
 	url = current_zerkalo:gsub('/$','')
 	else
-	url = 'https://rezka.ag'
+	url = 'https://hdrezka.ag'
 	end
 	m_simpleTV.Http.SetTimeout(session, 8000)
 	local rc,answer = m_simpleTV.Http.Request(session,{url= url})
@@ -202,7 +203,7 @@ function collection_rezka()
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 60000)
-	local url = 'https://rezka.ag/collections/'
+	local url = 'https://hdrezka.ag/collections/'
 	local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
 	end
@@ -466,7 +467,9 @@ function franchises_rezka_url(url)
 			t1[i].Id = i
 		end
 		t1.ExtButton0 = {ButtonEnable = true, ButtonName = ' Back '}
+		if not title:match('сериал') then
 		t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' Play '}
+		end
 		t1.ExtParams = {FilterType = 0, AutoNumberFormat = '%1. %2'}
 		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8(title:gsub(' в HD онлайн','') .. ' (' .. #t1 .. ')',0,t1,10000,1+4+8+2)
 		if ret == -1 or not id then
@@ -628,7 +631,7 @@ function media_info_rezka(url)
 	slogan = slogan:gsub('&laquo;', '«'):gsub('&raquo;', '»')
 	local country = answer:match('<h2>Страна.-">(.-)</tr>') or ''
 	country = country:gsub('<a.->', ''):gsub('</td>', ''):gsub('</a>', '')
-	local year = answer:match('Дата выхода.-year/(.-)/') or answer:match('Год:(.-)</tr>') or answer:match('<td class="l">(<h2>Дата рождения</h2>:.-)<div class="b%-person__career">') or ''
+	local year = answer:match('Дата выхода.-year/(.-)/') or answer:match('Год:.-year/(.-)/') or answer:match('<td class="l">(<h2>Дата рождения</h2>:.-)<div class="b%-person__career">') or ''
 	year = year:gsub('<a href="https://rezkery.com/year/.->', ''):gsub('<tr>', ''):gsub('</tr>', ''):gsub('<td.->', ''):gsub('</td>', ''):gsub('</a>', ''):gsub('<h2.->', '<h5>'):gsub('</h2>', ''):gsub('</table>', ''):gsub('<div class="b%-person__gallery_holder">.-</div>', '')
 	local kpr = answer:match('Кинопоиск</a>: <span class="bold">(.-)</span> <i>') or ''
 	if kpr ~= '' then kpr = string.format('%.' .. (1 or 0) .. 'f', kpr) end

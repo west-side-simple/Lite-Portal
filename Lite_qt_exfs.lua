@@ -289,7 +289,7 @@ end
 	answer = answer:gsub('\n', ' ')
 	local desc = answer:match('<meta name="description" content="(.-)"') or ''
 	local poster = answer:match('<div class="FullstoryForm">.-<img src="(.-)"') or ''
-	poster = 'https://ex-fs.net' .. poster:gsub('https://ex%-fs%.net','')
+	poster = 'https://ex-fs.net' .. poster:gsub('https://ex%-fs%.net','')	
 	local title_rus = answer:match('<h1 class="view%-caption">(.-)</h1>') or ''
 	local title_eng = answer:match('<h2 class="view%-caption2">(.-)</h2>') or ''
 	local kpr = answer:match('<div class="in_name_kp">(.-)</div>') or ''

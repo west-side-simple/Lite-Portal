@@ -1,4 +1,4 @@
---kinokong portal - lite version west_side 15.07.22
+--kinokong portal - lite version west_side 29.07.22
 
 function run_lite_qt_kinokong()
 	local function getConfigVal(key)
@@ -223,9 +223,13 @@ function kinokong_info(url)
 		if rc ~= 200 then return end
 		answer = m_simpleTV.Common.multiByteToUTF8(answer)
 		answer = answer:gsub('<!%-%-.-%-%->', ''):gsub('/%*.-%*/', '')
+	if answer:match('<b>Внимание%, обнаружена ошибка</b>') then
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'KinoKong: Медиаконтент не доступен', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
+		run_lite_qt_kinokong()
+	end
 	local title = answer:match('<h1 itemprop="name">(.-)</h1>') or 'KinoKong'
 	local poster = answer:match('<div class="full%-poster">.-src="(.-)"')
-	poster = 'https://kinokong.pro/' .. poster
+	poster = 'https://kinokong.pro/' .. (poster or 'favicon.ico')
 	local country = answer:match('<div><span>Страна:</span> <b>(.-)</b></div>') or ''
 	local kp = answer:match('<span class="main%-sliders%-kp" data%-name="KP">(.-)</span>')
 	local imdb = answer:match('<span class="main%-sliders%-imdb" data%-name="IMDb">(.-)</span>')
@@ -233,8 +237,8 @@ function kinokong_info(url)
 	if kp then rating = 'KP: ' .. kp .. ' • ' end
 	if imdb then rating = rating .. 'IMDB: ' .. imdb .. ' ' end
 	if country and country ~= '' then country = country .. ' • ' end
-	local overview = answer:match('itemprop="description">(.-)<br />') or ''
-	overview = overview:gsub('<br>', ''):gsub('\n                ',''):gsub('<.->',''):gsub('Чтобы отключить.-$','')
+	local overview = answer:match('itemprop="description">(.-)<br />') or answer:match('itemprop="description">(.-)</div>') or ''
+	overview = overview:gsub('<br>', ''):gsub('\n                ',''):gsub('<.->',''):gsub('Чтобы отключить.-$',''):gsub('\n','')
 	local overwiew_min = answer:match('<meta name="description" content="(.-)" />')
 	local all_tag = answer:match('<div class="kkch">(.-)</div>') or ''
 	local all_tag_1 = answer:match('<div class="full%-kino%-info1">(.-)<a class="full_btn_podborka"') or ''

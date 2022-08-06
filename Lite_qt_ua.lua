@@ -1,4 +1,4 @@
---UA portal - lite version west_side 30.06.22
+--UA portal - lite version west_side 04.08.22
 
 function run_lite_qt_ua()
 	local function getConfigVal(key)
@@ -169,7 +169,7 @@ function ua_info(url)
 	local actors = answer:match('<span itemprop="actor">(.-)</span>')
 	if actors then actors = '<h4>Актори: ' .. actors:gsub('<.->','') .. '</h4>' else actors = '' end
 	local videodesc = answer:match('itemprop="description">(.-)</div>') or desc
-	videodesc= '<table width="100%"><tr><td style="padding: 5px 5px 0px;"><img src="' .. poster .. '" width="320"><p><img src="' .. rating .. '" width="320"></td><td style="padding: 5px 5px 0px; color: #AAAAAA; vertical-align: middle;"><h3><font color=#00FA9A>' .. title .. '</font></h3>' .. title1 .. '<h4>' .. year .. ' • '.. country .. '</h4>' .. director .. actors .. '</td></tr></table><table width="100%"><tr><td style="padding: 0px 5px 0px; color: #FFFFFF;"><h4>' .. videodesc:gsub('<.->','') .. '</h4></td></tr></table>'
+	videodesc= '<table width="100%"><tr><td style="padding: 5px 5px 0px;"><img src="' .. poster .. '" width="320"><p><img src="' .. rating .. '" width="320"></td><td style="padding: 5px 5px 0px; color: #AAAAAA; vertical-align: middle;"><h3><font color=#00FA9A>' .. title .. '</font></h3>' .. title1 .. '<h4>' .. year .. ' • '.. country .. '</h4>' .. director .. actors .. '</td></tr></table><table width="100%"><tr><td style="padding: 0px 5px 0px; color: #FFFFFF;"><h4>' .. videodesc:gsub('<.->',''):gsub('%&copy%;.-$','') .. '</h4></td></tr></table>'
 	videodesc = videodesc:gsub('"', '\"')
 
 	local all_tag = answer:match('<div class="m%-desc full%-text clearfix">(.-)<div class="fullstory"') or ''
@@ -181,9 +181,9 @@ function ua_info(url)
 		t1[1].Address = ''
 		t1[1].Name = '.: info :.'
 		t1[1].InfoPanelLogo = poster
-		t1[1].InfoPanelName = title:gsub('%&#039%;','`') .. ': UA info'
+		t1[1].InfoPanelName = title:gsub('%&#039%;','`'):gsub('%&quot%;','"') .. ': UA info'
 		t1[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc:gsub('%&#039%;','`') .. '</body></html>'
-		t1[1].InfoPanelTitle = desc:gsub('%&#039%;','`')
+		t1[1].InfoPanelTitle = desc:gsub('%&#039%;','`'):gsub('%&quot%;','"')
 		t1[1].InfoPanelShowTime = 10000
 
         for w in all_tag:gmatch('<a.-</a>') do
@@ -203,16 +203,16 @@ function ua_info(url)
 		t1[j]={}
 		t1[j].Id = j
 		t1[j].Address = adr
-		t1[j].Name = 'Схожий контент: ' .. name:gsub('%&#039%;','`')
+		t1[j].Name = 'Схожий контент: ' .. name:gsub('%&#039%;','`'):gsub('%&quot%;','"')
 		t1[j].InfoPanelLogo = 'https://kino4ua.com' .. logo
-		t1[j].InfoPanelName = name:gsub('%&#039%;','`')
+		t1[j].InfoPanelName = name:gsub('%&#039%;','`'):gsub('%&quot%;','"')
 		t1[j].InfoPanelShowTime = 10000
 		j=j+1
 		end
 
 		t1.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🢀 '}
 		t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' Play '}
-		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('UA: ' .. title:gsub('%&#039%;','`'), 0, t1, 30000, 1 + 4 + 8 + 2)
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('UA: ' .. title:gsub('%&#039%;','`'):gsub('%&quot%;','"'), 0, t1, 30000, 1 + 4 + 8 + 2)
 		if ret == 1 then
 			if id == 1 then
 			 ua_info(url)
