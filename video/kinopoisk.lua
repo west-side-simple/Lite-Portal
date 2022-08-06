@@ -1,6 +1,6 @@
--- видеоскрипт для сайта http://www.kinopoisk.ru (24/07/22)
+-- видеоскрипт для сайта http://www.kinopoisk.ru (05/08/22)
 -- Copyright © 2017-2021 Nexterr | https://github.com/Nexterr/simpleTV
--- mod west_side (add VB, ZF, Videoapi) - (24/07/22)
+-- mod west_side (add VB, ZF, Videoapi) - (05/08/22)
 -- ## необходимы ##
 -- видеоскрипты: yandex-vod.lua, kodik.lua, filmix.lua, videoframe.lua, seasonvar.lua
 -- iviru.lua, videocdn.lua, hdvb-vb.lua, collaps.lua, cdnmovies.lua, voidboost.lua, videoapi.lua, zetflix.lua
@@ -139,7 +139,7 @@ tname = {
  'Videocdn',
  'VB',
  'ZF',
- 'Videoapi',
+-- 'Videoapi',
 -- 'Filmix',
 -- 'CDN Movies',
 -- 'Videoframe',
@@ -160,11 +160,11 @@ tname = {
  'VB',
  'ZF',
 -- 'Filmix',
- 'CDN Movies',
- 'Videoframe',
+-- 'CDN Movies',
+-- 'Videoframe',
  'Hdvb',
  'Collaps',
- 'Kodik',
+-- 'Kodik',
  'Videoapi',
 -- 'КиноПоиск онлайн',
 -- 'Seasonvar',
@@ -223,6 +223,20 @@ end
 	local usvar, i, u = 1, 1, 1
 	local function unescape_html(str)
 	 return htmlEntities.decode(str)
+	end
+	local function bazon(kp)
+	local rc, answer = m_simpleTV.Http.Request(session, {url = decode64('aHR0cHM6Ly9iYXpvbi5jYy9hcGkvc2VhcmNoP3Rva2VuPWMxMThlYjVmOGQzNjU2NWIyYjA4YjUzNDJkYTk3Zjc5JmtwPQ==') .. kp})
+	if rc ~= 200 then return '','' end
+	local title = answer:match('"rus"%:"(.-)"') or ''
+	local year = answer:match('"year"%:"(.-)"') or ''
+	return title,year
+	end
+	local function ukp(kp)
+	local rc,answer = m_simpleTV.Http.Request(session,{url = decode64('aHR0cHM6Ly9raW5vcG9pc2thcGl1bm9mZmljaWFsLnRlY2gvYXBpL3YyLjIvZmlsbXMv') .. kp, method = 'get', headers = 'X-API-KEY: ' .. decode64('OTczODMxMzUtNjM0ZC00ODA4LWEzMzQtNGIwMjg3ZjZiZDBh') .. '\nContent-Type: application/json'})
+	if rc ~= 200 then return '','' end
+	local title = answer:match('"nameRu"%:"(.-)"')
+	local year = answer:match('"year"%:(%d%d%d%d)')
+	return title,year
 	end
 	local function answerdget(url)
 		if url:match('widget%.kinopoisk%.ru') then
@@ -542,8 +556,12 @@ end
 		else
 		getlogo()
 	end
-	if not title or title and title == '' then title = name_tmdb or 'Кинопоиск' end
-	if not year or year and year == '' then year = year_tmdb or '' end
+	local title_b,year_b = bazon(kpid)
+	if title_b and title_b == '' then
+	title_b,year_b = ukp(kpid)
+	end
+	if not title or title and title == '' then title = name_tmdb or title_b or 'Кинопоиск' end
+	if not year or year and year == '' then year = year_tmdb or year_b or '' end
 	m_simpleTV.Control.CurrentTitle_UTF8 = title .. ' (' .. year .. ')'
 	m_simpleTV.Control.SetTitle(title .. ' (' .. year .. ')')
 	local function setMenu()
@@ -623,8 +641,8 @@ end
 				search_rezka()
 			end
 
-			id = id or 1
-			add_to_history(inAdr .. '&bal=' .. rett[id].Name,title .. ' (' .. year .. ')',rett[id].InfoPanelLogo)
+			id = id or current_id
+			add_to_history(inAdr .. '&bal=' .. rett[id].Name,title:gsub('%,','') .. ' (' .. year .. ')',rett[id].InfoPanelLogo)
 			retAdr = getAdr(rett[id].answer, rett[id].Address)
 
 		if retAdr == -1 then

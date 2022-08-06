@@ -1,4 +1,4 @@
--- видеоскрипт для запросов потоков Rezka по ID кинопоиска и IMDB (31/01/22)
+-- видеоскрипт для запросов потоков Rezka по ID кинопоиска и IMDB (05/08/22)
 -- nexterr, west_side
 -- ## открывает подобные ссылки ##
 -- https://voidboost.net/embed/1227967
@@ -17,6 +17,20 @@
 		end
 	m_simpleTV.Http.SetTimeout(session, 30000)
 	require 'playerjs'
+	local function bazon(kp)
+	local rc, answer = m_simpleTV.Http.Request(session, {url = decode64('aHR0cHM6Ly9iYXpvbi5jYy9hcGkvc2VhcmNoP3Rva2VuPWMxMThlYjVmOGQzNjU2NWIyYjA4YjUzNDJkYTk3Zjc5JmtwPQ==') .. kp})
+	if rc ~= 200 then return '','' end
+	local title = answer:match('"rus"%:"(.-)"') or ''
+	local year = answer:match('"year"%:"(.-)"') or ''
+	return title,year
+	end
+	local function ukp(kp)
+	local rc,answer = m_simpleTV.Http.Request(session,{url = decode64('aHR0cHM6Ly9raW5vcG9pc2thcGl1bm9mZmljaWFsLnRlY2gvYXBpL3YyLjIvZmlsbXMv') .. kp, method = 'get', headers = 'X-API-KEY: ' .. decode64('OTczODMxMzUtNjM0ZC00ODA4LWEzMzQtNGIwMjg3ZjZiZDBh') .. '\nContent-Type: application/json'})
+	if rc ~= 200 then return '','' end
+	local title = answer:match('"nameRu"%:"(.-)"')
+	local year = answer:match('"year"%:(%d%d%d%d)')
+	return title,year
+	end
 	local function imdbid(kpid)
 	local url_vn = decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvc2hvcnQ/YXBpX3Rva2VuPW9TN1d6dk5meGU0SzhPY3NQanBBSVU2WHUwMVNpMGZtJmtpbm9wb2lza19pZD0=') .. kpid
 	local rc5,answer_vn = m_simpleTV.Http.Request(session,{url=url_vn})
@@ -85,15 +99,22 @@
 	end
 	imdb_id = m_simpleTV.User.Rezka.embed:match('tt%d+')
 	if not imdb_id then kp_id = m_simpleTV.User.Rezka.embed:match('(%d+)') end
-	local title_v, year_v
+	local title_v, year_v, title_b, year_b
 	if kp_id then imdb_id, title_v, year_v = imdbid(kp_id) end
 	local logo = 'https://static.hdrezka.ac/templates/hdrezka/images/avatar.png'
 	if imdb_id and imdb_id~='' and bg_imdb_id(imdb_id)~='' then
 	m_simpleTV.User.Rezka.background, m_simpleTV.User.Rezka.title = bg_imdb_id(imdb_id)
 	m_simpleTV.Control.ChangeChannelLogo(m_simpleTV.User.Rezka.background, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
 	end
-	if not m_simpleTV.User.Rezka.title then
-		m_simpleTV.User.Rezka.title = title_v
+	if not m_simpleTV.User.Rezka.title and title_v and title_v~='' then
+		m_simpleTV.User.Rezka.title = title_v .. ' (' .. year_v .. ')'
+	else
+	title_b,year_b = bazon(kp_id)
+	if title_b and title_b == '' then
+	title_b,year_b = ukp(kp_id)
+	end
+		m_simpleTV.User.Rezka.title = title_b .. ' (' .. year_b .. ')'
+		m_simpleTV.User.Rezka.background = 'https://st.kp.yandex.net/images/film_iphone/iphone360_' .. kp_id .. '.jpg'
 	end
 	if not m_simpleTV.User.Rezka.background or m_simpleTV.User.Rezka.background=='' then
 		m_simpleTV.Control.ChangeChannelLogo(logo, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
@@ -448,7 +469,8 @@
 	thumb_url = 'https://voidboost.net' .. thumb_url
 	pars_thumb(thumb_url)
 	end
-	cur_translate = translate:match('selected=.->(.-)<') or 'Перевод'
+	local cur_translate = translate:match('selected=.->(.-)<') or 'Перевод'
+	if cur_translate == '-' then cur_translate = 'Оригинал' end
 		if not answer:match('<select name="season".-</select>') then
 		local retAdr = inAdr
 		local t = {}

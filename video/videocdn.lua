@@ -20,6 +20,7 @@ local proxy = ''
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/PXk2QGbvEVmS')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/CtpKt94RDwED')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/Z9w3z4ZBIQxF')
+			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/z3jFqN8Tz3Ta')
 --			and not m_simpleTV.Control.CurrentAddress:match('^https?://[%w%.]*svetacdn%.')
 			and not m_simpleTV.Control.CurrentAddress:match('^$videocdn')
 		then

@@ -1,4 +1,4 @@
--- видеоскрипт для балансера ashdi (11/07/22) author - westSide
+-- видеоскрипт для балансера ashdi (04/08/22) author - westSide
 -- необходим plugin: videotrack (author - wafee)
 -- открывает подобные ссылки:
 -- https://ashdi.vip/vod/396?geoblock=ru
@@ -42,7 +42,7 @@ local function GetInfo(Adr)
 		 return
 		end
 	local title = answer:match('<h1 itemprop="name">(.-)</h1>') or answer:match('<title>(.-)</title>')
-	title = title:gsub(' дивитися онлайн.-$', ''):gsub('%&#039%;','`')
+	title = title:gsub(' дивитися онлайн.-$', ''):gsub('%&#039%;','`'):gsub('%&quot%;','"')
 	local poster = answer:match('<meta property="og:image" content="(.-)"')
 	poster = 'https://kino4ua.com/uploads/posts/' .. poster
 	local desc = answer:match('<meta name="description" content="(.-)"')

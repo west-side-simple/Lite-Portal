@@ -82,7 +82,7 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 	end
 	m_simpleTV.User.rezka.DelayedAddress = nil
 	if zerkalo == '' then
-		m_simpleTV.User.rezka.host = 'https://rezka.ag/'
+		m_simpleTV.User.rezka.host = 'https://hdrezka.ag/'
 	else
 		m_simpleTV.User.rezka.host = zerkalo
 	end
@@ -535,7 +535,7 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 		m_simpleTV.Control.ChangeChannelLogo(poster, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
 		m_simpleTV.Control.ChangeChannelName(title, m_simpleTV.Control.ChannelID, false)
 	end
-	if inAdr:match('$rezka') then
+	if inAdr:match('%$rezka') then
 		local season, episode = inAdr:match('%&season=(%d+)%&episode=(%d+)')
 		title = title .. ' Сезон ' .. season .. ', Серия ' .. episode
 		play(inAdr, title, id)

@@ -15,6 +15,11 @@
 	if not m_simpleTV.User.ZF then
 		m_simpleTV.User.ZF = {}
 	end
+	if not m_simpleTV.User.TMDB then
+		m_simpleTV.User.TMDB = {}
+	end
+	m_simpleTV.User.TMDB.Id = nil
+	m_simpleTV.User.TMDB.tv = nil
 	m_simpleTV.User.ZF.CurAddress = inAdr
 	m_simpleTV.User.ZF.DelayedAddress = nil
 	local function getConfigVal(key)
@@ -84,6 +89,9 @@
 	if background and background ~= nil and background ~= '' then background = 'http://image.tmdb.org/t/p/original' .. background
 	elseif background1 and background1 ~= nil and background1 ~= '' then background = 'http://image.tmdb.org/t/p/original' .. background1 end
 	if background == nil then background = '' end
+	m_simpleTV.User.TMDB.Id = tmdb_id
+	m_simpleTV.User.TMDB.tv = tv
+	m_simpleTV.User.westSide.PortalTable = m_simpleTV.User.TMDB.Id .. ',' .. m_simpleTV.User.TMDB.tv
 	return background, name_tmdb, year_tmdb, overview_tmdb, tmdb_id, tv
 	end
 	local function tmdb_tv(tmdbid,inAdr)
@@ -120,6 +128,8 @@
 	local kpid = inAdr:match('kp%=(%d+)')
 	m_simpleTV.User.ZF.kpid = kpid
 	local season,episode=m_simpleTV.User.ZF.CurAddress:match('season=(%d+).-episode=(%d+)')
+	local name_ep=m_simpleTV.User.ZF.CurAddress:match('name_ep=(.-)$')
+	inAdr = inAdr:gsub('%&name_ep=.-$','')
 	local logo, title, year, overview, tmdbid, tv
 	local id_imdb,title_v,year_v,tv = imdbid(kpid)
 	if id_imdb and id_imdb~= '' and bg_imdb_id(id_imdb)~= ''	then
@@ -139,6 +149,7 @@
 	title = title_v
 	year = year_v
 	end
+	if name_ep then title = title .. ' (' .. name_ep .. ')' end
 	rc,answer = m_simpleTV.Http.Request(session,{url = inAdr:gsub('//hdi%.zetflix%.online/','//hd.zetfix.online/'), method = 'get', headers = 'User-agent: ' .. ua .. '\nReferer: https://hdi.zetflix.online/iplayer/player.php'})
 		if rc ~= 200 then return end
 	local function ZFIndex(t)
@@ -322,7 +333,7 @@
 	t[i]={}
 	t[i].Id = i
 	t[i].Address = inAdr:gsub('%&season=.-$','') .. '&season=' .. tonumber(tab.seasons[j].season_number) .. '&episode=' .. k
-	t[i].Name = tab.seasons[j].name .. ', Эпизод ' .. k
+	t[i].Name = tab.seasons[j].name:gsub('Season','Сезон') .. ', Эпизод ' .. k
 	i=i+1
 	k=k+1
 	end
@@ -337,25 +348,34 @@
 	if not name or not adr then break end
 	t1[i]={}
 	t1[i].Id = i
-	t1[i].Address = GetZFAdr(adr)
+	t1[i].Address1 = adr
+	t1[i].Address = inAdr:gsub('%&name_ep=.-$','') .. '&name_ep=' .. m_simpleTV.Common.multiByteToUTF8(name)
 	t1[i].Name = name
 	i=i+1
 	end
-
+	if not name_ep then
+		name_ep =t1[#t1].Name
+		m_simpleTV.Control.PlayAddress(inAdr .. '&name_ep=' .. name_ep)
+        return
+	end
 	for i = 1, #t1 do
 		t[i]={}
 		t[i].Address = t1[#t1-i+1].Address
+		t[i].Address1 = t1[#t1-i+1].Address1
 		t[i].Name = t1[#t1-i+1].Name
 		t[i].Id = #t1-i+1
+		if t[i].Name == name_ep then
+			current_ep = i
+			retAdr = GetZFAdr(t[i].Address1)
+		end
 	end
-	retAdr = t[1].Address
 	end
 	m_simpleTV.User.ZF.titleTab = t
 	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_ZF()'}
 	if getConfigVal('perevod/zf') ~= '' then
 	t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_ZF()'}
 	end
-	m_simpleTV.OSD.ShowSelect_UTF8('Сезоны: ' .. title, current_ep - 1, t, 10000, 32)
+	m_simpleTV.OSD.ShowSelect_UTF8('Эпизоды: ' .. title, current_ep - 1, t, 10000, 32)
 	m_simpleTV.Control.ChangeAdress = 'Yes'
 	m_simpleTV.Control.CurrentAddress = retAdr
 	return
