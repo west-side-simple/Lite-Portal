@@ -1,5 +1,5 @@
--- видеоскрипт поиска медиаконтента на видеобалансере Rezka (16/06/22)
--- autor westSide
+-- видеоскрипт поиска медиаконтента на видеобалансере Rezka (07/08/22)
+-- author westSide
 		if m_simpleTV.Control.ChangeAdress ~= 'No' then return end
 	local inAdr = m_simpleTV.Control.CurrentAdress
 		if not inAdr then return end
@@ -295,7 +295,7 @@ end
 
 	local zerkalo = m_simpleTV.Config.GetValue('zerkalo/rezka',"LiteConf.ini") or ''
 	if zerkalo == '' then
-	zerkalo = 'https://rezka.ag/'
+	zerkalo = 'https://hdrezka.ag/'
 	end
 		local function infodesc_rezka(adr1)
 		local rc3,answeradr = m_simpleTV.Http.Request(session,{url=adr1})
