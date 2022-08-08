@@ -1,4 +1,4 @@
--- поиск на https://www.ex-fs.net из телепрограмы (20/11/21)
+-- поиск медиа в схемах из телепрограмы (07/08/22)
 -- необходим скрипт: Lite_qt_search.lua
 	function findEPGInKP(epgId)
 			if not epgId then return end
@@ -35,7 +35,7 @@
 		local w = clean_title(t[1].Title)
 
 		m_simpleTV.Config.SetValue('search/media',escape (w),"LiteConf.ini")
-		search_media()
+		search_all()
 
 	end
 	local t = {}

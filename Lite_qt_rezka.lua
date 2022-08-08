@@ -1,4 +1,4 @@
---Rezka portal - lite version west_side 29.07.22
+--Rezka portal - lite version west_side 07.08.22
 
 local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
@@ -216,7 +216,7 @@ function collection_rezka()
 	url = url:gsub('http.-//.-/', current_zerkalo)
 	end
 	local t,i = {},1
-	for j=1,3 do
+	for j=1,4 do
 		local rc,answer = m_simpleTV.Http.Request(session,{url=url .. 'page/' .. j .. '/'})
 		if rc ~= 200 then return '' end
 		for w in answer:gmatch('<div class="b%-content__collections_item".-</div></div>') do
