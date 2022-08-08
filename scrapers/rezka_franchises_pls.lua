@@ -1,5 +1,5 @@
--- скрапер TVS для загрузки плейлиста "Franchises" https://hdrezka.ag/franchises/ (02/08/22)
--- west_side
+-- скрапер TVS для загрузки плейлиста "Franchises" https://hdrezka.ag/franchises/ (07/08/22)
+-- author west_side
 -- ## необходим ##
 -- видеоскрипт: hdrezka.lua - mod west_side for lite version
 -- ## Переименовать каналы ##
@@ -38,8 +38,8 @@ local filter = {
 	local function LoadFromSite()
 	local zerkalo = m_simpleTV.Config.GetValue('zerkalo/rezka','LiteConf.ini') or ''
 	if zerkalo == '' then zerkalo = 'https://hdrezka.ag/' end
-	local t,i = {},1
-	for j=1,55 do
+	local t,i,j,all_pg = {},1,1,1
+	while j<=tonumber(all_pg) do
 		local rc,answer = m_simpleTV.Http.Request(session,{url= zerkalo .. 'franchises/' .. 'page/' .. j .. '/'})
 		if rc ~= 200 then
 			m_simpleTV.Common.Sleep(500)
@@ -51,6 +51,9 @@ local filter = {
 		end
 		if rc ~= 200 then
 			return t
+		end
+		if j==1 then
+		 all_pg=answer:match('<span class="nav_ext">%.%.%.</span> <a href=".-(%d+)<')
 		end
 		for w in answer:gmatch('<div class="b%-content__collections_item".-</div></div>') do
 			local adr,logo,num,name = w:match('url="(.-)".-src="(.-)".-tooltip">(%d+).-"title">(.-)<')
@@ -69,7 +72,7 @@ local filter = {
 					t[i].name = t[i].name:gsub('Все части мультфильма ',''):gsub('Все части мультсериала ',''):gsub('Все мультфильмы про ','Про '):gsub('Все мультфильмы франшизы ',''):gsub('Все мультфильмы ',''):gsub('Все части фильма ',''):gsub('Все части сериала ',''):gsub('все части сериала ',''):gsub('Все части документального сериала ',''):gsub('Все фильмы про ','Про '):gsub('Все части франшизы ',''):gsub('Все части аниме ',''):gsub('Все мультфильмы серии ',''):gsub('Все фильмы серии ',''):gsub('%%2C','!') .. ' (' .. num .. ')'
 					t[i].group = grp
 					t[i].group_logo = grp_logo
-				showMsg('Загрузка: ' .. j .. ' / ' .. i, ARGB(255, 153, 255, 153))
+				showMsg('Загрузка: ' .. j .. ' из ' .. all_pg .. ' / ' .. i, ARGB(255, 153, 255, 153))
 --				debug_in_file(i .. ' (' .. j .. '), ' .. t[i].name .. '\n','c://1/frch.txt')
 				i=i+1
 			end
