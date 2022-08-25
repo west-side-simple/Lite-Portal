@@ -1,4 +1,4 @@
--- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (15/06/22) - автор west_side
+-- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (20/08/22) - автор west_side
 -- необходим действующий аккаунт на сайте https://kino.pub
 -- работает в связке со скриптом Lite_qt_kinopub.lua - автор west_side
 -- необходимо сгенерировать cookies в браузере Mozilla, дополнение cookies.txt.
@@ -10,7 +10,7 @@
 	if not inAdr:match('https?://kino%.pub')
 	and not inAdr:match('^%,')
 	then return end
-local proxy = 'http://proxy-nossl.antizapret.prostovpn.org:29976'
+local proxy = ''
 -- '' - нет
 -- 'http://proxy-nossl.antizapret.prostovpn.org:29976' (пример)
 -- ##
@@ -20,15 +20,15 @@ local proxy = 'http://proxy-nossl.antizapret.prostovpn.org:29976'
 	if kinopub_search ~= '' then inAdr = 'https://kino.pub/item/search?query=' .. m_simpleTV.Common.toPercentEncoding(kinopub_search) end
 	m_simpleTV.Control.ChangeAdress = 'Yes'
 	m_simpleTV.Control.CurrentAdress = ''
-	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0', proxy, false)
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:103.0) Gecko/20100101 Firefox/103.0', proxy, false)
 		if not session then return end
-	m_simpleTV.Http.SetTimeout(session, 16000)
+	m_simpleTV.Http.SetTimeout(session, 22000)
 local tooltip_body
 if m_simpleTV.Config.GetValue('mainOsd/showEpgInfoAsWindow', 'simpleTVConfig') then tooltip_body = ''
 else tooltip_body = 'bgcolor="#182633"'
 end
 local function bg_imdb_id(imdb_id)
-local session1 = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
+local session1 = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:103.0) Gecko/20100101 Firefox/103.0')
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 16000)
 --#!!nexterr code!!#--
