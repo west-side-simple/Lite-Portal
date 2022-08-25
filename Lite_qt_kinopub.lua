@@ -1,4 +1,4 @@
---Kinopub portal - lite version west_side 01.05.22
+--Kinopub portal - lite version west_side 24.08.22
 function run_lite_qt_kinopub()
 
 	local tt = {
@@ -46,13 +46,13 @@ function run_lite_qt_kinopub()
 end
 
 function show_select(inAdr)
-local proxy = 'http://proxy-nossl.antizapret.prostovpn.org:29976'
+local proxy = ''
 -- '' - нет
 -- 'http://proxy-nossl.antizapret.prostovpn.org:29976' (пример)
 -- ##
-	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0', proxy, false)
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:103.0) Gecko/20100101 Firefox/103.0', proxy, false)
 		if not session then return end
-	m_simpleTV.Http.SetTimeout(session, 16000)
+	m_simpleTV.Http.SetTimeout(session, 35000)
 
 	local function cookiesFromFile()
 	local path = m_simpleTV.Common.GetMainPath(1) .. '/cookies.txt'
@@ -208,11 +208,11 @@ local proxy = 'http://proxy-nossl.antizapret.prostovpn.org:29976'
 end
 
 function show_selection(inAdr)
-local proxy = 'http://proxy-nossl.antizapret.prostovpn.org:29976'
+local proxy = ''
 -- '' - нет
 -- 'http://proxy-nossl.antizapret.prostovpn.org:29976' (пример)
 -- ##
-	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0', proxy, false)
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:103.0) Gecko/20100101 Firefox/103.0', proxy, false)
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 16000)
 
