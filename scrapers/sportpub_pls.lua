@@ -1,4 +1,4 @@
--- скрапер TVS для загрузки плейлиста "SPORT PUB TV ($)" с сайта https://kino.pub (01/05/22)
+-- скрапер TVS для загрузки плейлиста "SPORT PUB TV ($)" с сайта https://kino.pub (20/08/22)
 
 -- ## Переименовать каналы ##
 local filter = {
@@ -57,13 +57,13 @@ local filter = {
 	end
 
 	local function getname(adr)
-	local proxy = 'http://proxy-nossl.antizapret.prostovpn.org:29976'
+	local proxy = ''
 -- '' - нет
 -- 'http://proxy-nossl.antizapret.prostovpn.org:29976' (пример)
 -- ##
-	local session1 = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0', proxy, false)
+	local session1 = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:103.0) Gecko/20100101 Firefox/103.0', proxy, false)
 		if not session then return end
-		m_simpleTV.Http.SetTimeout(session1, 60000)
+		m_simpleTV.Http.SetTimeout(session1, 80000)
 	local cookies = cookiesFromFile()
 		local rc1, answer = m_simpleTV.Http.Request(session1, {url = 'https://kino.pub' .. adr, headers = 'Cookie: ' .. cookies})
 		if rc1 ~= 200 then return end
@@ -77,7 +77,7 @@ local filter = {
 -- '' - нет
 -- 'http://proxy-nossl.antizapret.prostovpn.org:29976' (пример)
 -- ##
-		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0', proxy, false)
+		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:103.0) Gecko/20100101 Firefox/103.0', proxy, false)
 		if not session then return end
 		m_simpleTV.Http.SetTimeout(session, 60000)
 		local cookies = cookiesFromFile()
