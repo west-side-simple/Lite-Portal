@@ -1,6 +1,6 @@
 *, :before, :after {
     margin: 0;
-	box-sizing: border-box;
+    box-sizing: border-box;
 }
 body {
 	overflow:  hidden;
@@ -11,11 +11,11 @@ body {
 	justify-content: center;
 }
 .search-form {
+	position: relative;
 	display: flex;
 	flex-direction: row;
 	align-items: center;
-	width: 70vw;
-    font-size: 20px;
+	width: 74vw;
     font-size: 3vw;
 }
 .btn {
@@ -97,6 +97,7 @@ body {
 	background-size: 100%;
 	background-color: rgba(255, 0, 0, .7);
 }
+
 .btn-search:active  {
 	background-color: rgba(0, 200, 200, .9);
 }
@@ -117,11 +118,13 @@ body {
 	outline: none !important;
 }
 #keyboard {
+    width: 75%;
+    height: 0vh;
+    zoom: 200%;
 	margin: auto;
 	align-items: center;
 	display: flex;
 	justify-content: center;
-	width: 75vw;
 }
 #keyboard:not(.ready) {
 	display: none;
@@ -130,7 +133,7 @@ body {
   --stroke-color: #3bc5c5;
 }
 #keyboard.skin-2 {
-  --stroke-color: #00ff7f;
+  --stroke-color: #00FF7F;
 }
 #keyboard.skin-3 {
   --stroke-color: #efefef;
