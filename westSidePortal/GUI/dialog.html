@@ -1,6 +1,9 @@
 <html>
- <head>
-<link rel="stylesheet" type="text/css" href="css/def.css">
+<head>
+  <meta charset="UTF-8">
+  <title>klava</title>
+  <link rel="stylesheet" type="text/css" href="css/def.css">
+  <link rel="stylesheet" href="css/style.css">
 <script src="jscript/def.js"></script>
 
 <script language=JavaScript>
@@ -23,98 +26,16 @@ lang = 'russian';
 </script>
 </head>
 <body >
-<!-- 
-<tr>
-<td>
- <input id="SearchID" value="Поиск..." onblur="if(this.value==&#39;&#39;) this.value=&#39;Поиск...&#39;;" onfocus="if(this.value==&#39;Поиск...&#39;) this.value=&#39;&#39;;" type="text" onchange="">
-</td>
-<td> 
- <input id="Search" type="button" value="🔍" onclick="doSearch();">
-</td>
-</tr> -->
-<div id="top"><input type="button" value="❌" onclick="doClose();"></div>
-<!-- <div class="hello_word">Hello word</div> -->
-<!-- <div class="hello_word">Press 'esc' for close</div> -->
-<center>
-
-<form name=lex>
-
-<!--  keyboard-->
-<tr>
-<td>
-<input id="SearchID" type=text name=text>&nbsp;&nbsp;</td><td><input type=button class=button value="🔍" onclick="doSearch();">
-</td>
-</tr>
-<p>
-            <table cellpadding="0" cellspacing="0" width="100%" border="0"><tr><td><center><img src="img/new_keyb_OFF.svg" id="klava" width="557" height="195" alt="" border="0" usemap="#newkeyboard"></td></tr></table>
-                        <map name="newkeyboard">
-                            <area alt="" coords="1,1,18,38" href="JavaScript:ping('`');">
-
-                            <area alt="" coords="21,3,56,37" href="JavaScript:ping('1');">
-                            <area alt="" coords="61,2,96,37" href="JavaScript:ping('2');">
-                            <area alt="" coords="101,2,136,37" href="JavaScript:ping('3');">
-                            <area alt="" coords="141,2,176,37" href="JavaScript:ping('4');">
-                            <area alt="" coords="181,2,216,37" href="JavaScript:ping('5');">
-                            <area alt="" coords="221,2,256,37" href="JavaScript:ping('6');">
-                            <area alt="" coords="261,2,296,37" href="JavaScript:ping('7');">
-                            <area alt="" coords="301,2,336,37" href="JavaScript:ping('8');">
-                            <area alt="" coords="341,2,376,37" href="JavaScript:ping('9');">
-                            <area alt="" coords="381,2,416,37" href="JavaScript:ping('0');">
-                            <area alt="" coords="421,2,456,37" href="JavaScript:ping('-');">
-                            <area alt="" coords="461,2,496,37" href="JavaScript:ping('=');">
-                            <area alt="" coords="500,3,554,37" href="JavaScript:ping('BACK');">
-                            <area alt="" coords="2,41,36,76" href="JavaScript:ping(';');">
-                            <area alt="" coords="41,41,76,76" href="JavaScript:ping('й');">
-                            <area alt="" coords="81,41,116,76" href="JavaScript:ping('ц');">
-                            <area alt="" coords="121,41,156,76" href="JavaScript:ping('у');">
-
-                            <area alt="" coords="161,41,196,76" href="JavaScript:ping('к');">
-                            <area alt="" coords="201,41,236,76" href="JavaScript:ping('е');">
-                            <area alt="" coords="241,41,276,76" href="JavaScript:ping('н');">
-                            <area alt="" coords="281,41,316,76" href="JavaScript:ping('г');">
-                            <area alt="" coords="321,41,356,76" href="JavaScript:ping('ш');">
-                            <area alt="" coords="361,41,396,76" href="JavaScript:ping('щ');">
-                            <area alt="" coords="401,41,436,76" href="JavaScript:ping('з');">
-                            <area alt="" coords="441,41,476,76" href="JavaScript:ping('х');">
-                            <area alt="" coords="481,41,516,76" href="JavaScript:ping('ъ');">
-                            <area alt="" coords="520,41,555,76" href="JavaScript:ping('?');">
-                            <area alt="" coords="1,81,56,115" href="JavaScript:ping('CAPS');">
-                            <area alt="" coords="61,80,96,115" href="JavaScript:ping('ф');">
-                            <area alt="" coords="101,80,136,115" href="JavaScript:ping('ы');">
-                            <area alt="" coords="141,80,176,115" href="JavaScript:ping('в');">
-                            <area alt="" coords="181,80,216,114" href="JavaScript:ping('а');">
-                            <area alt="" coords="221,80,256,115" href="JavaScript:ping('п');">
-                            <area alt="" coords="261,80,296,115" href="JavaScript:ping('р');">
-
-                            <area alt="" coords="301,80,336,115" href="JavaScript:ping('о');">
-                            <area alt="" coords="341,80,376,115" href="JavaScript:ping('л');">
-                            <area alt="" coords="381,80,416,114" href="JavaScript:ping('д');">
-                            <area alt="" coords="421,80,456,114" href="JavaScript:ping('ж');">
-                            <area alt="" coords="461,80,496,115" href="JavaScript:ping('э');">
-                            <area alt="" coords="500,80,555,115" onclick="doSearch();">
-                            <area alt="" coords="1,119,76,154" href="JavaScript:ping('SHIFT');">
-                            <area alt="" coords="81,119,116,154" href="JavaScript:ping('я');">
-                            <area alt="" coords="121,119,156,154" href="JavaScript:ping('ч');">
-                            <area alt="" coords="161,119,196,154" href="JavaScript:ping('с');">
-                            <area alt="" coords="201,119,236,154" href="JavaScript:ping('м');">
-                            <area alt="" coords="241,119,276,154" href="JavaScript:ping('и');">
-                            <area alt="" coords="281,119,316,154" href="JavaScript:ping('т');">
-                            <area alt="" coords="321,119,356,154" href="JavaScript:ping('ь');">
-                            <area alt="" coords="361,119,396,154" href="JavaScript:ping('б');">
-                            <area alt="" coords="401,119,436,154" href="JavaScript:ping('ю');">
-                            <area alt="" coords="441,119,476,154" href="JavaScript:ping('ё');">
-
-                            <area alt="" coords="481,119,555,154" href="JavaScript:ping('SHIFT');">
-                            <area alt="" coords="101,158,176,193" href="JavaScript:ping('<');">
-                            <area alt="" coords="180,158,376,193" href="JavaScript:ping(' ');">
-                            <area alt="" coords="381,158,416,193" href="JavaScript:ping('.');">
-                            <area alt="" coords="421,158,456,193" href="JavaScript:ping(',');">
-                            <area alt="" coords="1,158,96,193" href="JavaScript:ping('CLEAR_ALL')">
-                            <area alt="" coords="461,158,555,193" href="#copy" onclick="eval(form_name+'.select()'); if(window.clipboardData)window.clipboardData.setData('Text', eval(form_name+'.innerText'))">
-                        </map>
-            </td></tr></table>
-<!--  /keyboard-->
-</form>
-</center>
+<!--<div id="top">
+<input type=button class=button value="ABC" onclick="keyboard();">
+</div>-->
+<div class="search-form">
+	<input type="text" id="value">
+	<div class="btn btn-search"></div>
+	<div class="btn btn-settings"></div>
+	<div class="btn btn-close"></div>
+</div>
+<div id="keyboard" class="skin-0"></div>
+<script src="jscript/main.js"></script>
 </body>
 </html>

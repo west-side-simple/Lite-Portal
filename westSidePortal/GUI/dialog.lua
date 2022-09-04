@@ -1,4 +1,4 @@
--- SergeyVS, west_side 27.06.22
+-- SergeyVS, west_side 13.07.22
 require("westSidePortal")
 
 ----------------------------------------------------------------------
@@ -21,6 +21,11 @@ end
 ----------------------------------------------------------------------
 function setSearch(Object, search)
 m_simpleTV.Config.SetValue('search/media',tostring(m_simpleTV.Common.toPercentEncoding(search)),'LiteConf.ini')
+end
+
+function update_skin(Object)
+ local numbs = getConfigVal('keyboard/number') or '1'
+ m_simpleTV.Dialog.ExecScript(Object,'updateSkin(\'' .. numbs .. '\');')
 end
 ----------------------------------------------------------------------
 function baseInit(Object)
@@ -48,6 +53,17 @@ function westSidePortalDialogCloseEvent(Object)
  end
 end
 ----------------------------------------------------------------------
+function getConfigFile()
+ return 'westSidePortal.ini'
+end
+------------------------------------------------------------------------------
+function getConfigVal(key)
+ return m_simpleTV.Config.GetValue(key,getConfigFile())
+end
+------------------------------------------------------------------------------
+function setConfigVal(key,val)
+  m_simpleTV.Config.SetValue(key,val,getConfigFile())
+end
 function search_all()
 m_simpleTV.Control.ExecuteAction(37)
 	local function getConfigVal(key)
@@ -65,6 +81,7 @@ m_simpleTV.Control.ExecuteAction(37)
 	{'Rezka',''},
 	{'Filmix',''},
 	{'KinoGo',''},
+	{'KinoKong',''},
 	{'UA',''},
 	{'Kinopub',''},
 	{'YouTube',''},
@@ -89,6 +106,7 @@ m_simpleTV.Control.ExecuteAction(37)
   elseif t1[id].Name == 'Rezka' then search_rezka()
   elseif t1[id].Name == 'Filmix' then search_filmix_media()
   elseif t1[id].Name == 'KinoGo' then search_kinogo()
+  elseif t1[id].Name == 'KinoKong' then search_kinokong()
   elseif t1[id].Name == 'UA' then search_ua()
   elseif t1[id].Name == 'Kinopub' then show_select('https://kino.pub/item/search?query=' .. search_ini)
   elseif t1[id].Name == 'YouTube' then search_youtube()
@@ -101,4 +119,54 @@ m_simpleTV.Control.ExecuteAction(37)
   if ret == 2 then
    run_westSide_portal()
   end
+end
+
+function select_keyboard()
+	m_simpleTV.Control.ExecuteAction(37)
+	local function getConfigVal(key)
+		return m_simpleTV.Config.GetValue(key,"westSidePortal.ini")
+	end
+	local function setConfigVal(key,val)
+		m_simpleTV.Config.SetValue(key,val,"westSidePortal.ini")
+	end
+	local kb_pack=
+	{
+	{"Без клавиатуры",0},
+	{"Classic Dark",1},
+	{"Classic Green",2},
+	{"Classic Light",3},
+	{"Neon Glass",4},
+	{"Classic",5},
+--[[	{"Grey",6},
+	{"Modern Green",7},
+	{"Umbrella",8},
+	{"Rainbow",9},
+	{"Vintage",10},
+	{"Circle",11},
+	{"Modern",12},
+	{"Gold",13},
+	{"Circle Neon",14},
+	{"Neon",15},--]]
+	{"Circle Grey",6},
+	}
+	local cur_keyboard = getConfigVal('keyboard/number') or m_simpleTV.Config.GetValue("keyboard/number","westSidePortal.ini") or 1
+	local t = {}
+	for i=1,#kb_pack do
+    t[i] = {}
+    t[i].Id = i
+    t[i].Name = kb_pack[i][1]
+    t[i].Action = kb_pack[i][2]
+	t[i].InfoPanelLogo = m_simpleTV.MainScriptDir_UTF8 .. 'user/westSidePortal/GUI/img/' .. kb_pack[i][2] .. '.svg'
+	t[i].InfoPanelShowTime = 10000
+    end	
+	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Skins '}
+	local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Keyboard Pack',cur_keyboard,t,9000,1+4+8)
+    if id==nil then return end
+    if ret == 1 then
+	  setConfigVal('keyboard/number',t[id].Action)	 
+	  dofile(m_simpleTV.MainScriptDir_UTF8 .. 'user\\westSidePortal\\GUI\\showDialog.lua')
+    end
+	if ret == 2 then
+	  skin_schema_settings()
+    end
 end
