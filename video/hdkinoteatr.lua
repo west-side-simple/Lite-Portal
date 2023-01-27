@@ -1,4 +1,4 @@
--- видеоскрипт для сайтов http://www.hdkinoteatr.com  https://kinogo.cc/ (02/07/22)
+-- видеоскрипт для сайтов http://www.hdkinoteatr.com  https://kinogo.cc/ (18/01/23)
 -- необходимы скрипты: collaps (autor - nexterr)
 -- открывает подобные ссылки:
 -- http://www.hdkinoteatr.com/drama/28856-vse_ispravit.html
@@ -40,7 +40,7 @@ end
 	local t,i = {},1
 	for w in answer:gmatch('<iframe.-</iframe>') do
 		adr = w:match('<iframe(.-)</iframe>')
-		if not adr or adr:match('youtube') or adr:match('/trailer/') or adr:match('token=') or adr:match('kinogo') then break end
+		if not adr or adr:match('youtube') or adr:match('/trailer/') or adr:match('token=') or not adr:match('//') then break end
 		t[i] = {}
 		t[i].Address = adr:gsub('^.-//', 'https://'):gsub(' .-$', ''):gsub('"',''):gsub('^//', 'http://'):gsub('/iframe%?.+', '/iframe'):gsub('vb17120ayeshajenkins','vb17121coramclean'):gsub('%?host=kinogo%.cc.-$',''):gsub('%?d=kinogo%.cc.-$','')
 		if adr:match('/embed/') then t[i].Name = 'Collaps' elseif adr:match('svetacdn') then t[i].Name = 'VideoCDN' else t[i].Name = 'HDVB' end

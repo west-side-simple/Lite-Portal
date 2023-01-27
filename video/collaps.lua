@@ -1,6 +1,6 @@
 -- видеоскрипт для видеобалансера "Collaps" https://collaps.org (15/06/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod west_side (15/06/22)
+-- mod west_side (18/01/23)
 -- ## открывает подобные ссылки ##
 -- https://api1603044906.kinogram.best/embed/movie/7059
 -- https://api1603044906.kinogram.best/embed/kp/5928
@@ -183,11 +183,11 @@
 		end
 	end
 	local function play(Adr, title)
-		local retAdr = GetcollapsAdr(Adr)
-			if not retAdr then
+		local retAdr = GetcollapsAdr(Adr) or Adr
+		--[[	if not retAdr then
 				m_simpleTV.Control.CurrentAddress = 'http://wonky.lostcut.net/vids/error_getlink.avi'
 			 return
-			end
+			end--]]
 		m_simpleTV.Control.CurrentTitle_UTF8 = title
 		-- retAdr = GetFilePath(retAdr)
 			-- if not retAdr then
@@ -196,7 +196,7 @@
 			-- end
 		showMsg(title, ARGB(255, 153, 153, 255))
 --		m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = '', TypeBackColor = 0, UseLogo = 0, Once = 1})
-		m_simpleTV.Control.CurrentAddress = retAdr
+		m_simpleTV.Control.CurrentAddress = retAdr:gsub('^$collaps','')
 -- debug_in_file(retAdr .. '\n')
 	end
 		if inAdr:match('^$collaps') then

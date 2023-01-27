@@ -1,9 +1,5 @@
--- видеоскрипт для сайта https://hdi.zetflix.online/ (03/04/22)
--- west_side
--- открывает подобные ссылки:
--- https://hdi.zetflix.online/iplayer/videodb.php?kp=300
--- https://hd.zetfix.online/iplayer/videodb.php?kp=1172074
--- ##
+-- видеоскрипт для балансера ZF (27/01/23)
+-- author west_side
 	if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 	if not m_simpleTV.Control.CurrentAddress:match('^https?://hdi%.zetflix%.online') then return end
 	local inAdr = m_simpleTV.Control.CurrentAddress
@@ -29,7 +25,7 @@
 		m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
 	end
 	local current_np = getConfigVal('perevod/zf') or ''
-	local ua = 'Mozilla/5.0 (Windows NT 10.0; rv:97.0) Gecko/20100101 Firefox/97.0'
+	local ua = 'Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0'
 	local session = m_simpleTV.Http.New(ua)
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 30000)
@@ -66,7 +62,7 @@
 	and not (tab.tv_results[1] or tab.tv_results[1]==nil) and not tab.tv_results[1].backdrop_path and not tab.tv_results[1].poster_path
 	then return '', '', '', '', '', ''
 	else
-	if tab.movie_results[1] then
+	if tab.movie_results[1] and imdb_id ~= 'tt0078655' then
 	background = tab.movie_results[1].backdrop_path or ''
 	background1 = tab.movie_results[1].poster_path or ''
 	name_tmdb = tab.movie_results[1].title or ''
@@ -150,7 +146,7 @@
 	year = year_v
 	end
 	if name_ep then title = title .. ' (' .. name_ep .. ')' end
-	rc,answer = m_simpleTV.Http.Request(session,{url = inAdr:gsub('//hdi%.zetflix%.online/','//hd.zetfix.online/'), method = 'get', headers = 'User-agent: ' .. ua .. '\nReferer: https://hdi.zetflix.online/iplayer/player.php'})
+	rc,answer = m_simpleTV.Http.Request(session,{url = inAdr:gsub('//hdi%.zetflix%.online/','//hd2.zetfix.online/'), method = 'get', headers = 'User-agent: ' .. ua .. '\nReferer: https://hdi.zetflix.online/iplayer/player.php'})
 		if rc ~= 200 then return end
 	local function ZFIndex(t)
 		local lastQuality = tonumber(m_simpleTV.Config.GetValue('zf_qlty') or 5000)
@@ -263,7 +259,12 @@
 	if retAdr then setConfigVal('perevod/zf', '') end
 		if not retAdr then
 		retAdr = answer:match('file:%[(.-)%]%}')
-
+		if not retAdr then 
+			m_simpleTV.Control.ExecuteAction(37)
+			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'ZF: Медиаконтент не доступен', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
+			m_simpleTV.Control.ExecuteAction(11)
+			return
+		end
 		if retAdr == '' then m_simpleTV.Control.ExecuteAction(102, 1) return end
 		local t1,i,current_p = {},1
 		for w in retAdr:gmatch('%{.-%}') do
