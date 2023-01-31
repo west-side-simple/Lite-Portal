@@ -1,4 +1,4 @@
---TMDb portal - lite version west_side 21.07.22
+--TMDb portal - lite version west_side 31.01.23
 
 local function findrutor(name, id)
 	local session2 = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36', proxy, true)
@@ -797,13 +797,23 @@ function tmdb_person_page(page)
 	end
 
 function collection()
+		local rc,answer_pls
+		local file = io.open(m_simpleTV.Common.GetMainPath(1) .. 'DB/collection.m3u', 'r')
+		if file then
+		answer_pls = file:read('*a')
+		file:close()
+		else
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 		if not session then return end
 		m_simpleTV.Http.SetTimeout(session, 60000)
 		local url_home = decode64('aHR0cDovL20yNC5kby5hbS9DSC9raW5vL3RtZGJfY29sbGVjdGlvbnMudHh0')
-		local rc,answer_pls = m_simpleTV.Http.Request(session,{url=url_home})
+		rc,answer_pls = m_simpleTV.Http.Request(session,{url=url_home})
 		if rc ~= 200 then return '' end
 		answer_pls = answer_pls .. '\n'
+		end
+		if not file then
+		debug_in_file(answer_pls,m_simpleTV.Common.GetMainPath(1) .. 'DB/collection.m3u')
+		end
 		local t, i = {}, 1
 
 			for w in answer_pls:gmatch('%#EXTINF:.-\n.-\n') do
