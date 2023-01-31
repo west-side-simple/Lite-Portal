@@ -1,4 +1,4 @@
--- видеоскрипт для сайта http://www.kinopoisk.ru (05/08/22)
+-- видеоскрипт для сайта http://www.kinopoisk.ru (31/01/23)
 -- Copyright © 2017-2021 Nexterr | https://github.com/Nexterr/simpleTV
 -- mod west_side (add VB, ZF, Videoapi) - (05/08/22)
 -- ## необходимы ##
@@ -136,9 +136,9 @@ if not m_simpleTV.Config.GetValue('mediabaze', 'LiteConf.ini') or tonumber(m_sim
 tname = {
 -- сортировать: поменять порядок строк
 -- отключить: поставить в начале строки --
- 'Videocdn',
- 'VB',
+-- 'Videocdn',
  'ZF',
+ 'VB',
 -- 'Videoapi',
 -- 'Filmix',
 -- 'CDN Movies',
@@ -156,15 +156,15 @@ elseif tonumber(m_simpleTV.Config.GetValue('mediabaze', 'LiteConf.ini')) == 2 th
 tname = {
 -- сортировать: поменять порядок строк
 -- отключить: поставить в начале строки --
- 'Videocdn',
- 'VB',
  'ZF',
+ 'VB',
 -- 'Filmix',
 -- 'CDN Movies',
 -- 'Videoframe',
  'Hdvb',
  'Collaps',
--- 'Kodik',
+ 'Kodik',
+ 'Videocdn',
  'Videoapi',
 -- 'КиноПоиск онлайн',
 -- 'Seasonvar',
@@ -587,7 +587,7 @@ end
 			elseif tname[i] == 'Videoapi' then
 				turl[i] = {adr = decode64('aHR0cHM6Ly81MTAyLnN2ZXRhY2RuLmluL2tOS2o0N01rQmdMUz9pbWRiX2lkPQ==') .. id_imdb, tTitle = 'Большая база фильмов и сериалов', tLogo = logo_k}
 			elseif tname[i] == 'Collaps' then
-				turl[i] = {adr = 'http://api.' .. os.time() .. decode64('LmRlbGl2ZW1iZC53cy9lbWJlZC9rcC8') .. kpid, tTitle = 'Большая база фильмов и сериалов', tLogo = logo_k}
+				turl[i] = {adr = 'https://api' .. os.time() .. decode64('LnN5bmNocm9uY29kZS5jb20vZW1iZWQva3Av') .. kpid, tTitle = 'Большая база фильмов и сериалов', tLogo = logo_k}
 			elseif tname[i] == 'CDN Movies' then
 				turl[i] = {adr = decode64('aHR0cHM6Ly9jZG5tb3ZpZXMubmV0L2FwaT90b2tlbj0wYWVmZDdjMWQ2ZjY0YzAzNzRjYmE4ZmRiZTZmOTE2MyZraW5vcG9pc2tfaWQ9') .. kpid, tTitle = 'Большая база фильмов и сериалов', tLogo = 'https://raw.githubusercontent.com/Nexterr-origin/simpleTV-Images/main/cdnmovie.png'}
 			elseif tname[i] == 'Hdvb' then
