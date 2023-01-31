@@ -1,7 +1,7 @@
--- видеоскрипт для запросов потоков Rezka по ID кинопоиска и IMDB (05/08/22)
+-- видеоскрипт для запросов потоков Rezka по ID кинопоиска и IMDB (30/01/23)
 -- nexterr, west_side
 -- ## открывает подобные ссылки ##
--- https://voidboost.net/embed/1227967
+-- https://voidboost.net/embed/280179
 -- https://voidboost.net/embed/tt0108778
 -- ##
 		if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
@@ -59,7 +59,7 @@
 	local tab = json.decode(answerd)
 	local background, name_tmdb, year_tmdb = '', '', ''
 	if not tab and (not tab.movie_results[1] or tab.movie_results[1]==nil) and not tab.movie_results[1].backdrop_path or not tab and not (tab.tv_results[1] or tab.tv_results[1]==nil) and not tab.tv_results[1].backdrop_path then background = '' else
-	if tab.movie_results[1] then
+	if tab.movie_results[1] and imdb_id ~= 'tt0078655' and imdb_id ~= 'tt2317100' then
 	background = tab.movie_results[1].backdrop_path or ''
 	name_tmdb = tab.movie_results[1].title or ''
 	year_tmdb = tab.movie_results[1].release_date or 0
@@ -93,7 +93,7 @@
 	m_simpleTV.User.Rezka.title = nil
 	m_simpleTV.User.Rezka.year = nil
 	if inAdr:match('/embed/')
-	then m_simpleTV.User.Rezka.embed = inAdr:match('/embed/(.-)$') m_simpleTV.User.Rezka.embed = m_simpleTV.User.Rezka.embed:gsub('%?.-$','')
+	then m_simpleTV.User.Rezka.embed = inAdr:match('/embed/(.-)$') m_simpleTV.User.Rezka.embed = m_simpleTV.User.Rezka.embed:gsub('%&.-$','')
 	elseif inAdr:match('%&embed=')
 	then m_simpleTV.User.Rezka.embed = inAdr:match('%&embed=(.-)$') inAdr = inAdr:gsub('%&embed=.-$','')
 	end
@@ -108,7 +108,7 @@
 	end
 	if not m_simpleTV.User.Rezka.title and title_v and title_v~='' then
 		m_simpleTV.User.Rezka.title = title_v .. ' (' .. year_v .. ')'
-	else
+	elseif not m_simpleTV.User.Rezka.title then
 	title_b,year_b = bazon(kp_id)
 	if title_b and title_b == '' then
 	title_b,year_b = ukp(kp_id)
@@ -447,7 +447,12 @@
 		end
 	if answer:match('<select name="season".-</select>') and not inAdr:match('%?s=') then
 		local episodes = answer:match('var seasons_episodes = %{(.-)%}')
-		local first_season, first_episodes = episodes:match('"(%d+)":%[.-(%d+)')
+		local first_season, first_episodes
+		if episodes then
+		first_season, first_episodes = episodes:match('"(%d+)":%[.-(%d+)')
+		else
+		first_season, first_episodes = 0,1
+		end
 		m_simpleTV.Control.ChangeAdress = 'Yes'
 		m_simpleTV.Control.SetNewAddress(inAdr:gsub('%?h=.-$','') .. '?s=' .. first_season .. '&e=' .. first_episodes .. '&h=voidboost.net&embed=' .. m_simpleTV.User.Rezka.embed)
 		return

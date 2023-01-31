@@ -7,7 +7,7 @@
 	local inAdr = m_simpleTV.Control.CurrentAdress
 		if not inAdr then return end
 		if not inAdr:match('^https?://www%.hdkinoteatr%.com')
-		and not inAdr:match('^https?://kinogo%.cc')
+		and not inAdr:match('^https?://kinogo%.')
 		then return end
 	m_simpleTV.Control.ChangeAdress = 'Yes'
 	m_simpleTV.Control.CurrentAdress = ''
@@ -26,6 +26,7 @@ end
 			m_simpleTV.OSD.ShowMessage_UTF8('hdkinoteatr ошибка[1]-' .. rc, 255, 5)
 		 return
 		end
+	if inAdr:match('^https?://kinogo%.la') then answer = m_simpleTV.Common.multiByteToUTF8(answer) end
 	local title = answer:match('<font color="yellow">(.-)</font>') or answer:match('<title>(.-)</title>') or 'hdkinoteatr'
 	title = title:gsub('%).-$', ')')
 	local poster = answer:match('<meta property="og:image" content="(.-)"')
@@ -42,8 +43,8 @@ end
 		adr = w:match('<iframe(.-)</iframe>')
 		if not adr or adr:match('youtube') or adr:match('/trailer/') or adr:match('token=') or not adr:match('//') then break end
 		t[i] = {}
-		t[i].Address = adr:gsub('^.-//', 'https://'):gsub(' .-$', ''):gsub('"',''):gsub('^//', 'http://'):gsub('/iframe%?.+', '/iframe'):gsub('vb17120ayeshajenkins','vb17121coramclean'):gsub('%?host=kinogo%.cc.-$',''):gsub('%?d=kinogo%.cc.-$','')
-		if adr:match('/embed/') then t[i].Name = 'Collaps' elseif adr:match('svetacdn') then t[i].Name = 'VideoCDN' else t[i].Name = 'HDVB' end
+		t[i].Address = adr:gsub('^.-//', 'https://'):gsub(' .-$', ''):gsub('"',''):gsub('^//', 'http://'):gsub('/iframe%?.+', '/iframe'):gsub('vb17120ayeshajenkins','vb17121coramclean'):gsub('%?host=kinogo%..-$',''):gsub('%?d=kinogo%..-$','')
+		if adr:match('/embed/') then t[i].Name = 'Collaps' elseif adr:match('svetacdn') or adr:match('33cHYTFTAlwP') then t[i].Name = 'VideoCDN' else t[i].Name = 'HDVB' end
 		i=i+1
 	end
 		local hash, res = {}, {}

@@ -1,6 +1,6 @@
 -- видеоскрипт для видеобалансера "videocdn" https://videocdn.tv (13/07/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod - west_side (13/07/22)
+-- mod - west_side (29/01/23)
 -- ## открывает подобные ссылки ##
 -- https://32.svetacdn.in/fnXOUDB9nNSO?kp_id=5928
 -- https://32.tvmovies.in/fnXOUDB9nNSO/tv-series/92
@@ -21,6 +21,7 @@ local proxy = ''
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/CtpKt94RDwED')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/Z9w3z4ZBIQxF')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/z3jFqN8Tz3Ta')
+			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/33cHYTFTAlwP')
 --			and not m_simpleTV.Control.CurrentAddress:match('^https?://[%w%.]*svetacdn%.')
 			and not m_simpleTV.Control.CurrentAddress:match('^$videocdn')
 		then

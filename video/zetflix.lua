@@ -1,4 +1,4 @@
--- видеоскрипт для балансера ZF (27/01/23)
+-- видеоскрипт для балансера ZF (30/01/23)
 -- author west_side
 	if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 	if not m_simpleTV.Control.CurrentAddress:match('^https?://hdi%.zetflix%.online') then return end
@@ -62,7 +62,7 @@
 	and not (tab.tv_results[1] or tab.tv_results[1]==nil) and not tab.tv_results[1].backdrop_path and not tab.tv_results[1].poster_path
 	then return '', '', '', '', '', ''
 	else
-	if tab.movie_results[1] and imdb_id ~= 'tt0078655' then
+	if tab.movie_results[1] and imdb_id ~= 'tt0078655' and imdb_id ~= 'tt2317100' then
 	background = tab.movie_results[1].backdrop_path or ''
 	background1 = tab.movie_results[1].poster_path or ''
 	name_tmdb = tab.movie_results[1].title or ''
@@ -125,6 +125,8 @@
 	m_simpleTV.User.ZF.kpid = kpid
 	local season,episode=m_simpleTV.User.ZF.CurAddress:match('season=(%d+).-episode=(%d+)')
 	local name_ep=m_simpleTV.User.ZF.CurAddress:match('name_ep=(.-)$')
+	local adr_for_name=m_simpleTV.User.ZF.CurAddress:match('adr_for_name=(.-)$')
+	if name_ep then name_ep = name_ep:gsub('%&adr_for_name=.-$','') end
 	inAdr = inAdr:gsub('%&name_ep=.-$','')
 	local logo, title, year, overview, tmdbid, tv
 	local id_imdb,title_v,year_v,tv = imdbid(kpid)
@@ -350,13 +352,14 @@
 	t1[i]={}
 	t1[i].Id = i
 	t1[i].Address1 = adr
-	t1[i].Address = inAdr:gsub('%&name_ep=.-$','') .. '&name_ep=' .. m_simpleTV.Common.multiByteToUTF8(name)
+	t1[i].Address = inAdr:gsub('%&name_ep=.-$','') .. '&name_ep=' .. m_simpleTV.Common.multiByteToUTF8(name) .. '&adr_for_name=' .. adr
 	t1[i].Name = name
 	i=i+1
 	end
 	if not name_ep then
-		name_ep =t1[#t1].Name
-		m_simpleTV.Control.PlayAddress(inAdr .. '&name_ep=' .. name_ep)
+		name_ep = t1[#t1].Name
+		adr_for_name = t1[#t1].Address1
+		m_simpleTV.Control.PlayAddress(inAdr .. '&name_ep=' .. name_ep .. '&adr_for_name=' .. adr_for_name)
         return
 	end
 	for i = 1, #t1 do
@@ -365,7 +368,7 @@
 		t[i].Address1 = t1[#t1-i+1].Address1
 		t[i].Name = t1[#t1-i+1].Name
 		t[i].Id = #t1-i+1
-		if t[i].Name == name_ep then
+		if t[i].Name == name_ep and t[i].Address1 == adr_for_name then
 			current_ep = i
 			retAdr = GetZFAdr(t[i].Address1)
 		end
