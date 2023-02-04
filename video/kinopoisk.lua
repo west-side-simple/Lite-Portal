@@ -1,6 +1,6 @@
 -- видеоскрипт для сайта http://www.kinopoisk.ru (31/01/23)
 -- Copyright © 2017-2021 Nexterr | https://github.com/Nexterr/simpleTV
--- mod west_side (add VB, ZF, Videoapi) - (05/08/22)
+-- mod west_side (add VB, ZF, Videoapi) - (04/02/23)
 -- ## необходимы ##
 -- видеоскрипты: yandex-vod.lua, kodik.lua, filmix.lua, videoframe.lua, seasonvar.lua
 -- iviru.lua, videocdn.lua, hdvb-vb.lua, collaps.lua, cdnmovies.lua, voidboost.lua, videoapi.lua, zetflix.lua
@@ -227,16 +227,18 @@ end
 	local function bazon(kp)
 	local rc, answer = m_simpleTV.Http.Request(session, {url = decode64('aHR0cHM6Ly9iYXpvbi5jYy9hcGkvc2VhcmNoP3Rva2VuPWMxMThlYjVmOGQzNjU2NWIyYjA4YjUzNDJkYTk3Zjc5JmtwPQ==') .. kp})
 	if rc ~= 200 then return '','' end
+	if answer:match('invalid token') then return '','' end
 	local title = answer:match('"rus"%:"(.-)"') or ''
 	local year = answer:match('"year"%:"(.-)"') or ''
 	return title,year
 	end
 	local function ukp(kp)
 	local rc,answer = m_simpleTV.Http.Request(session,{url = decode64('aHR0cHM6Ly9raW5vcG9pc2thcGl1bm9mZmljaWFsLnRlY2gvYXBpL3YyLjIvZmlsbXMv') .. kp, method = 'get', headers = 'X-API-KEY: ' .. decode64('OTczODMxMzUtNjM0ZC00ODA4LWEzMzQtNGIwMjg3ZjZiZDBh') .. '\nContent-Type: application/json'})
-	if rc ~= 200 then return '','' end
-	local title = answer:match('"nameRu"%:"(.-)"')
+	if rc ~= 200 then return '','','' end
+	local title = answer:match('"nameRu"%:"(.-)"') or answer:match('"nameEn"%:"(.-)"') or answer:match('"nameOriginal"%:"(.-)"')
 	local year = answer:match('"year"%:(%d%d%d%d)')
-	return title,year
+	local overview = answer:match('"description"%:"(.-)"') or ''
+	return title,year,overview
 	end
 	local function answerdget(url)
 		if url:match('widget%.kinopoisk%.ru') then
@@ -557,8 +559,9 @@ end
 		getlogo()
 	end
 	local title_b,year_b = bazon(kpid)
+	local overview_kp
 	if title_b and title_b == '' then
-	title_b,year_b = ukp(kpid)
+	title_b,year_b,overview_kp = ukp(kpid)
 	end
 	if not title or title and title == '' then title = name_tmdb or title_b or 'Кинопоиск' end
 	if not year or year and year == '' then year = year_tmdb or year_b or '' end
@@ -608,7 +611,7 @@ end
 			t[i].Address = turl[i].adr
 			end
 			if background and name_tmdb and year_tmdb and overview_tmdb then
-				t[i].InfoPanelTitle = overview_tmdb
+				t[i].InfoPanelTitle = overview_tmdb or overview_kp
 				t[i].InfoPanelName = name_tmdb .. ' (' .. year_tmdb .. ')'
 				t[i].InfoPanelLogo = logourl or 'https://avatars.mds.yandex.net/get-zen-logos/200214/pub_595fb4431410c3258a91bf55_5af1c6e63dceb755566a70a2/xxh'
 			else

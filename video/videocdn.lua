@@ -1,6 +1,6 @@
--- видеоскрипт для видеобалансера "videocdn" https://videocdn.tv (13/07/22)
+-- видеоскрипт для видеобалансера "videocdn" https://videocdn.tv (01/07/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod - west_side (29/01/23)
+-- mod - west_side (01/02/23)
 -- ## открывает подобные ссылки ##
 -- https://32.svetacdn.in/fnXOUDB9nNSO?kp_id=5928
 -- https://32.tvmovies.in/fnXOUDB9nNSO/tv-series/92
@@ -22,6 +22,7 @@ local proxy = ''
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/Z9w3z4ZBIQxF')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/z3jFqN8Tz3Ta')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/33cHYTFTAlwP')
+			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/fz41ePu9lzFL')
 --			and not m_simpleTV.Control.CurrentAddress:match('^https?://[%w%.]*svetacdn%.')
 			and not m_simpleTV.Control.CurrentAddress:match('^$videocdn')
 		then
@@ -146,10 +147,10 @@ end
 	m_simpleTV.User.Videocdn.title_translate = title_translate(translate)
 	end
 	local imdb_id, kp_id
-	if inAdr:match('&embed=')
-	then m_simpleTV.User.Videocdn.embed = inAdr:match('&embed=(.-)$')
+	if inAdr:match('&embed=') or inAdr:match('kp_id=')
+	then m_simpleTV.User.Videocdn.embed = inAdr:match('&embed=(.-)$') or inAdr:match('kp_id=(.-)$')
 	end
-	inAdr = inAdr:gsub('%?translation=.-$', ''):gsub('&embed=.-$', '')
+	inAdr = inAdr:gsub('%?translation=.-$', ''):gsub('&embed=.-$', ''):gsub('&block.-$', '')
 	if not inAdr:match('^$videocdn') then
 	m_simpleTV.User.Videocdn.adr = inAdr
 	end

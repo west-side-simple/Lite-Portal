@@ -1,12 +1,14 @@
 -- видеоскрипт для видеобалансера "Collaps" https://collaps.org (15/06/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod west_side (18/01/23)
+-- mod west_side (04/02/23)
 -- ## открывает подобные ссылки ##
 -- https://api1603044906.kinogram.best/embed/movie/7059
 -- https://api1603044906.kinogram.best/embed/kp/5928
 		if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 		if not m_simpleTV.Control.CurrentAddress:match('^https?://api[%d]*[^/]+/embed/movie/%d+')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://api[%d]*[^/]+/embed/kp/%d+')
+			and not m_simpleTV.Control.CurrentAddress:match('^https?://api%..-/embed/kp/%d+')
+			and not m_simpleTV.Control.CurrentAddress:match('^https?://api%..-/embed/movie/%d+')
 			and not m_simpleTV.Control.CurrentAddress:match('^$collaps')
 		then
 		 return

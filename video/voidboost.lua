@@ -1,4 +1,4 @@
--- видеоскрипт для запросов потоков Rezka по ID кинопоиска и IMDB (30/01/23)
+-- видеоскрипт для запросов потоков Rezka по ID кинопоиска и IMDB (04/02/23)
 -- nexterr, west_side
 -- ## открывает подобные ссылки ##
 -- https://voidboost.net/embed/280179
@@ -20,6 +20,7 @@
 	local function bazon(kp)
 	local rc, answer = m_simpleTV.Http.Request(session, {url = decode64('aHR0cHM6Ly9iYXpvbi5jYy9hcGkvc2VhcmNoP3Rva2VuPWMxMThlYjVmOGQzNjU2NWIyYjA4YjUzNDJkYTk3Zjc5JmtwPQ==') .. kp})
 	if rc ~= 200 then return '','' end
+	if answer:match('invalid token') then return '','' end
 	local title = answer:match('"rus"%:"(.-)"') or ''
 	local year = answer:match('"year"%:"(.-)"') or ''
 	return title,year
@@ -27,7 +28,7 @@
 	local function ukp(kp)
 	local rc,answer = m_simpleTV.Http.Request(session,{url = decode64('aHR0cHM6Ly9raW5vcG9pc2thcGl1bm9mZmljaWFsLnRlY2gvYXBpL3YyLjIvZmlsbXMv') .. kp, method = 'get', headers = 'X-API-KEY: ' .. decode64('OTczODMxMzUtNjM0ZC00ODA4LWEzMzQtNGIwMjg3ZjZiZDBh') .. '\nContent-Type: application/json'})
 	if rc ~= 200 then return '','' end
-	local title = answer:match('"nameRu"%:"(.-)"')
+	local title = answer:match('"nameRu"%:"(.-)"') or answer:match('"nameEn"%:"(.-)"') or answer:match('"nameOriginal"%:"(.-)"')
 	local year = answer:match('"year"%:(%d%d%d%d)')
 	return title,year
 	end
