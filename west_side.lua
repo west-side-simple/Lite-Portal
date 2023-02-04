@@ -131,7 +131,7 @@ function run_westSide_portal()
  {'Filmix',''},
  {'Kinopub',''},
  {'Переводы',''},
- {'KinoGo',''},
+-- {'KinoGo',''},
  {'KinoKong',''},
  {'UA',''},
  {'YouTube',''},
@@ -162,7 +162,7 @@ function run_westSide_portal()
   elseif t1[id].Name == 'Медиабазы' then mediabaze()
   elseif t1[id].Name:match('SimpleTV') then highlight()
   elseif t1[id].Name == 'Переводы' then run_lite_qt_cdntr()
-  elseif t1[id].Name == 'KinoGo' then run_lite_qt_kinogo()
+--  elseif t1[id].Name == 'KinoGo' then run_lite_qt_kinogo()
   elseif t1[id].Name == 'KinoKong' then run_lite_qt_kinokong()
   elseif t1[id].Name == 'UA' then run_lite_qt_ua()
   end

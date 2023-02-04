@@ -113,7 +113,7 @@ m_simpleTV.Control.ExecuteAction(37)
 	{'EX-FS',''},
 	{'Rezka',''},
 	{'Filmix',''},
-	{'KinoGo',''},
+--	{'KinoGo',''},
 	{'KinoKong',''},
 	{'UA',''},
 	{'Kinopub',''},
@@ -138,7 +138,7 @@ m_simpleTV.Control.ExecuteAction(37)
   elseif t1[id].Name == 'EX-FS' then search_media()
   elseif t1[id].Name == 'Rezka' then search_rezka()
   elseif t1[id].Name == 'Filmix' then search_filmix_media()
-  elseif t1[id].Name == 'KinoGo' then search_kinogo()
+--  elseif t1[id].Name == 'KinoGo' then search_kinogo()
   elseif t1[id].Name == 'KinoKong' then search_kinokong()
   elseif t1[id].Name == 'UA' then search_ua()
   elseif t1[id].Name == 'Kinopub' then show_select('https://kino.pub/item/search?query=' .. search_ini)
