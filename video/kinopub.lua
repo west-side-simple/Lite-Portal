@@ -1,4 +1,4 @@
--- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (20/08/22) - автор west_side
+-- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (12/02/23) - автор west_side
 -- необходим действующий аккаунт на сайте https://kino.pub
 -- работает в связке со скриптом Lite_qt_kinopub.lua - автор west_side
 -- необходимо сгенерировать cookies в браузере Mozilla, дополнение cookies.txt.
@@ -138,6 +138,7 @@ end
 	local rc, answer = m_simpleTV.Http.Request(session, {url = inAdr, headers = 'Cookie: ' .. cookies})
 --	m_simpleTV.Http.Close(session)
 		if rc ~= 200 then return end
+--	debug_in_file(answer .. '\n','c://1/testpub.txt')
 	answer = answer:gsub('\n', ' ')
 	answer = answer:gsub('<!%-%-.-%-%->', ''):gsub('/%*.-%*/', '')
 	if inAdr:match('/tv/view/') then
@@ -435,7 +436,7 @@ else
 	end
 
 	local qlty = m_simpleTV.Config.GetValue('kinopub_qlty')
-	local answer1 = answer:match('<li class="dropdown%-header">Файл mp4</li>(.-)<li class="dropdown%-header">HLS плейлист</li>')
+	local answer1 = answer:match('<li class="dropdown%-header">HLS плейлист</li>(.-)<li class="dropdown%-header">HLS4 плейлист</li>')
 	local answer2 = answer:match('<span class="season%-title m%-l%-sm p%-r%-sm">.-</div> </div>')
 	local answer3 = answer:match('<td><strong>Год.-</tbody>')
 	local retAdr = GetQlty(answer1) or 'https://yandex-cdn.net/hls4/aWQ9MTc5MTE5OzMxNjQ4MDg1MzU7MTMzMjg0NjQ7MTYzMjE2ODMwMCZoPTVjM2lkeUVZOWVVM1JzSnZtVUgzMHcmZT0xNjMyMjU0NzAw/demo.m3u8?loc=nl'
