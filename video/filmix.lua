@@ -1,6 +1,6 @@
 -- видеоскрипт для сайта https://filmix.ac (23/07/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- west_side mod for lite (23/07/22)
+-- west_side mod for lite (05/02/23)
 -- ## авторизация ##
 -- логин, пароль установить в 'Password Manager', для id - filmix
 -- ## необходим ##
@@ -507,7 +507,7 @@ end
 		 return
 		end
 	playerjs_url = host .. playerjs_url
-	local url = host .. 'api/movies/player_data'
+	local url = host .. 'api/movies/player-data?t=' .. os.time()
 	local rc, answer0 = m_simpleTV.Http.Request(session, {url = url, method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. inAdr, body = 'post_id=' .. id .. '&showfull=true' })
 		if rc ~= 200 then
 			m_simpleTV.Http.Close(session)
@@ -646,7 +646,9 @@ end
 					t[i].InfoPanelShowTime = 20000
 					t[i].InfoPanelLogo = poster
 					t[i].InfoPanelTitle = overview
+					if videodesc ~= '' then
 					t[i].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc:gsub('<a.-trailer%.png.->','') .. '</body></html>'
+					end
 					i = i + 1
 				end
 				if i == 1 then
@@ -664,7 +666,9 @@ end
 					t[i].InfoPanelShowTime = 20000
 					t[i].InfoPanelLogo = poster
 					t[i].InfoPanelTitle = overview
+					if videodesc ~= '' then
 					t[i].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc:gsub('<a.-trailer%.png.->','') .. '</body></html>'
+					end
 					i = i + 1
 				end
 				if i == 1 then
@@ -704,7 +708,9 @@ end
 		t1[1].InfoPanelShowTime = 20000
 		t1[1].InfoPanelLogo = poster
 		t1[1].InfoPanelTitle = overview
+		if videodesc ~= '' then
 		t1[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc:gsub('<a.-trailer%.png.->','') .. '</body></html>'
+		end
 		t1.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Quality_filmix()'}
 		t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🧾 Теги ', ButtonScript = 'similar_filmix()'}
 		m_simpleTV.OSD.ShowSelect_UTF8('Filmix', 0, t1, 5000, 32 + 64 + 128)
