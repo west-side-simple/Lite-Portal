@@ -14,7 +14,7 @@ end
    
  if westSidePortal.isEmbedded() then
    t.flags =  'FRAMELESS_MODE | NOT_MODAL | TRANSPARENT_BACKGROUND | INHERIT_OSD_FONT'
-   t.childPositionParams = 'typeAlign="0x202" x="0" y="0" cx="-80" cy="-80" xb="0" yb="0" mincx="50" mincy="50"'  
+   t.childPositionParams = 'typeAlign="0x202" x="0" y="0" cx="-87" cy="-80" xb="0" yb="0" mincx="50" mincy="50"'  
  else   
   local scale = m_simpleTV.Interface.GetScale()
   if westSidePortal.isSavePosition() then

@@ -1,4 +1,4 @@
--- SergeyVS, west_side 13.07.22
+-- SergeyVS, west_side 24.02.23
 require("westSidePortal")
 
 ----------------------------------------------------------------------
@@ -64,6 +64,7 @@ end
 function setConfigVal(key,val)
   m_simpleTV.Config.SetValue(key,val,getConfigFile())
 end
+------------------------------------------------------------------------------
 function search_all()
 m_simpleTV.Control.ExecuteAction(37)
 	local function getConfigVal(key)
@@ -76,6 +77,8 @@ m_simpleTV.Control.ExecuteAction(37)
 
 	local search_ini = getConfigVal('search/media') or ''
 	local tt1={
+	{'Трекеры',''},
+	{'RipsClub (HEVC)',''},
 	{'TMDb',''},
 	{'EX-FS',''},
 	{'Rezka',''},
@@ -105,6 +108,8 @@ m_simpleTV.Control.ExecuteAction(37)
   elseif t1[id].Name == 'EX-FS' then search_media()
   elseif t1[id].Name == 'Rezka' then search_rezka()
   elseif t1[id].Name == 'Filmix' then search_filmix_media()
+  elseif t1[id].Name == 'Трекеры' then content_adr_page('http://api.vokino.tv/v2/list?name=' .. search_ini)
+  elseif t1[id].Name == 'RipsClub (HEVC)' then search_hevc('https://rips.club/search/?part=0&year=&cat=0&standard=0&bit=0&order=1&search=' .. search_ini)
   elseif t1[id].Name == 'KinoGo' then search_kinogo()
   elseif t1[id].Name == 'KinoKong' then search_kinokong()
   elseif t1[id].Name == 'UA' then search_ua()
@@ -120,7 +125,7 @@ m_simpleTV.Control.ExecuteAction(37)
    run_westSide_portal()
   end
 end
-
+------------------------------------------------------------------------------
 function select_keyboard()
 	m_simpleTV.Control.ExecuteAction(37)
 	local function getConfigVal(key)
@@ -132,14 +137,13 @@ function select_keyboard()
 	local kb_pack=
 	{
 	{"Без клавиатуры",0},
-	{"Classic Dark",1},
-	{"Classic Green",2},
-	{"Classic Light",3},
-	{"Neon Glass",4},
+	{"Dark",1},
+	{"Green",2},
+	{"Light",3},
+	{"Neon",4},
 	{"Classic",5},
 --[[	{"Grey",6},
 	{"Modern Green",7},
-	{"Umbrella",8},
 	{"Rainbow",9},
 	{"Vintage",10},
 	{"Circle",11},
@@ -148,6 +152,9 @@ function select_keyboard()
 	{"Circle Neon",14},
 	{"Neon",15},--]]
 	{"Circle Grey",6},
+	{"Umbrella",7},
+	{"Circle Yellow",8},
+    {"Glass",9},
 	}
 	local cur_keyboard = getConfigVal('keyboard/number') or m_simpleTV.Config.GetValue("keyboard/number","westSidePortal.ini") or 1
 	local t = {}
@@ -158,12 +165,12 @@ function select_keyboard()
     t[i].Action = kb_pack[i][2]
 	t[i].InfoPanelLogo = m_simpleTV.MainScriptDir_UTF8 .. 'user/westSidePortal/GUI/img/' .. kb_pack[i][2] .. '.svg'
 	t[i].InfoPanelShowTime = 10000
-    end	
+    end
 	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Skins '}
 	local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Keyboard Pack',cur_keyboard,t,9000,1+4+8)
     if id==nil then return end
     if ret == 1 then
-	  setConfigVal('keyboard/number',t[id].Action)	 
+	  setConfigVal('keyboard/number',t[id].Action)
 	  dofile(m_simpleTV.MainScriptDir_UTF8 .. 'user\\westSidePortal\\GUI\\showDialog.lua')
     end
 	if ret == 2 then
