@@ -1,4 +1,4 @@
---Плагин быстрого доступа к замене скина, обоев, расположения контролпанели для lite portal - west_side 12.03.22
+--Плагин быстрого доступа к замене скина, обоев, виртуальной клавиатуры, расположения контролпанели для lite portal - west_side 11.02.23
 function background_skin()
 	local currentbackground = m_simpleTV.Config.GetValue('mainView/logo/file','simpleTVConfig') or ''
 	local path = m_simpleTV.Common.GetMainPath(2) .. 'work/Channel/logo/Wallpapers/'
@@ -69,6 +69,9 @@ local function set_skin(dir)
 	local backgroundimage = '../Channel/logo/Wallpapers/simple.jpg'
 	if dir:match('WS')
 	or dir:match('FM')
+	or dir:match('TiVi')
+    or dir:match('MediaPortal')
+    or dir:match('BloodNight')
 	or dir:match('Dark')
 	or dir:match('BlackGlass')
 -- add dir for backgroundimage
@@ -124,12 +127,68 @@ local t = {}
     end
 	local side = m_simpleTV.Config.GetValue('osdcontrolpanel/side','simpleTVConfig') or 0
 	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Skins '}
+	t.ExtButton1 = {ButtonEnable = true, ButtonName = ' Keyboard '}
 	local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('OSD controlpanel side',side,t,9000,1+4+8)
     if id==nil then return end
     if ret == 1 then
 	  m_simpleTV.Config.SetValue('osdcontrolpanel/side', t[id].Action ,'simpleTVConfig')
 	  controlside()
 	  m_simpleTV.Config.Apply('NEED_CONTROLPANELBASE_UPDATE')
+    end
+	if ret == 2 then
+	  skin_schema_settings()
+    end
+	if ret == 3 then
+	  select_keyboard()
+    end
+end
+-------------------------------------------------------------------
+function select_keyboard()
+	m_simpleTV.Control.ExecuteAction(37)
+	local function getConfigVal(key)
+		return m_simpleTV.Config.GetValue(key,"westSidePortal.ini")
+	end
+	local function setConfigVal(key,val)
+		m_simpleTV.Config.SetValue(key,val,"westSidePortal.ini")
+	end
+	local kb_pack=
+	{
+	{"Без клавиатуры",0},
+	{"Dark",1},
+	{"Green",2},
+	{"Light",3},
+	{"Neon",4},
+	{"Classic",5},
+--[[	{"Grey",6},
+	{"Modern Green",7},
+	{"Rainbow",9},
+	{"Vintage",10},
+	{"Circle",11},
+	{"Modern",12},
+	{"Gold",13},
+	{"Circle Neon",14},
+	{"Neon",15},--]]
+	{"Circle Grey",6},
+	{"Umbrella",7},
+	{"Circle Yellow",8},
+    {"Glass",9},
+	}
+	local cur_keyboard = getConfigVal('keyboard/number') or m_simpleTV.Config.GetValue("keyboard/number","westSidePortal.ini") or 1
+	local t = {}
+	for i=1,#kb_pack do
+    t[i] = {}
+    t[i].Id = i
+    t[i].Name = kb_pack[i][1]
+    t[i].Action = kb_pack[i][2]
+	t[i].InfoPanelLogo = m_simpleTV.MainScriptDir_UTF8 .. 'user/westSidePortal/GUI/img/' .. kb_pack[i][2] .. '.svg'
+	t[i].InfoPanelShowTime = 10000
+    end	
+	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Skins '}
+	local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Keyboard Pack',cur_keyboard,t,9000,1+4+8)
+    if id==nil then return end
+    if ret == 1 then
+	  setConfigVal('keyboard/number',t[id].Action)	 
+	  dofile(m_simpleTV.MainScriptDir_UTF8 .. 'user\\westSidePortal\\GUI\\showDialog.lua')
     end
 	if ret == 2 then
 	  skin_schema_settings()
@@ -147,91 +206,3 @@ end
  t.image= m_simpleTV.MainScriptDir_UTF8 .. 'user/show_mi/emptyLogo.png'
  m_simpleTV.Interface.AddExtMenuT(t)
 ------------------------------------------------------------------- 
-	if not m_simpleTV.User then
-		m_simpleTV.User = {}
-	end
-local function getConfigVal(key)
- return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
-end
-
-local function setConfigVal(key,val)
-  m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
-end
-
--------------------------------------------------------------------
-local dataEN = os.date ("%a %d %b %Y %H:%M")
-	dataRU = dataEN:gsub('Sun', 'Вс'):gsub('Mon', 'Пн'):gsub('Tue', 'Вт'):gsub('Wed', 'Ср'):gsub('Thu', 'Чт'):gsub('Fri', 'Пт'):gsub('Sat', 'Сб')
-	dataRU = dataRU:gsub('Jan', 'Янв'):gsub('Feb', 'Фев'):gsub('Mar', 'Мар'):gsub('Apr', 'Апр'):gsub('May', 'Май'):gsub('Jun', 'Июн'):gsub('Jul', 'Июл'):gsub('Aug', 'Авг'):gsub('Sep', 'Сен'):gsub('Oct', 'Окт'):gsub('Nov', 'Ноя'):gsub('Dec', 'Дек')
-	if m_simpleTV.Interface.GetLanguage() == 'ru' then data = dataRU else data = dataEN end
--------------------------------------------------------------------
-
-	userAgent = "Mozilla/5.0 (Windows NT 10.0; rv:85.0) Gecko/20100101 Firefox/85.0"
-	session =  m_simpleTV.Http.New(userAgent)
-	if not session then
-	return ''
-	end
-	m_simpleTV.Http.SetTimeout(session, 8000)
-
-rc,answer = m_simpleTV.Http.Request(session,{url='http://m24.do.am/_fr/0/upd.txt'})
-if rc~=200 then
-  m_simpleTV.Http.Close(session)
-  return
-end
-	local str3 = answer:match('^.-\n.-\n(.-)\n')
-	local str4 = answer:match('^.-\n.-\n.-\n(.-)\n')
-	local str5 = answer:match('^.-\n.-\n.-\n.-\n(.-)\n')
-	local str6 = answer:match('^.-\n.-\n.-\n.-\n.-\n(.-)\n')
-	local str7 = answer:match('^.-\n.-\n.-\n.-\n.-\n.-\n(.-)\n')
-	local h,m,d,mo,y = answer:match('(%d+):(%d+) (%d+)%.(%d+)%.(%d+)')
-	local h1,m1,d1,mo1,y1 = answer:match('\n(%d+):(%d+) (%d+)%.(%d+)%.(%d+)')
-	dateuptime = { year = '20' .. y,
-                   month = mo,
-                   day = d,
-                   hour = h,
-                   min = m,
-                   sec = 0
-                  }
-	dateuptime1 = { year = '20' .. y1,
-                   month = mo1,
-                   day = d1,
-                   hour = h1,
-                   min = m1,
-                   sec = 0
-                  }
-	t1 = os.time(dateuptime)
-	t2 = getConfigVal("Upd") or 0
-	t3 = os.time(dateuptime1)
-	t4 = getConfigVal("Upd1") or 0
-
-
-if t1 and t2 then
-	need = tonumber(t1) - tonumber(t2)
-end
-if t3 and t4 then
-	need1 = tonumber(t3) - tonumber(t4)
-end
-if need then
-if need > 0 then
-	setConfigVal("Upd",t1)
-	setConfigVal("need",1)
-	m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = 'http://m24.do.am/_fr/0/7911633.jpg', TypeBackColor = 0, UseLogo = 4, Once = 1})
-	m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.5" src="http://m24.do.am/images/liteportal.png"', text = str3 .. '\nТекущее время: ' .. data, color = ARGB(255, 255, 255, 255), showTime = 2000 * 10})
-   local params = {}
-   params.message = 'Для обновления сборки нажмите кнопку ДА.'
-   params.caption = 'westSide'
-   params.buttons = 'Yes|No'
-   params.icon = 'Question'
-   params.defButton = 'Yes'
-   if m_simpleTV.Interface.MessageBoxT(params) == 'Yes' then
-    setConfigVal("Upd",t1)
-	setConfigVal("need",0)
-	os.execute('tv-update.exe')
-   end
-	elseif need <= 0 then
-	setConfigVal("need",0)
-	if str5~='' then
-	m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = str5 , TypeBackColor = 0, UseLogo = 4, Once = 1})
-	end
-	m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.5" src="http://m24.do.am/images/liteportal.png"' , text = str6 ,  color = ARGB(255, 255, 255, 255), showTime = 1700 * 10})
-end
-end

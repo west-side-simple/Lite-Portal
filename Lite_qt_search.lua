@@ -1,4 +1,4 @@
--- Плагин поиска для lite portal - west_side 14.07.22
+-- Плагин поиска для lite portal - west_side 24.02.23
 -- необходимы скрипты Lite_qt_exfs.lua, ex-fs.lua, Lite_qt_tmdb.lua, Lite_qt_kinopub.lua, Lite_qt_filmix.lua - автор west_side
 
 function search()
@@ -109,11 +109,13 @@ m_simpleTV.Control.ExecuteAction(37)
 
 	local search_ini = getConfigVal('search/media') or ''
 	local tt1={
+	{'Трекеры',''},
+	{'RipsClub (HEVC)',''},
 	{'TMDb',''},
 	{'EX-FS',''},
 	{'Rezka',''},
 	{'Filmix',''},
---	{'KinoGo',''},
+	{'KinoGo',''},
 	{'KinoKong',''},
 	{'UA',''},
 	{'Kinopub',''},
@@ -138,7 +140,9 @@ m_simpleTV.Control.ExecuteAction(37)
   elseif t1[id].Name == 'EX-FS' then search_media()
   elseif t1[id].Name == 'Rezka' then search_rezka()
   elseif t1[id].Name == 'Filmix' then search_filmix_media()
---  elseif t1[id].Name == 'KinoGo' then search_kinogo()
+  elseif t1[id].Name == 'Трекеры' then content_adr_page('http://api.vokino.tv/v2/list?name=' .. search_ini)
+  elseif t1[id].Name == 'RipsClub (HEVC)' then search_hevc('https://rips.club/search/?part=0&year=&cat=0&standard=0&bit=0&order=1&search=' .. search_ini)
+  elseif t1[id].Name == 'KinoGo' then search_kinogo()
   elseif t1[id].Name == 'KinoKong' then search_kinokong()
   elseif t1[id].Name == 'UA' then search_ua()
   elseif t1[id].Name == 'Kinopub' then show_select('https://kino.pub/item/search?query=' .. search_ini)

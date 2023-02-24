@@ -1,10 +1,12 @@
 --startup westSide portal
 --saved as utf-8 without bom
---wafee code, west_side updated 24.07.22
+--wafee code, west_side updated 24.02.23
 -------------------------------------------------------------------
 if m_simpleTV.User==nil then m_simpleTV.User={} end
 if m_simpleTV.User.westSide==nil then m_simpleTV.User.westSide={} end
 if m_simpleTV.User.filmix==nil then m_simpleTV.User.filmix={} end
+if m_simpleTV.User.torrent==nil then m_simpleTV.User.torrent={} end
+if m_simpleTV.User.hevc==nil then m_simpleTV.User.hevc={} end
 AddFileToExecute('events', m_simpleTV.MainScriptDir .. "user/westSide/events.lua")
 -------------------------------------------------------------------
 local function getConfigVal(key)
@@ -16,24 +18,29 @@ local function setConfigVal(key,val)
 end
 -------------------------------------------------------------------
 function show_portal_window()
- local function getConfigVal(key)
-	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
- end
- local function setConfigVal(key,val)
-	m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
- end
- if m_simpleTV.User.westSide.PortalTable~=nil then
- if m_simpleTV.User.filmix and m_simpleTV.User.filmix.TabSimilar then similar_filmix()
- elseif m_simpleTV.User.TMDB.Id and m_simpleTV.User.TMDB.tv then
- media_info_tmdb(m_simpleTV.User.TMDB.Id,m_simpleTV.User.TMDB.tv)
- elseif m_simpleTV.User.collaps.ua then
-   ua_info(m_simpleTV.User.westSide.PortalTable)
- elseif m_simpleTV.User.hdua.serial then
-   ua_serial()
- elseif m_simpleTV.User.collaps.kinogo then
-   kinogo_info(m_simpleTV.User.westSide.PortalTable)
- end
- end
+	local function getConfigVal(key)
+		return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
+	end
+	local function setConfigVal(key,val)
+		m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
+	end
+	if m_simpleTV.User.westSide.PortalTable~=nil then
+		if m_simpleTV.User.filmix and m_simpleTV.User.filmix.TabSimilar then
+			similar_filmix()
+			elseif m_simpleTV.User.TMDB and m_simpleTV.User.TMDB.Id and m_simpleTV.User.TMDB.tv then
+			media_info_tmdb(m_simpleTV.User.TMDB.Id,m_simpleTV.User.TMDB.tv)
+			elseif m_simpleTV.User.collaps and m_simpleTV.User.collaps.ua then
+			ua_info(m_simpleTV.User.westSide.PortalTable)
+			elseif m_simpleTV.User.hdua and m_simpleTV.User.hdua.serial then
+			ua_serial()
+			elseif m_simpleTV.User.collaps and m_simpleTV.User.collaps.kinogo then
+			kinogo_info(m_simpleTV.User.westSide.PortalTable)
+			elseif m_simpleTV.User.torrent and m_simpleTV.User.torrent.content then
+			content(m_simpleTV.User.westSide.PortalTable)
+			elseif m_simpleTV.User.hevc and m_simpleTV.User.hevc.content then
+			content_hevc(m_simpleTV.User.westSide.PortalTable)
+		end
+	end
 end
 -------------------------------------------------------------------
 function mediabaze()
@@ -77,35 +84,35 @@ function KP_Get_History()
     local recentName = getConfigVal('kp_history/title') or ''
     local recentAddress = getConfigVal('kp_history/adr') or ''
 	local recentLogo = getConfigVal('kp_history/logo') or ''
-       
+
      local t,i={},1
 
-   if recentName~='' and recentLogo~='' and recentAddress~='' and recentIndex~='' then   
+   if recentName~='' and recentLogo~='' and recentAddress~='' and recentIndex~='' then
      for w in string.gmatch(recentName,"[^,]+") do
        t[i] = {}
        t[i].Id = i
        t[i].Name = w
 	   t[i].InfoPanelName = w
 	   t[i].InfoPanelShowTime = 10000
-       i=i+1 
+       i=i+1
      end
      i=1
      for w in string.gmatch(recentAddress,"[^,]+") do
        t[i].Address = w
 	   t[i].InfoPanelTitle = w:match('%&bal=(.-)$')
-       i=i+1   
+       i=i+1
      end
 	 i=1
      for w in string.gmatch(recentLogo,"[^,]+") do
-       t[i].InfoPanelLogo = w 
-       i=i+1   
+       t[i].InfoPanelLogo = w
+       i=i+1
      end
    end
    t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Portal '}
    t.ExtButton1 = {ButtonEnable = true, ButtonName = ' Cleane '}
    local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Кинопоиск: История просмотра',0,t,9000,1+4+8)
    if id==nil then return end
-   if ret==1 then 
+   if ret==1 then
       m_simpleTV.Control.PlayAddressT({address = t[id].Address})
    end
    if ret==2 then
@@ -116,9 +123,9 @@ function KP_Get_History()
 	  setConfigVal('kp_history/logo','')
 	  setConfigVal('kp_history/adr','')
 	  run_westSide_portal()
-   end   
    end
---------------------------------------------------   
+   end
+--------------------------------------------------
 function run_westSide_portal()
  m_simpleTV.Control.ExecuteAction(37)
  local tt1={
@@ -126,12 +133,14 @@ function run_westSide_portal()
  {'Кинопоиск: История',''},
  {'Закладки',''},
  {'TMDb',''},
+ {'Трекеры',''},
+ {'RipsClub (HEVC)',''},
  {'EX-FS',''},
  {'Rezka',''},
  {'Filmix',''},
  {'Kinopub',''},
  {'Переводы',''},
--- {'KinoGo',''},
+ {'KinoGo',''},
  {'KinoKong',''},
  {'UA',''},
  {'YouTube',''},
@@ -162,9 +171,11 @@ function run_westSide_portal()
   elseif t1[id].Name == 'Медиабазы' then mediabaze()
   elseif t1[id].Name:match('SimpleTV') then highlight()
   elseif t1[id].Name == 'Переводы' then run_lite_qt_cdntr()
---  elseif t1[id].Name == 'KinoGo' then run_lite_qt_kinogo()
+  elseif t1[id].Name == 'Трекеры' then start_page()
+  elseif t1[id].Name == 'KinoGo' then run_lite_qt_kinogo()
   elseif t1[id].Name == 'KinoKong' then run_lite_qt_kinokong()
   elseif t1[id].Name == 'UA' then run_lite_qt_ua()
+  elseif t1[id].Name == 'RipsClub (HEVC)' then start_hevc()
   end
   end
 end

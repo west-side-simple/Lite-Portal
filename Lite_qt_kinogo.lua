@@ -199,7 +199,7 @@ function page_kinogo(url)
 		if ret == 3 then
 		  page_kinogo(url:gsub('page/.-/','') .. next_pg)
 		end
-		end
+end
 
 function kinogo_info(url)
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
