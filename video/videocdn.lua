@@ -1,13 +1,13 @@
 -- видеоскрипт для видеобалансера "videocdn" https://videocdn.tv (01/07/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod - west_side (01/02/23)
+-- mod - west_side (20/03/23)
 -- ## открывает подобные ссылки ##
 -- https://32.svetacdn.in/fnXOUDB9nNSO?kp_id=5928
 -- https://32.tvmovies.in/fnXOUDB9nNSO/tv-series/92
 -- https://32.tvmovies.in/fnXOUDB9nNSO/movie/22080
 -- http://32.svetacdn.in/fnXOUDB9nNSO/movie/36905
 -- ## домен ##
-local domen = 'http://8209.svetacdn.in'
+local domen = 'https://567886534688564.svetacdn.in'
 -- '' - по умолчанию
 -- 'http://58.svetacdn.in' (пример)
 -- ## прокси ##
@@ -23,13 +23,14 @@ local proxy = ''
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/z3jFqN8Tz3Ta')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/33cHYTFTAlwP')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/fz41ePu9lzFL')
+			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/SZLMKH3vCY0W')
 --			and not m_simpleTV.Control.CurrentAddress:match('^https?://[%w%.]*svetacdn%.')
 			and not m_simpleTV.Control.CurrentAddress:match('^$videocdn')
 		then
 		 return
 		end
 	local inAdr = m_simpleTV.Control.CurrentAddress
-	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; rv:99.0) Gecko/20100101 Firefox/99.0', proxy, false)
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36', proxy, false)
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 12000)
 	if domen ~= '' then
@@ -160,7 +161,7 @@ end
 	end
 	local title_v, year_v
 	if kp_id then imdb_id, title_v, year_v = imdbid(kp_id) end
-	local logo = 'https://videocdn.tv/favicon.png'
+	local logo = 'https://www.videocdn.tv/favicon.png'
 	if imdb_id and imdb_id~='' and bg_imdb_id(imdb_id) and bg_imdb_id(imdb_id)~='' then
 	m_simpleTV.User.Videocdn.background, m_simpleTV.User.Videocdn.title, m_simpleTV.User.Videocdn.year, m_simpleTV.User.Videocdn.overview, m_simpleTV.User.TMDB.tv, m_simpleTV.User.TMDB.Id = bg_imdb_id(imdb_id)
 	m_simpleTV.User.westSide.PortalTable = m_simpleTV.User.TMDB.Id .. ',' .. m_simpleTV.User.TMDB.tv
@@ -238,24 +239,25 @@ end
 			url = url:gsub('^%[', '')
 		end
 		local t = {}
-			for adr in url:gmatch('%](//[^%s]+%.mp4)') do
+			for adr in url:gmatch('%](//.-%.mp4)') do
 				local qlty = adr:match('/(%d+)%.mp4')
 				if qlty then
 					t[#t + 1] = {}
 					t[#t].qlty = tonumber(qlty)
-					t[#t].Address = adr:gsub('^//', 'http://')
+					t[#t].Address = adr:gsub('^//', 'https://')
 					t[#t].Name = qlty .. 'p'
+--	debug_in_file(t[#t].Name .. ' ' .. t[#t].Address .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer.txt')
 				end
 			end
 			if #t == 0 then return end
-		local adr1080 = t[1].Address:gsub('/%d+.mp4', '/1080.mp4')
+--[[		local adr1080 = t[1].Address:gsub('/%d+.mp4', '/1080.mp4')
 		local rc, answer = m_simpleTV.Http.Request(session, {url = adr1080, method = 'head'})
 		if rc == 200 then
 			t[#t + 1] = {}
 			t[#t].qlty = 1080
 			t[#t].Address = adr1080
 			t[#t].Name = '1080p'
-			end
+			end--]]
 		table.sort(t, function(a, b) return a.qlty < b.qlty end)
 		local hash, tab = {}, {}
 			for i = 1, #t do
@@ -267,6 +269,7 @@ end
 		for i = 1, #tab do
 			tab[i].Id = i
 			tab[i].Address = tab[i].Address .. '$OPT:NO-STIMESHIFT$OPT:meta-description=https://github.com/Nexterr-origin/simpleTV-Scripts'
+--	debug_in_file(tab[i].Address .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer.txt')
 			if psevdotv then
 				local videoTitle = title:gsub('.-:', '')
 				local k = tab[i].qlty
@@ -384,14 +387,15 @@ end
 		end
 	inAdr = inAdr:gsub('&kinopoisk', ''):gsub('%?block=%w+', '')
 	m_simpleTV.User.Videocdn.Tabletitle = nil
-	local rc, answer = m_simpleTV.Http.Request(session, {url = inAdr:gsub('$OPT:.+', '')})
---	m_simpleTV.Http.Close(session)
+	local rc, answer = m_simpleTV.Http.Request(session, {url = inAdr:gsub('$OPT:.+', ''), headers = 'Referer: https://www.videocdn.tv/'})
+	m_simpleTV.Http.Close(session)
 		if rc ~= 200 then return end
 	answer = htmlEntities.decode(answer)
 	answer = answer:gsub('\\\\\\/', '/')
 	answer = answer:gsub('\\"', '"')
 	answer = unescape3(answer)
 	answer = answer:gsub('\\', '')
+--	debug_in_file(answer .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer.txt')
 	title = answer:match('<title>([^<]+)') or answer:match('id="title" value="([^"]+)')
 	if not title or title == '' then
 	if m_simpleTV.User.Videocdn.title and m_simpleTV.User.Videocdn.year then
@@ -446,11 +450,12 @@ end
 	translate = transl
 	m_simpleTV.User.Videocdn.translate = translate
 	m_simpleTV.User.Videocdn.title_translate = title_translate(translate)
-	local answer = answer:match('id="files" value="(.+)')
+	local answer = answer:match('id="files" value=\'(.-)\'')
 		if not answer then return end
-
+--	debug_in_file(answer .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer.txt')
 	if tv_series then
-		answer = answer:match('"' .. transl .. '":"(.-)">')
+		answer = answer:match('"' .. transl .. '":(%[.-%}%]%}%])')
+--	debug_in_file(answer .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer.txt')
 			if not answer then return end
 		require 'json'
 		local du = answer:match('#(%w+)')
@@ -462,7 +467,7 @@ end
 			if not tab then return end
 		local season_title = ''
 		local t, i = {}, 1
-		if tab[1].folder then
+		if tab[1] and tab[1].folder then
 			local s, j, seson = {}, 1
 				while true do
 						if not tab[j] then break end
@@ -499,13 +504,29 @@ end
 					i = i + 1
 				end
 				if i == 1 then return end
-		else
+		elseif tab[1] and tab[1].file then
 				while true do
 						if not tab[i] then break end
 					t[i] = {}
 					t[i].Id = i
 					t[i].Name = tab[i].comment:gsub('<i>.-</i>', ''):gsub('<br>', '')
 					t[i].Address = '$videocdn' .. tab[i].file
+					if m_simpleTV.User.Videocdn.overview then
+					t[i].InfoPanelName = m_simpleTV.User.Videocdn.title
+					t[i].InfoPanelTitle = m_simpleTV.User.Videocdn.overview
+					t[i].InfoPanelLogo = m_simpleTV.User.Videocdn.background
+					end
+					i = i + 1
+				end
+				if i == 1 then return end
+		else
+				season_title = ' (' .. unescape3(tab.comment) .. ')'
+				while true do
+						if not tab.folder[i] then break end
+					t[i] = {}
+					t[i].Id = i
+					t[i].Name = tab.folder[i].comment:gsub('<i>.-</i>', ''):gsub('<br>', '')
+					t[i].Address = '$videocdn' .. tab.folder[i].file
 					if m_simpleTV.User.Videocdn.overview then
 					t[i].InfoPanelName = m_simpleTV.User.Videocdn.title
 					t[i].InfoPanelTitle = m_simpleTV.User.Videocdn.overview
@@ -535,6 +556,7 @@ end
 		title = title .. ' - ' .. m_simpleTV.User.Videocdn.Tabletitle[1].Name
 	else
 		inAdr = answer:match('"' .. transl .. '":"([^"]+)')
+--	debug_in_file(inAdr .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer.txt')
 			if not inAdr then return end
 		if psevdotv then
 			local t = m_simpleTV.Control.GetCurrentChannelInfo()

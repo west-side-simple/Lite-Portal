@@ -1,9 +1,8 @@
--- видеоскрипт для сайта http://www.kinopoisk.ru (31/01/23)
--- Copyright © 2017-2021 Nexterr | https://github.com/Nexterr/simpleTV
--- mod west_side (add VB, ZF, Videoapi) - (04/02/23)
+-- видеоскрипт для сайта http://www.kinopoisk.ru
+-- Copyright © 2017-2023 Nexterr | https://github.com/Nexterr/simpleTV
+-- mod west_side (add VB, ZF, Videoapi) - (20.03.23)
 -- ## необходимы ##
--- видеоскрипты: yandex-vod.lua, kodik.lua, filmix.lua, videoframe.lua, seasonvar.lua
--- iviru.lua, videocdn.lua, hdvb-vb.lua, collaps.lua, cdnmovies.lua, voidboost.lua, videoapi.lua, zetflix.lua
+-- видеоскрипты: videocdn.lua, hdvb-vb.lua, collaps.lua, voidboost.lua, videoapi.lua, zetflix.lua
 -- ## открывает подобные ссылки ##
 -- https://www.kinopoisk.ru/film/5928
 -- https://www.kinopoisk.ru/level/1/film/46225/sr/1/
@@ -136,7 +135,7 @@ if not m_simpleTV.Config.GetValue('mediabaze', 'LiteConf.ini') or tonumber(m_sim
 tname = {
 -- сортировать: поменять порядок строк
 -- отключить: поставить в начале строки --
--- 'Videocdn',
+ 'Videocdn',
  'ZF',
  'VB',
 -- 'Videoapi',
@@ -156,16 +155,16 @@ elseif tonumber(m_simpleTV.Config.GetValue('mediabaze', 'LiteConf.ini')) == 2 th
 tname = {
 -- сортировать: поменять порядок строк
 -- отключить: поставить в начале строки --
+ 'Videocdn',
  'ZF',
  'VB',
+-- 'Videoapi',
 -- 'Filmix',
 -- 'CDN Movies',
 -- 'Videoframe',
  'Hdvb',
  'Collaps',
- 'Kodik',
- 'Videocdn',
- 'Videoapi',
+-- 'Kodik',
 -- 'КиноПоиск онлайн',
 -- 'Seasonvar',
 -- 'ivi',
@@ -224,14 +223,7 @@ end
 	local function unescape_html(str)
 	 return htmlEntities.decode(str)
 	end
-	local function bazon(kp)
-	local rc, answer = m_simpleTV.Http.Request(session, {url = decode64('aHR0cHM6Ly9iYXpvbi5jYy9hcGkvc2VhcmNoP3Rva2VuPWMxMThlYjVmOGQzNjU2NWIyYjA4YjUzNDJkYTk3Zjc5JmtwPQ==') .. kp})
-	if rc ~= 200 then return '','' end
-	if answer:match('invalid token') then return '','' end
-	local title = answer:match('"rus"%:"(.-)"') or ''
-	local year = answer:match('"year"%:"(.-)"') or ''
-	return title,year
-	end
+
 	local function ukp(kp)
 	local rc,answer = m_simpleTV.Http.Request(session,{url = decode64('aHR0cHM6Ly9raW5vcG9pc2thcGl1bm9mZmljaWFsLnRlY2gvYXBpL3YyLjIvZmlsbXMv') .. kp, method = 'get', headers = 'X-API-KEY: ' .. decode64('OTczODMxMzUtNjM0ZC00ODA4LWEzMzQtNGIwMjg3ZjZiZDBh') .. '\nContent-Type: application/json'})
 	if rc ~= 200 then return '','','' end
@@ -240,6 +232,7 @@ end
 	local overview = answer:match('"description"%:"(.-)"') or ''
 	return title,year,overview
 	end
+
 	local function answerdget(url)
 		if url:match('widget%.kinopoisk%.ru') then
 			rc, answer = m_simpleTV.Http.Request(session, {url = url})
@@ -251,8 +244,8 @@ end
 				if not answer:match('"stream_type":"HLS","url":"%a') then return end
 			return url
 		elseif url:match('PXk2QGbvEVmS') then
-			rc, answer = m_simpleTV.Http.Request(session, {url = url})
-				if rc ~= 200 then return end
+			rc,answer = m_simpleTV.Http.Request(session,{url = url, method = 'get', headers = 'User-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36\nReferer: https://www.videocdn.tv/'})
+				if rc ~= 200 or answer:match('video_not_found') then return end
 			return url
 		elseif url:match('kNKj47MkBgLS') then
 			rc, answer = m_simpleTV.Http.Request(session, {url = url})
@@ -411,6 +404,7 @@ end
 		end
 	 return
 	end
+
 	local function getAdr(answer, url)
 		if url:match('iframe%.video') then
 			return answer
@@ -476,6 +470,7 @@ end
 		end
 	 return
 	end
+
 	local function getlogo()
 		local session2 = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; rv:84.0) Gecko/20100101 Firefox/84.0', nil, true)
 			if not session2 then return end
@@ -496,6 +491,7 @@ end
 			m_simpleTV.Interface.SetBackground({BackColor = 0, BackColorEnd = 255, PictFileName = url, TypeBackColor = 0, UseLogo = 3, Once = 1})
 		end
 	end
+
 	local function imdbid(kpid)
 	local url_vn = decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvc2hvcnQ/YXBpX3Rva2VuPW9TN1d6dk5meGU0SzhPY3NQanBBSVU2WHUwMVNpMGZtJmtpbm9wb2lza19pZD0=') .. kpid
 	local rc5,answer_vn = m_simpleTV.Http.Request(session,{url=url_vn})
@@ -503,15 +499,16 @@ end
 		return '','',''
 		end
 		require('json')
-		answer_vn = answer_vn:gsub('(%[%])', '"nil"')
+		answer_vn = answer_vn:gsub('\\', '\\\\'):gsub('\\"', '\\\\"'):gsub('\\/', '/'):gsub('(%[%])', '"nil"')
 		local tab_vn = json.decode(answer_vn)
 		if tab_vn and tab_vn.data and tab_vn.data[1] and tab_vn.data[1].imdb_id and tab_vn.data[1].imdb_id ~= 'null' and tab_vn.data[1].year then
-		return tab_vn.data[1].imdb_id or '', tab_vn.data[1].title or '',tab_vn.data[1].year:match('%d%d%d%d') or ''
+		return tab_vn.data[1].imdb_id or '', unescape3(tab_vn.data[1].title) or '',tab_vn.data[1].year:match('%d%d%d%d') or ''
 		elseif tab_vn and tab_vn.data and tab_vn.data[1] and ( not tab_vn.data[1].imdb_id or tab_vn.data[1].imdb_id ~= 'null') then
-		return '', tab_vn.data[1].title or '',tab_vn.data[1].year:match('%d%d%d%d') or ''
+		return '', unescape3(tab_vn.data[1].title) or '',tab_vn.data[1].year:match('%d%d%d%d') or ''
 		else return '','',''
 		end
 	end
+
 	local function bg_imdb_id(imdb_id)
 	local urld = 'https://api.themoviedb.org/3/find/' .. imdb_id .. decode64('P2FwaV9rZXk9ZDU2ZTUxZmI3N2IwODFhOWNiNTE5MmVhYWE3ODIzYWQmbGFuZ3VhZ2U9cnUmZXh0ZXJuYWxfc291cmNlPWltZGJfaWQ')
 	local rc5,answerd = m_simpleTV.Http.Request(session,{url=urld})
@@ -543,14 +540,17 @@ end
 	if background == nil then background = '' end
 	return background, name_tmdb, year_tmdb, overview_tmdb
 	end
-	local background, id_imdb, name_tmdb, year_tmdb, overview_tmdb
+
+	local background, id_imdb, name_tmdb, year_tmdb, overview_tmdb, name_vcd, year_vcd, overview_kp, title_kp, year_kp
+
 	if imdbid(kpid)
 		then
-		id_imdb, title, year = imdbid(kpid)
+		id_imdb, name_vcd, year_vcd = imdbid(kpid)
 		if id_imdb ~= '' and bg_imdb_id(id_imdb)~= '' then
 		background, name_tmdb, year_tmdb, overview_tmdb = bg_imdb_id(id_imdb)
 		end
 	end
+
 	if background and background~= ''
 		then
 		logourl = background
@@ -558,15 +558,33 @@ end
 		else
 		getlogo()
 	end
-	local title_b,year_b = bazon(kpid)
-	local overview_kp
-	if title_b and title_b == '' then
-	title_b,year_b,overview_kp = ukp(kpid)
+
+	if not name_tmdb or (name_tmdb and name_tmdb == '') then
+		title = name_vcd
+		year = year_vcd
+	else
+		title = name_tmdb
+		year = year_tmdb
 	end
-	if not title or title and title == '' then title = name_tmdb or title_b or 'Кинопоиск' end
-	if not year or year and year == '' then year = year_tmdb or year_b or '' end
-	m_simpleTV.Control.CurrentTitle_UTF8 = title .. ' (' .. year .. ')'
-	m_simpleTV.Control.SetTitle(title .. ' (' .. year .. ')')
+
+	if not title or (title and title == '') then
+		title_kp, year_kp, overview_kp = ukp(kpid)
+		title = title_kp
+		year = year_kp
+	end
+
+	if not title or title and title == '' then
+		title = 'Кинопоиск'
+	end
+	if not year or (year and year == '') then
+		year = ''
+	else
+		year = ' (' .. tostring(year) .. ')'
+	end
+
+	m_simpleTV.Control.CurrentTitle_UTF8 = title .. year
+	m_simpleTV.Control.SetTitle(title .. year)
+
 	local function setMenu()
 		local logo_k = logourl or 'https://avatars.mds.yandex.net/get-zen-logos/200214/pub_595fb4431410c3258a91bf55_5af1c6e63dceb755566a70a2/xxh'
 		m_simpleTV.Control.ChangeChannelLogo(logo_k, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
@@ -602,22 +620,22 @@ end
 			end
 		end
 	end
+
 	local function menu()
 		for i = 1, #tname do
 			t[i] = {}
 			t[i].Name = tname[i]
+			t[i].InfoPanelName = title .. year
 			if not id_imdb or id_imdb ~= '' or id_imdb and id_imdb == '' and tname[i] ~= 'Videoapi' then
 			t[i].answer = answerdget(turl[i].adr)
 			t[i].Address = turl[i].adr
 			end
 			if background and name_tmdb and year_tmdb and overview_tmdb then
-				t[i].InfoPanelTitle = overview_tmdb or overview_kp
-				t[i].InfoPanelName = name_tmdb .. ' (' .. year_tmdb .. ')'
+				t[i].InfoPanelTitle = overview_tmdb
 				t[i].InfoPanelLogo = logourl or 'https://avatars.mds.yandex.net/get-zen-logos/200214/pub_595fb4431410c3258a91bf55_5af1c6e63dceb755566a70a2/xxh'
 			else
-				t[i].InfoPanelName = title .. ' (' .. year .. ')'
-				t[i].InfoPanelTitle = turl[i].tTitle
-				t[i].InfoPanelLogo = turl[i].tLogo
+				t[i].InfoPanelTitle = overview_kp or turl[i].tTitle
+				t[i].InfoPanelLogo = logourl or turl[i].tLogo
 			end
 			t[i].InfoPanelShowTime = 30000
 		end
@@ -638,14 +656,14 @@ end
 			rett.ExtButton1 = {ButtonEnable = true, ButtonName = '🔎 Rezka'}
 
 		m_simpleTV.OSD.ShowMessageT({text = '', showTime = 1000, id = 'channelName'})
-		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('🎞 ' .. title .. ' (' .. year .. ')', current_id-1, rett, 8000, 1 + 2)
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('🎞 ' .. title .. year, current_id-1, rett, 8000, 1 + 2)
 			if ret == 3 then
 				m_simpleTV.Config.SetValue('search/media',m_simpleTV.Common.toPercentEncoding(title),'LiteConf.ini')
 				search_rezka()
 			end
 
 			id = id or current_id
-			add_to_history(inAdr .. '&bal=' .. rett[id].Name,title:gsub('%,','') .. ' (' .. year .. ')',rett[id].InfoPanelLogo)
+			add_to_history(inAdr .. '&bal=' .. rett[id].Name,title:gsub('%,','') .. year,rett[id].InfoPanelLogo)
 			retAdr = getAdr(rett[id].answer, rett[id].Address)
 
 		if retAdr == -1 then
@@ -667,8 +685,8 @@ end
 		search_all()
 	 return
 	end
-	m_simpleTV.Control.CurrentTitle_UTF8 = title .. ' (' .. year .. ')'
-	m_simpleTV.Control.SetTitle(title .. ' (' .. year .. ')')
+	m_simpleTV.Control.CurrentTitle_UTF8 = title .. year
+	m_simpleTV.Control.SetTitle(title .. year)
 	m_simpleTV.Http.Close(session)
 	m_simpleTV.Control.ExecuteAction(37)
 	m_simpleTV.Control.ChangeAddress = 'No'

@@ -1,4 +1,4 @@
--- видеоскрипт для балансера ZF (30/01/23)
+-- видеоскрипт для балансера ZF (18.03.23)
 -- author west_side
 	if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 	if not m_simpleTV.Control.CurrentAddress:match('^https?://hdi%.zetflix%.online') then return end
@@ -37,13 +37,13 @@
 		return '','','',0
 		end
 		require('json')
-		answer_vn = answer_vn:gsub('(%[%])', '"nil"')
+		answer_vn = answer_vn:gsub('\\', '\\\\'):gsub('\\"', '\\\\"'):gsub('\\/', '/'):gsub('(%[%])', '"nil"')
 		local tab_vn = json.decode(answer_vn)
 		if tab_vn and tab_vn.data and tab_vn.data[1] and tab_vn.data[1].type and tab_vn.data[1].type == 'serial' then tv = 1 end
 		if tab_vn and tab_vn.data and tab_vn.data[1] and tab_vn.data[1].imdb_id and tab_vn.data[1].imdb_id ~= 'null' and tab_vn.data[1].year then
-		return tab_vn.data[1].imdb_id or '', tab_vn.data[1].title or '',tab_vn.data[1].year:match('%d%d%d%d') or '', tv
+		return tab_vn.data[1].imdb_id or '', unescape3(tab_vn.data[1].title) or '',tab_vn.data[1].year:match('%d%d%d%d') or '', tv
 		elseif tab_vn and tab_vn.data and tab_vn.data[1] and ( not tab_vn.data[1].imdb_id or tab_vn.data[1].imdb_id ~= 'null') then
-		return '', tab_vn.data[1].title or '',tab_vn.data[1].year:match('%d%d%d%d') or '', tv
+		return '', unescape3(tab_vn.data[1].title) or '',tab_vn.data[1].year:match('%d%d%d%d') or '', tv
 		else return '','','',0
 		end
 	end
@@ -261,7 +261,7 @@
 	if retAdr then setConfigVal('perevod/zf', '') end
 		if not retAdr then
 		retAdr = answer:match('file:%[(.-)%]%}')
-		if not retAdr then 
+		if not retAdr then
 			m_simpleTV.Control.ExecuteAction(37)
 			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'ZF: Медиаконтент не доступен', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
 			m_simpleTV.Control.ExecuteAction(11)

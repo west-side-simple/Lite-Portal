@@ -1,4 +1,4 @@
--- видеоскрипт для запросов потоков Rezka по ID кинопоиска и IMDB (04/02/23)
+-- видеоскрипт для запросов потоков Rezka по ID кинопоиска и IMDB (18.03.23)
 -- nexterr, west_side
 -- ## открывает подобные ссылки ##
 -- https://voidboost.net/embed/280179
@@ -17,21 +17,7 @@
 		end
 	m_simpleTV.Http.SetTimeout(session, 30000)
 	require 'playerjs'
-	local function bazon(kp)
-	local rc, answer = m_simpleTV.Http.Request(session, {url = decode64('aHR0cHM6Ly9iYXpvbi5jYy9hcGkvc2VhcmNoP3Rva2VuPWMxMThlYjVmOGQzNjU2NWIyYjA4YjUzNDJkYTk3Zjc5JmtwPQ==') .. kp})
-	if rc ~= 200 then return '','' end
-	if answer:match('invalid token') then return '','' end
-	local title = answer:match('"rus"%:"(.-)"') or ''
-	local year = answer:match('"year"%:"(.-)"') or ''
-	return title,year
-	end
-	local function ukp(kp)
-	local rc,answer = m_simpleTV.Http.Request(session,{url = decode64('aHR0cHM6Ly9raW5vcG9pc2thcGl1bm9mZmljaWFsLnRlY2gvYXBpL3YyLjIvZmlsbXMv') .. kp, method = 'get', headers = 'X-API-KEY: ' .. decode64('OTczODMxMzUtNjM0ZC00ODA4LWEzMzQtNGIwMjg3ZjZiZDBh') .. '\nContent-Type: application/json'})
-	if rc ~= 200 then return '','' end
-	local title = answer:match('"nameRu"%:"(.-)"') or answer:match('"nameEn"%:"(.-)"') or answer:match('"nameOriginal"%:"(.-)"')
-	local year = answer:match('"year"%:(%d%d%d%d)')
-	return title,year
-	end
+
 	local function imdbid(kpid)
 	local url_vn = decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvc2hvcnQ/YXBpX3Rva2VuPW9TN1d6dk5meGU0SzhPY3NQanBBSVU2WHUwMVNpMGZtJmtpbm9wb2lza19pZD0=') .. kpid
 	local rc5,answer_vn = m_simpleTV.Http.Request(session,{url=url_vn})
@@ -39,15 +25,16 @@
 		return '','',''
 		end
 		require('json')
-		answer_vn = answer_vn:gsub('(%[%])', '"nil"')
+		answer_vn = answer_vn:gsub('\\', '\\\\'):gsub('\\"', '\\\\"'):gsub('\\/', '/'):gsub('(%[%])', '"nil"')
 		local tab_vn = json.decode(answer_vn)
 		if tab_vn and tab_vn.data and tab_vn.data[1] and tab_vn.data[1].imdb_id and tab_vn.data[1].imdb_id ~= 'null' and tab_vn.data[1].year then
-		return tab_vn.data[1].imdb_id or '', tab_vn.data[1].title or '',tab_vn.data[1].year:match('%d%d%d%d') or ''
+		return tab_vn.data[1].imdb_id or '', unescape3(tab_vn.data[1].title) or '',tab_vn.data[1].year:match('%d%d%d%d') or ''
 		elseif tab_vn and tab_vn.data and tab_vn.data[1] and ( not tab_vn.data[1].imdb_id or tab_vn.data[1].imdb_id ~= 'null') then
-		return '', tab_vn.data[1].title or '',tab_vn.data[1].year:match('%d%d%d%d') or ''
+		return '', unescape3(tab_vn.data[1].title) or '',tab_vn.data[1].year:match('%d%d%d%d') or ''
 		else return '','',''
 		end
 	end
+
 	local function bg_imdb_id(imdb_id)
 	local urld = 'https://api.themoviedb.org/3/find/' .. imdb_id .. decode64('P2FwaV9rZXk9ZDU2ZTUxZmI3N2IwODFhOWNiNTE5MmVhYWE3ODIzYWQmbGFuZ3VhZ2U9cnUmZXh0ZXJuYWxfc291cmNlPWltZGJfaWQ')
 	local rc5,answerd = m_simpleTV.Http.Request(session,{url=urld})
@@ -74,12 +61,15 @@
 	if background == nil then background = '' end
 	return background, name_tmdb
 	end
+
 	local function getConfigVal(key)
 		return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
 	end
+
 	local function setConfigVal(key,val)
 		m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
 	end
+
 	local proxy = ''
 	local background
 	local inAdr = m_simpleTV.Control.CurrentAddress
@@ -110,10 +100,7 @@
 	if not m_simpleTV.User.Rezka.title and title_v and title_v~='' then
 		m_simpleTV.User.Rezka.title = title_v .. ' (' .. year_v .. ')'
 	elseif not m_simpleTV.User.Rezka.title then
-	title_b,year_b = bazon(kp_id)
-	if title_b and title_b == '' then
-	title_b,year_b = ukp(kp_id)
-	end
+		title_b,year_b = ukp(kp_id)
 		m_simpleTV.User.Rezka.title = title_b .. ' (' .. year_b .. ')'
 		m_simpleTV.User.Rezka.background = 'https://st.kp.yandex.net/images/film_iphone/iphone360_' .. kp_id .. '.jpg'
 	end

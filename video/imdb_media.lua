@@ -1,7 +1,7 @@
--- видеоскрипт для сайта https://www.imdb.com/ (18/01/22) - автор west_side
+-- видеоскрипт для сайта https://www.imdb.com/ (18/03/23) - автор west_side
 -- открывает подобные ссылки:
 -- https://www.imdb.com/title/tt5491994/reference
--- необходимы скрипты poisk_kinopoisk.lua, kinopoisk.lua - автор nexterr
+-- необходим скрипт kinopoisk.lua - автор nexterr (mod west_side)
 		if m_simpleTV.Control.ChangeAdress ~= 'No' then return end
 	local inAdr = m_simpleTV.Control.CurrentAdress
 		if not inAdr then return end
@@ -49,8 +49,8 @@ end
 	local function vb_asw(imdb_id)
 	local urlv = 'https://voidboost.net/embed/' .. imdb_id
 	local rcv,answerv = m_simpleTV.Http.Request(session,{url=urlv})
-	if rcv~=200 then	
-	return ''	
+	if rcv~=200 then
+	return ''
 	end
 	return urlv
 	end
@@ -62,11 +62,11 @@ end
 		return ''
 		end
 		require('json')
-		answer_vn = answer_vn:gsub('(%[%])', '"nil"')
+		answer_vn = answer_vn:gsub('\\', '\\\\'):gsub('\\"', '\\\\"'):gsub('\\/', '/'):gsub('(%[%])', '"nil"')
 		local tab_vn = json.decode(answer_vn)
 
 		if tab_vn and tab_vn.data and tab_vn.data[1] and tab_vn.data[1].kp_id then
-		return tab_vn.data[1].kp_id
+		return tostring(tab_vn.data[1].kp_id)
 		elseif tab_vn and tab_vn.data and tab_vn.data[1] and tab_vn.data[1].imdb_id then
 		return 'https://32.svetacdn.in/fnXOUDB9nNSO?imdb_id=' .. imdbid
 		elseif vb_asw(imdbid) and vb_asw(imdbid) ~= '' then

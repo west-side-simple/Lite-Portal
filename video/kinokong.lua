@@ -34,18 +34,14 @@
 	local title = answer:match('property="og:title" content="([^"]+)') or 'kinokong'
 	local poster = answer:match('<div class="full%-poster">.-src="(.-)"') or logo
 	local desc = answer:match('"description" content="([^"]+)') or ''
-	local retAdr, name
+	local retAdr
 	local i, t = 1, {}
-		for adr in answer:gmatch('<div class="box.-<iframe.-src="([^"]+)') do
+		for w in answer:gmatch('<li data%-iframe=".-</li>') do
+			local adr,name = w:match('<li data%-iframe="(.-)">(.-)</li>')
 				if not adr then break end
-			if not (adr:match('alloha') or adr:match('bazon') or adr:match('uboost') or adr:match('alloeclub')) then
+			if (name == 'HDVB' or name == 'Collaps') and adr~='' then
 				t[i] = {}
 				t[i].Id = i
-				if adr:match('trailer%-cdn') then
-					name = 'Трейлер'
-				else
-					name = 'Плеер ' .. i
-				end
 				t[i].Name = name
 				t[i].Address = adr
 				t[i].InfoPanelName = title
