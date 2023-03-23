@@ -164,7 +164,7 @@ tname = {
 -- 'Videoframe',
  'Hdvb',
  'Collaps',
--- 'Kodik',
+ 'Kodik',
 -- 'КиноПоиск онлайн',
 -- 'Seasonvar',
 -- 'ivi',

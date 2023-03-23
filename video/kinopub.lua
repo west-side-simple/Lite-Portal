@@ -138,7 +138,7 @@ end
 	local rc, answer = m_simpleTV.Http.Request(session, {url = inAdr, headers = 'Cookie: ' .. cookies})
 --	m_simpleTV.Http.Close(session)
 		if rc ~= 200 then return end
---	debug_in_file(answer .. '\n','c://1/testpub.txt')
+	debug_in_file(answer .. '\n','c://1/testpub.txt')
 	answer = answer:gsub('\n', ' ')
 	answer = answer:gsub('<!%-%-.-%-%->', ''):gsub('/%*.-%*/', '')
 	if inAdr:match('/tv/view/') then

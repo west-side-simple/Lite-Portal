@@ -152,6 +152,7 @@
 		local url = urls:match("file\'(:.-)return pub")
 		url = url:gsub(": ",''):gsub("'#",'#'):gsub("'\n.-$",'')
 		url = playerjs.decode(url, m_simpleTV.User.Rezka.playerjs_url)
+		debug_in_file(url, 'c://1/bas.txt')
 		local qlty, adr
 			for qlty, adr in url:gmatch('%[(.-)%](http.-) ') do
 			if not qlty:match('%d+') then break end

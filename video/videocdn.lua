@@ -1,6 +1,6 @@
 -- видеоскрипт для видеобалансера "videocdn" https://videocdn.tv (01/07/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod - west_side (20/03/23)
+-- mod - west_side (23/03/23)
 -- ## открывает подобные ссылки ##
 -- https://32.svetacdn.in/fnXOUDB9nNSO?kp_id=5928
 -- https://32.tvmovies.in/fnXOUDB9nNSO/tv-series/92
@@ -95,22 +95,60 @@ local function bg_imdb_id(imdb_id)
 	return background, name_tmdb, year_tmdb, overview_tmdb, tv, id
 end
 local function title_translate(translate)
-local url = 'aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvdHJhbnNsYXRpb25zP2FwaV90b2tlbj1vUzdXenZOZnhlNEs4T2NzUGpwQUlVNlh1MDFTaTBmbQ=='
-	local rc, answer = m_simpleTV.Http.Request(session, {url = decode64(url)})
-	require('json')
-	if not answer then return '' end
-	answer = answer:gsub('(%[%])', '"nil"')
-	local tab = json.decode(answer)
-	if not tab or not tab.data or not tab.data[1]
-	then
-	return '' end
-	local i = 1
-	while true do
-	if not tab.data[i] then break end
-	if tonumber(tab.data[i].id) == tonumber(translate) then return ' - ' .. tab.data[i].title end
-		i = i + 1
+	require 'lfs'
+	local rc, answer, name_translate
+	local url = 'aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvdHJhbnNsYXRpb25zP2FwaV90b2tlbj1vUzdXenZOZnhlNEs4T2NzUGpwQUlVNlh1MDFTaTBmbQ=='
+	local t,i,page = {},1,1
+	local str = ''
+	local filePath = m_simpleTV.MainScriptDir .. 'user/westSidePortal/core/db_tr.txt' -- DB translations
+	local fhandle = io.open(filePath, 'r')
+	if not fhandle then
+		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
+		if not session then return end
+		m_simpleTV.Http.SetTimeout(session, 60000)
+		for page = 1,19 do
+			rc, answer = m_simpleTV.Http.Request(session, {url = decode64(url) .. '&page=' .. page .. '&limit=100'})
+			require('json')
+			if not answer then return end
+			answer = answer:gsub('\\', '\\\\'):gsub('\\"', '\\\\"'):gsub('\\/', '/'):gsub('(%[%])', '"nil"')
+			local tab = json.decode(answer)
+			local j = 1
+			if not tab or not tab.data or not tab.data[1] then return end
+			while true do
+			if not tab.data[j] then break end
+				t[i]={}
+				t[i].Id = i
+				t[i].Name = unescape3(tab.data[j].smart_title)
+				t[i].Action = tab.data[j].id
+				t[i].InfoPanelTitle = unescape3(tab.data[j].title)
+				if tonumber(t[i].Action) == tonumber(translate) then name_translate = unescape3(t[i].InfoPanelTitle) end
+				str = str .. '\n/' .. t[i].Action .. '/' .. t[i].Name .. '/' .. t[i].InfoPanelTitle .. '/'
+				i = i + 1
+				j = j + 1
+			end
+			page = page + 1
 		end
-return ''
+		m_simpleTV.Http.Close(session)
+		fhandle = io.open(filePath, 'w+')
+		if fhandle then
+			fhandle:write(str)
+			fhandle:close()
+		end
+	else
+		fhandle = io.open(filePath, 'r')
+		answer = fhandle:read('*a')
+		fhandle:close()
+		for w in answer:gmatch('/.-/\n') do
+			t[i]={}
+			t[i].Id = i
+			t[i].Name = w:match('/.-/(.-)/')
+			t[i].Action = w:match('/(.-)/')
+			t[i].InfoPanelTitle = w:match('/.-/.-/(.-)/')
+			if tonumber(t[i].Action) == tonumber(translate) then name_translate = unescape3(t[i].InfoPanelTitle) end
+			i = i + 1
+		end
+		return name_translate or ''
+	end
 end
 	local psevdotv
 	if inAdr:match('PARAMS=psevdotv') then
@@ -268,7 +306,7 @@ end
 			end
 		for i = 1, #tab do
 			tab[i].Id = i
-			tab[i].Address = tab[i].Address .. '$OPT:NO-STIMESHIFT$OPT:meta-description=https://github.com/Nexterr-origin/simpleTV-Scripts'
+			tab[i].Address = tab[i].Address .. '$OPT:NO-STIMESHIFT'
 --	debug_in_file(tab[i].Address .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer.txt')
 			if psevdotv then
 				local videoTitle = title:gsub('.-:', '')
@@ -405,7 +443,7 @@ end
 	end
 	end
 	m_simpleTV.Control.SetTitle(title)
-	local tv_series = answer:match('value="tv_series"')
+	local tv_series = answer:match('value="tv_series"') or answer:match('value="show_tv_series"') or answer:match('value="anime_tv_series"')
 	local transl
 	local tr = answer:match('<div class="translations".-</div>')
 	if tr then
@@ -573,7 +611,7 @@ end
 		t1[1].Name = title
 		t1[1].Address = inAdr
 		if m_simpleTV.User.Videocdn.overview then
-		t1[1].InfoPanelName = m_simpleTV.User.Videocdn.title .. ' (' .. m_simpleTV.User.Videocdn.year .. ')' .. (m_simpleTV.User.Videocdn.title_translate or '')
+		t1[1].InfoPanelName = m_simpleTV.User.Videocdn.title .. ' (' .. m_simpleTV.User.Videocdn.year .. ')' .. ((' - ' .. m_simpleTV.User.Videocdn.title_translate) or '')
 		t1[1].InfoPanelTitle = m_simpleTV.User.Videocdn.overview
 		t1[1].InfoPanelLogo = m_simpleTV.User.Videocdn.background
 		end
@@ -589,4 +627,4 @@ end
 		m_simpleTV.User.Videocdn.isVideo = true
 
 	end
-	play(inAdr, title .. (m_simpleTV.User.Videocdn.title_translate or ''))
+	play(inAdr, title .. ((' - ' .. m_simpleTV.User.Videocdn.title_translate) or ''))
