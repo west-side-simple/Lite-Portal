@@ -1,4 +1,4 @@
--- SergeyVS, west_side 20.03.23
+-- SergeyVS, west_side 23.03.23
 require("westSidePortal")
 
 ----------------------------------------------------------------------
@@ -85,7 +85,7 @@ m_simpleTV.Control.ExecuteAction(37)
 	{'Filmix',''},
 --	{'KinoGo',''},
 	{'KinoKong',''},
---	{'UA',''},
+	{'UA',''},
 	{'Kinopub',''},
 	{'YouTube',''},
 --	{'VideoCDN',''},
