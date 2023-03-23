@@ -79,11 +79,12 @@ function page_ua(url)
 	local rc, answer = m_simpleTV.Http.Request(session, {url = url})
 
 		if rc ~= 200 then return end
-		answer = answer:gsub('<!%-%-.-%-%->', ''):gsub('/%*.-%*/', '')
+		answer = answer:gsub('<!%-%-.-%-%->', ''):gsub('/%*.-%*/', ''):gsub('\n', '')
+--		debug_in_file(answer .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/UA.txt')
 		local title = answer:match('<title>(.-)</title>')
 		title = title:gsub(' онлайн.-$',''):gsub('Дивитися ',''):gsub('&.-$','')
 		local t,i={},1
-			for w in answer:gmatch('<div class="movie%-img img%-box">.-<div class="movie%-rate">') do
+			for w in answer:gmatch('<div class="movie%-img img%-box">.-</div></div></div>') do
 				local year = w:match('/year/(.-)/') or 0
 				local adr, name = w:match('<a class="movie%-title" href="(.-)" title="(.-)"')
 				local logo = w:match('src="(.-)"')
@@ -96,7 +97,7 @@ function page_ua(url)
 				t[i].Address = adr
 				t[i].InfoPanelName = 'UA info: ' .. name:gsub('%&quot%;','"'):gsub('%&#039%;','`') .. ' (' .. year .. ')'
 				t[i].InfoPanelShowTime = 30000
-				t[i].InfoPanelTitle = overview:gsub('<.->','')
+				t[i].InfoPanelTitle = overview:gsub('<.->',''):gsub('%&quot%;','"')
 			    i = i + 1
 			end
 		local prev_pg, next_pg
@@ -158,9 +159,7 @@ function ua_info(url)
 	local title1 = answer:match('назва:.-<div class="mi%-desc">(.-)</div>')
 	if title1 then title1 = '<h4>' .. title1:gsub('^ ', '') .. '</h4>' else title1 = '' end
 	local poster = answer:match('<meta property="og:image" content="(.-)"')
-	poster = 'https://kino4ua.com/uploads/posts/' .. poster
-	local rating = answer:match('Рейтинг IMDB та Кінопошук" src="(.-)"')
-	if rating then rating = 'https://kino4ua.com' .. rating else rating = '' end
+	local rating = answer:match('<span class="imdbnew">IMDb</span><a href=".-">(.-)<') or 0
 	local year = answer:match('/year/(.-)/') or ''
 	local country = answer:match('countryOfOrigin">(.-)<') or ''
 	local desc = answer:match('<meta name="description" content="(.-)"') or ''
@@ -169,7 +168,7 @@ function ua_info(url)
 	local actors = answer:match('<span itemprop="actor">(.-)</span>')
 	if actors then actors = '<h4>Актори: ' .. actors:gsub('<.->','') .. '</h4>' else actors = '' end
 	local videodesc = answer:match('itemprop="description">(.-)</div>') or desc
-	videodesc= '<table width="100%"><tr><td style="padding: 5px 5px 0px;"><img src="' .. poster .. '" width="320"><p><img src="' .. rating .. '" width="320"></td><td style="padding: 5px 5px 0px; color: #AAAAAA; vertical-align: middle;"><h3><font color=#00FA9A>' .. title .. '</font></h3>' .. title1 .. '<h4>' .. year .. ' • '.. country .. '</h4>' .. director .. actors .. '</td></tr></table><table width="100%"><tr><td style="padding: 0px 5px 0px; color: #FFFFFF;"><h4>' .. videodesc:gsub('<.->',''):gsub('%&copy%;.-$','') .. '</h4></td></tr></table>'
+	videodesc= '<table width="100%"><tr><td style="padding: 5px 5px 0px; color: #FFFFFF;"><img src="' .. poster .. '" height="300"></td><td style="padding: 5px 5px 0px; color: #AAAAAA; vertical-align: middle;"><h3><font color=#00FA9A>' .. title .. '</font></h3>' .. title1 .. '<h4>' .. year .. ' • '.. country .. '</h4><h4><img src="simpleTVImage:./luaScr/user/show_mi/menuIMDb.png" height="24" align="top"> <img src="simpleTVImage:./luaScr/user/show_mi/stars/' .. (tonumber(rating)*10 - tonumber(rating)*10%1)/10 .. '.png" height="24" align="top"> ' .. rating .. '</h4>' .. director .. actors .. '</td></tr></table><table width="100%"><tr><td style="padding: 0px 5px 0px; color: #FFFFFF;"><h4>' .. videodesc:gsub('<.->',''):gsub('%&copy%;.-$','') .. '</h4></td></tr></table>'
 	videodesc = videodesc:gsub('"', '\"')
 
 	local all_tag = answer:match('<div class="m%-desc full%-text clearfix">(.-)<div class="fullstory"') or ''

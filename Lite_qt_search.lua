@@ -117,7 +117,7 @@ m_simpleTV.Control.ExecuteAction(37)
 	{'Filmix',''},
 --	{'KinoGo',''},
 	{'KinoKong',''},
---	{'UA',''},
+	{'UA',''},
 	{'Kinopub',''},
 	{'YouTube',''},
 --	{'VideoCDN',''},

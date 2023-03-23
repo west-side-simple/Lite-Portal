@@ -1,6 +1,6 @@
 --startup westSide portal
 --saved as utf-8 without bom
---wafee code, west_side updated 20.03.23
+--wafee code, west_side updated 23.03.23
 -------------------------------------------------------------------
 if m_simpleTV.User==nil then m_simpleTV.User={} end
 if m_simpleTV.User.westSide==nil then m_simpleTV.User.westSide={} end
@@ -142,7 +142,7 @@ function run_westSide_portal()
  {'Озвучка',''},
 -- {'KinoGo',''},
  {'KinoKong',''},
--- {'UA',''},
+ {'UA',''},
  {'YouTube',''},
  {'Медиабазы',''},
  {'SimpleTV - видеоинструкции',''},
@@ -170,7 +170,7 @@ function run_westSide_portal()
   elseif t1[id].Name == 'Кинопоиск: История' then KP_Get_History()
   elseif t1[id].Name == 'Медиабазы' then mediabaze()
   elseif t1[id].Name:match('SimpleTV') then highlight()
-  elseif t1[id].Name == 'Озвучка' then run_lite_qt_cdntr(1)
+  elseif t1[id].Name == 'Озвучка' then run_lite_qt_cdntr()
   elseif t1[id].Name == 'Трекеры' then start_page()
   elseif t1[id].Name == 'KinoGo' then run_lite_qt_kinogo()
   elseif t1[id].Name == 'KinoKong' then run_lite_qt_kinokong()
