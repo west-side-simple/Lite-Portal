@@ -1,6 +1,6 @@
 --startup westSide portal
 --saved as utf-8 without bom
---wafee code, west_side updated 23.03.23
+--wafee code, west_side updated 21.04.23
 -------------------------------------------------------------------
 if m_simpleTV.User==nil then m_simpleTV.User={} end
 if m_simpleTV.User.westSide==nil then m_simpleTV.User.westSide={} end
@@ -111,7 +111,9 @@ function KP_Get_History()
    t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Portal '}
    t.ExtButton1 = {ButtonEnable = true, ButtonName = ' Cleane '}
    local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Кинопоиск: История просмотра',0,t,9000,1+4+8)
-   if id==nil then return end
+   if id==nil then 
+   run_westSide_portal()
+   end
    if ret==1 then
       m_simpleTV.Control.PlayAddressT({address = t[id].Address})
    end
@@ -140,7 +142,7 @@ function run_westSide_portal()
  {'Filmix',''},
  {'Kinopub',''},
  {'Озвучка',''},
--- {'KinoGo',''},
+ {'KinoGo',''},
  {'KinoKong',''},
  {'UA',''},
  {'YouTube',''},

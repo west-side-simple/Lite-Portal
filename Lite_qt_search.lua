@@ -1,4 +1,4 @@
--- Плагин поиска для lite portal - west_side 24.02.23
+-- Плагин поиска для lite portal - west_side 21.04.23
 -- необходимы скрипты Lite_qt_exfs.lua, ex-fs.lua, Lite_qt_tmdb.lua, Lite_qt_kinopub.lua, Lite_qt_filmix.lua - автор west_side
 
 function search()
@@ -115,7 +115,7 @@ m_simpleTV.Control.ExecuteAction(37)
 	{'EX-FS',''},
 	{'Rezka',''},
 	{'Filmix',''},
---	{'KinoGo',''},
+	{'KinoGo',''},
 	{'KinoKong',''},
 	{'UA',''},
 	{'Kinopub',''},
@@ -140,14 +140,14 @@ m_simpleTV.Control.ExecuteAction(37)
   elseif t1[id].Name == 'EX-FS' then search_media()
   elseif t1[id].Name == 'Rezka' then search_rezka()
   elseif t1[id].Name == 'Filmix' then search_filmix_media()
-  elseif t1[id].Name == 'Трекеры' then content_adr_page('http://api.vokino.tv/v2/list?name=' .. search_ini)
-  elseif t1[id].Name == 'RipsClub (HEVC)' then search_hevc('https://rips.club/search/?part=0&year=&cat=0&standard=0&bit=0&order=1&search=' .. search_ini)
+  elseif t1[id].Name == 'Трекеры' then content_adr_page('http://api.vokino.tv/v2/list?name=' .. search_ini:gsub('%%28.-%%29',''))
+  elseif t1[id].Name == 'RipsClub (HEVC)' then search_hevc('https://rips.club/search/?part=0&year=&cat=0&standard=0&bit=0&order=1&search=' .. search_ini:gsub('%%28.-%%29',''))
   elseif t1[id].Name == 'KinoGo' then search_kinogo()
   elseif t1[id].Name == 'KinoKong' then search_kinokong()
   elseif t1[id].Name == 'UA' then search_ua()
-  elseif t1[id].Name == 'Kinopub' then show_select('https://kino.pub/item/search?query=' .. search_ini)
+  elseif t1[id].Name == 'Kinopub' then show_select('https://kino.pub/item/search?query=' .. search_ini:gsub('%%28.-%%29',''))
   elseif t1[id].Name == 'YouTube' then search_youtube()
-  elseif t1[id].Name == 'VideoCDN' then m_simpleTV.Control.PlayAddress('*' .. m_simpleTV.Common.UTF8ToMultiByte(m_simpleTV.Common.fromPercentEncoding(search_ini)))
+--  elseif t1[id].Name == 'VideoCDN' then m_simpleTV.Control.PlayAddress('*' .. m_simpleTV.Common.UTF8ToMultiByte(m_simpleTV.Common.fromPercentEncoding(search_ini)))
   end
   end
   if ret == 3 then
@@ -179,7 +179,7 @@ function search_media()
 	end
 	local t, i, j, pages, answerd3 = {}, 1, 1, 1, ''
 	while j <= tonumber(pages) do
-	local urld2 = 'https://ex-fs.net/index.php?do=search&subaction=search&search_start=' .. j .. '&full_search=0&result_from=1&story=' .. search_ini
+	local urld2 = 'https://ex-fs.net/index.php?do=search&subaction=search&search_start=' .. j .. '&full_search=0&result_from=1&story=' .. search_ini:gsub('%%28.-%%29','')
 	local rc2,answerd2 = m_simpleTV.Http.Request(session,{url=urld2})
 	if rc2~=200 then
 		m_simpleTV.Http.Close(session)
@@ -509,6 +509,8 @@ function search_filmix_media()
 	m_simpleTV.Http.SetTimeout(session, 8000)
 
 	local search_ini = getConfigVal('search/media') or ''
+	local year = m_simpleTV.Common.fromPercentEncoding(search_ini):match(' %((%d%d%d%d)%)$')
+	local title = m_simpleTV.Common.fromPercentEncoding(search_ini):gsub(' %(%d%d%d%d%)$',''):gsub(' %(%)$','')
 	local title1 = 'Поиск медиа: ' .. m_simpleTV.Common.fromPercentEncoding(search_ini)
 	if not m_simpleTV.Control.CurrentAdress then
 		m_simpleTV.Control.SetTitle(title1)
@@ -516,7 +518,12 @@ function search_filmix_media()
 
 			local filmixurl = filmixsite .. '/search'
 			local headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. filmixurl
-			local body = 'scf=fx&story=' .. search_ini .. '&search_start=0&do=search&subaction=search&years_ot=&years_do=&kpi_ot=&kpi_do=&imdb_ot=&imdb_do=&sort_name=asc&undefined=asc&sort_date=&sort_favorite='
+			local body
+			if year then
+			body = 'scf=fx&story=' .. m_simpleTV.Common.toPercentEncoding(title) .. '&search_start=0&do=search&subaction=search&years_ot=' .. tonumber(year)-1 .. '&years_do=' .. tonumber(year)+1 .. '&kpi_ot=1&kpi_do=10&imdb_ot=1&imdb_do=10&sort_name=asc&undefined=asc&sort_date=&sort_favorite='
+			else
+			body = 'scf=fx&story=' .. m_simpleTV.Common.toPercentEncoding(title) .. '&search_start=0&do=search&subaction=search&years_ot=&years_do=&kpi_ot=&kpi_do=&imdb_ot=&imdb_do=&sort_name=asc&undefined=asc&sort_date=&sort_favorite='
+			end
 			local rc, answer = m_simpleTV.Http.Request(session, {body = body, url = filmixsite .. '/engine/ajax/sphinx_search.php', method = 'post', headers = headers})
 --			m_simpleTV.Http.Close(session)
 
@@ -612,7 +619,7 @@ function search_kinogo()
 	if not m_simpleTV.Control.CurrentAdress then
 		m_simpleTV.Control.SetTitle(title1)
 	end
-	local urld2 = 'https://kinogo.cc/index.php?do=search&story=' .. m_simpleTV.Common.toPercentEncoding(search_ini:gsub('%-',' '))
+	local urld2 = 'https://kinogo.cc/index.php?do=search&story=' .. m_simpleTV.Common.toPercentEncoding(search_ini:gsub('%-',' '):gsub('%%28.-%%29',''))
 	local rc2,answerd2 = m_simpleTV.Http.Request(session,{url=urld2})
 	if rc2~=200 then
 		m_simpleTV.Http.Close(session)
@@ -683,7 +690,7 @@ function search_kinokong()
 	if not m_simpleTV.Control.CurrentAdress then
 		m_simpleTV.Control.SetTitle(title1)
 	end
-	local urld2 = 'https://kinokong.pro/index.php?do=search&subaction=search&story=' .. escape(m_simpleTV.Common.string_fromUTF8(m_simpleTV.Common.fromPercentEncoding(search_ini)))
+	local urld2 = 'https://kinokong.pro/index.php?do=search&subaction=search&story=' .. escape(m_simpleTV.Common.string_fromUTF8(m_simpleTV.Common.fromPercentEncoding(search_ini:gsub('%%28.-%%29',''))))
 
 	local rc2,answerd2 = m_simpleTV.Http.Request(session,{url=urld2})
 	if rc2~=200 then
@@ -754,7 +761,7 @@ function search_ua()
 	if not m_simpleTV.Control.CurrentAdress then
 		m_simpleTV.Control.SetTitle(title1)
 	end
-	local urld2 = 'https://kino4ua.com/index.php?do=search&story=' .. m_simpleTV.Common.toPercentEncoding(search_ini:gsub('%-',' '))
+	local urld2 = 'https://kino4ua.com/index.php?do=search&story=' .. m_simpleTV.Common.toPercentEncoding(search_ini:gsub('%-',' '):gsub('%%28.-%%29',''))
 	local rc2,answerd2 = m_simpleTV.Http.Request(session,{url=urld2})
 	if rc2~=200 then
 		m_simpleTV.Http.Close(session)

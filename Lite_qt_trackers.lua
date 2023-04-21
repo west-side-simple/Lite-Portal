@@ -1,17 +1,9 @@
--- Плагин для трекеров lite portal 24.02.23
+-- Плагин для трекеров lite portal 21.04.23
 -- author west_side
 
 function start_page()
-	local token = decode64('d2luZG93c18yZmRkYTQyMWNkZGI2OTExNmUwNzY4ZjNiZmY0ZGUwNV81OTIwMjE=')
-	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
-	if not session then return end
-	m_simpleTV.Http.SetTimeout(session, 60000)
-	local url = 'http://api.vokino.tv/v2/main?token=' .. token
-	local rc,answerd = m_simpleTV.Http.Request(session,{url=url})
-	if rc~=200 then
-		m_simpleTV.Http.Close(session)
-		return
-	end
+
+		local last_adr = m_simpleTV.Config.GetValue('info/torrent','LiteConf.ini') or ''
 		local tt = {
 		{"http://api.vokino.tv/v2/list?sort=popular&page=1","В тренде"},
 		{"http://api.vokino.tv/v2/list?sort=updatings&page=1","Обновления"},
@@ -33,6 +25,10 @@ function start_page()
 			t0[i].Name = tt[i][2]
 			t0[i].Action = tt[i][1]
 		end
+		if last_adr and last_adr ~= '' then
+		t0.ExtButton0 = {ButtonEnable = true, ButtonName = ' Info '}
+		end
+		t0.ExtButton1 = {ButtonEnable = true, ButtonName = ' Portal '}
 		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите категорию',0,t0,10000,1+4+8+2)
 		if ret == -1 or not id then
 			return
@@ -45,6 +41,12 @@ function start_page()
 			else
 				content_adr_page(t0[id].Action)
 			end
+		end
+		if ret == 2 then
+		content(last_adr)
+		end
+		if ret == 3 then
+		run_westSide_portal()
 		end
 end
 
@@ -202,6 +204,12 @@ function content(content_id)
 		m_simpleTV.Http.Close(session)
 		return
 	end
+	if not m_simpleTV.User then
+		m_simpleTV.User = {}
+	end
+	if not m_simpleTV.User.torrent then
+		m_simpleTV.User.torrent = {}
+	end
 	local tooltip_body
 	if m_simpleTV.Config.GetValue('mainOsd/showEpgInfoAsWindow', 'simpleTVConfig') then tooltip_body = ''
 	else tooltip_body = 'bgcolor="#182633"'
@@ -214,8 +222,6 @@ function content(content_id)
 	then
 	return end
 	m_simpleTV.Http.Close(session)
-	local title = tab.details.name
-
 	local id = tab.details.id
 	local name = tab.details.name
 	local poster = tab.details.poster
@@ -238,7 +244,8 @@ function content(content_id)
 	local rating_imdb = tab.details.rating_imdb or 0
 	local videodesc= '<table width="100%" border="0"><tr><td style="padding: 15px 15px 5px;"><img src="' .. poster .. '" height="300"></td><td style="padding: 0px 5px 5px; color: #EBEBEB; vertical-align: middle;"><h4><font color=#00FA9A>' .. name .. '</font></h4><h5><font color=#BBBBBB>' .. originalname .. '</font></h5><h5><font color=#EBEBEB>' ..  country .. ' • </font><font color=#E0FFFF>' .. released .. '</font></h5><h5><font color=#EBEBEB>' .. genre .. '</font> • ' .. age .. '+</h5><h5>Кинопоиск: ' .. rating_kp .. ', IMDB: ' .. rating_imdb .. '</h5><h5><font color=#E0FFFF>' .. duration .. '</font></h5><h5>Режиссеры: <font color=#EBEBEB>' .. director .. '</font></h5><h5><font color=#EBEBEB>' .. about .. '</font></h5></td></tr></table>'
 	videodesc = videodesc:gsub('"', '\"')
-		local t,j={},2
+	local title = name:gsub(' $','') .. ' (' .. released .. ')'
+		local t,j={},3
 		t[1] = {}
 		t[1].Id = 1
 		t[1].Address = ''
@@ -248,6 +255,40 @@ function content(content_id)
 		t[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
 		t[1].InfoPanelTitle = about
 		t[1].InfoPanelShowTime = 10000
+
+		t[2] = {}
+		t[2].Id = 2
+		t[2].Name = 'Online: TMDB'
+
+		if tab.online and tab.online.Filmix then
+		t[j] = {}
+		t[j].Id = j
+		t[j].Name = 'Online: Filmix'
+		j=j+1
+		end
+
+		if tab.online and tab.online.HDRezka then
+		t[j] = {}
+		t[j].Id = j
+		t[j].Name = 'Online: HDRezka'
+		j=j+1
+		end
+
+		if tab.countrys and tab.countrys[1] then
+		local i = 1
+		while true do
+		if not tab.countrys[i]
+		then
+		break
+		end
+		t[j] = {}
+		t[j].Id = j
+		t[j].Address = tab.countrys[i].playlist_url
+		t[j].Name = tab.countrys[i].title
+		i=i+1
+		j=j+1
+		end
+		end
 
 		if tab.genres and tab.genres[1] then
 		local k = 1
@@ -277,27 +318,85 @@ function content(content_id)
 		t[j] = {}
 		t[j].Id = j
 		t[j].Address = tab.directors[m].playlist_url
-		t[j].Name = tab.directors[m].title
+		t[j].Name = 'Director: ' .. tab.directors[m].title
 		m=m+1
+		j=j+1
+		end
+		end
+
+		if tab.casts and tab.casts[1] then
+		local n = 1
+		while true do
+		if not tab.casts[n]
+		then
+		break
+		end
+		t[j] = {}
+		t[j].Id = j
+		t[j].Address = tab.casts[n].playlist_url
+		t[j].Name = 'Casts: ' .. tab.casts[n].title
+		t[j].InfoPanelLogo = tab.casts[n].poster or ''
+		t[j].InfoPanelLogo = t[j].InfoPanelLogo:gsub('w600_and_h900_bestv2','w500_and_h282_face')
+		t[j].InfoPanelName =  tab.casts[n].title .. ' (' ..  (tab.casts[n].birthday or 'not info') .. ') ' .. (tab.casts[n].place_of_birth or '')
+		t[j].InfoPanelTitle = tab.casts[n].biography
+		t[j].InfoPanelShowTime = 10000
+		n=n+1
+		j=j+1
+		end
+		end
+
+		if tab.similars and tab.similars[1] and tab.similars[1].details and tab.similars[1].details.id then
+		local o = 1
+		while true do
+		if not tab.similars[o]
+		then
+		break
+		end
+		t[j] = {}
+		t[j].Id = j
+		t[j].Address = tab.similars[o].details.id
+		t[j].Name = 'Similar: ' .. tab.similars[o].details.name .. ' - ' .. tab.similars[o].details.type
+		if not tab.similars[o].details.wide_poster or tab.similars[o].details.wide_poster == '' then
+			t[j].InfoPanelLogo = tab.similars[o].details.poster
+		else
+			t[j].InfoPanelLogo = tab.similars[o].details.wide_poster
+		end
+		t[j].InfoPanelName =  tab.similars[o].details.name .. ' / ' .. tab.similars[o].details.originalname .. ' (' .. tab.similars[o].details.released .. ') ' .. (tab.similars[o].details.genre or '')
+		t[j].InfoPanelTitle = tab.similars[o].details.about
+		t[j].InfoPanelShowTime = 10000
+		o=o+1
 		j=j+1
 		end
 		end
 
 		t.ExtButton0 = {ButtonEnable = true, ButtonName = 'Главная '}
 		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' Трекеры'}
-
-		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8(title, 0, t, 30000, 1+4+8+2)
+		local current_id = m_simpleTV.User.torrent.id_balanser or 1
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8(title, tonumber(current_id) - 1, t, 30000, 1+4+8+2)
 		if ret == -1 or not id then
 			return
 		end
 		if ret == 1 then
+		if t[id].Name:match('Similar: ') then
+			content(t[id].Address)
+		elseif t[id].Name:match('TMDB') then
+			m_simpleTV.Config.SetValue('search/media',m_simpleTV.Common.toPercentEncoding(title),'LiteConf.ini')
+			search_tmdb()
+		elseif t[id].Name:match('Filmix') then
+			m_simpleTV.Config.SetValue('search/media',m_simpleTV.Common.toPercentEncoding(title),'LiteConf.ini')
+			search_filmix_media()
+		elseif t[id].Name:match('HDRezka') then
+			m_simpleTV.Config.SetValue('search/media',m_simpleTV.Common.toPercentEncoding(title),'LiteConf.ini')
+			search_rezka()
+		else
 		content_adr_page(t[id].Address)
+		end
 		end
 		if ret == 2 then
 		start_page()
 		end
 		if ret == 3 then
-		torrents(tab.torrents)
+		torrents(tab.torrents .. 'seed_desc')
 		end
 end
 
@@ -312,7 +411,7 @@ function content_adr_page(adr)
 		m_simpleTV.Http.Close(session)
 		return
 	end
-	debug_in_file(rc .. ' - ' .. url .. '\n' .. answer .. '\n','c://1/deb.txt')
+--	debug_in_file(rc .. ' - ' .. url .. '\n' .. answer .. '\n','c://1/deb.txt')
 	require('json')
 	answer = answer:gsub('(%[%])', '"nil"')
 	local tab = json.decode(answer)
@@ -324,19 +423,19 @@ function content_adr_page(adr)
 	local page = tab.page.current
 	local t, i = {}, 1
 	while true do
-	if not tab.channels[i] or not tab.channels[i].details.name
+	if not tab.channels[i] or not tab.channels[i].details.id
 				then
 				break
 				end
 	t[i]={}
-	local id = tab.channels[i].details.id
-	local name = tab.channels[i].details.name
+	local id = tab.channels[i].details.id or ''
+	local name = tab.channels[i].details.name or 'noname'
 	local poster = tab.channels[i].details.poster or ''
-	local originalname = tab.channels[i].details.originalname
+	local originalname = tab.channels[i].details.originalname or ''
 	local released = tab.channels[i].details.released or ''
 	local about = tab.channels[i].details.about or ''
 	local genre = tab.channels[i].details.genre or ''
-	local type = tab.channels[i].details.type
+	local type = tab.channels[i].details.type or ''
 	local address = tab.channels[i].playlist_url
 	t[i].Id = i
 	t[i].Name = name .. ' (' .. released .. ') - ' .. type
@@ -373,6 +472,9 @@ function content_adr_page(adr)
 			return
 		end
 		if ret == 1 then
+		if t[id].Name == 'noname' then
+			content_adr_page(adr)
+		end
 			content(t[id].Address)
 		end
 		if ret == 2 then
@@ -391,7 +493,7 @@ function torrents(adr)
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 10000)
-	local url = adr .. '&token=' .. token
+	local url = adr:gsub('sorting=','sortings=') .. '&token=' .. token
 	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
 	if rc~=200 then
 		m_simpleTV.Http.Close(session)
@@ -449,7 +551,7 @@ function torrents_tracker(adr)
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 10000)
-	local url = adr .. '&token=' .. token
+	local url = adr:gsub('sorting=','sortings=') .. '&token=' .. token
 	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
 	if rc~=200 then
 		m_simpleTV.Http.Close(session)

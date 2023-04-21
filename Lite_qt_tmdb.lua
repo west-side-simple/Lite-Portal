@@ -72,11 +72,11 @@ local function findrutracker(name, id)
 	return str_rt
 end
 
-local function find_movie(title)
+local function find_movie(title,title_year)
 local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then return end
 m_simpleTV.Http.SetTimeout(session, 60000)
-local urld = decode64('aHR0cHM6Ly9hcGkudGhlbW92aWVkYi5vcmcvMy9zZWFyY2gvbW92aWU/YXBpX2tleT1kNTZlNTFmYjc3YjA4MWE5Y2I1MTkyZWFhYTc4MjNhZCZsYW5ndWFnZT1ydSZleHRlcm5hbF9zb3VyY2U9aW1kYl9pZCZxdWVyeT0=') .. m_simpleTV.Common.toPercentEncoding(title)
+local urld = decode64('aHR0cHM6Ly9hcGkudGhlbW92aWVkYi5vcmcvMy9zZWFyY2gvbW92aWU/YXBpX2tleT1kNTZlNTFmYjc3YjA4MWE5Y2I1MTkyZWFhYTc4MjNhZCZsYW5ndWFnZT1ydSZleHRlcm5hbF9zb3VyY2U9aW1kYl9pZCZxdWVyeT0=') .. m_simpleTV.Common.toPercentEncoding(title) .. '&year=' .. title_year
 local rc1,answerd = m_simpleTV.Http.Request(session,{url=urld})
 if rc1~=200 then
   m_simpleTV.Http.Close(session)
@@ -86,7 +86,7 @@ local total_pages,total_results = answerd:match('"total_pages":(%d+),"total_resu
 local answer = ''
 if tonumber(total_pages) == 0 then total_pages = 1 end
 for j = 1,total_pages do
-local urld = decode64('aHR0cHM6Ly9hcGkudGhlbW92aWVkYi5vcmcvMy9zZWFyY2gvbW92aWU/YXBpX2tleT1kNTZlNTFmYjc3YjA4MWE5Y2I1MTkyZWFhYTc4MjNhZCZsYW5ndWFnZT1ydSZleHRlcm5hbF9zb3VyY2U9aW1kYl9pZCZxdWVyeT0=') .. m_simpleTV.Common.toPercentEncoding(title) .. '&page=' .. j
+local urld = decode64('aHR0cHM6Ly9hcGkudGhlbW92aWVkYi5vcmcvMy9zZWFyY2gvbW92aWU/YXBpX2tleT1kNTZlNTFmYjc3YjA4MWE5Y2I1MTkyZWFhYTc4MjNhZCZsYW5ndWFnZT1ydSZleHRlcm5hbF9zb3VyY2U9aW1kYl9pZCZxdWVyeT0=') .. m_simpleTV.Common.toPercentEncoding(title) .. '&year=' .. title_year .. '&page=' .. j
 local rc1,answerd = m_simpleTV.Http.Request(session,{url=urld})
 if rc1~=200 then
   m_simpleTV.Http.Close(session)
@@ -136,7 +136,7 @@ while true do
 	return t, i - 1
 end
 
-local function find_series(title)
+local function find_series(title,title_year)
 local function infodesc_tmdb(id,tv)
 local urltm, titul_tmdb_media, tmdb_media
 if tv == 0 then
@@ -167,7 +167,7 @@ end
 local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then return end
 m_simpleTV.Http.SetTimeout(session, 60000)
-local urld2 = decode64('aHR0cHM6Ly9hcGkudGhlbW92aWVkYi5vcmcvMy9zZWFyY2gvdHY/YXBpX2tleT1kNTZlNTFmYjc3YjA4MWE5Y2I1MTkyZWFhYTc4MjNhZCZsYW5ndWFnZT1ydSZxdWVyeT0=') .. m_simpleTV.Common.toPercentEncoding(title)
+local urld2 = decode64('aHR0cHM6Ly9hcGkudGhlbW92aWVkYi5vcmcvMy9zZWFyY2gvdHY/YXBpX2tleT1kNTZlNTFmYjc3YjA4MWE5Y2I1MTkyZWFhYTc4MjNhZCZsYW5ndWFnZT1ydSZxdWVyeT0=') .. m_simpleTV.Common.toPercentEncoding(title) .. '&year=' .. title_year
 local rc2,answerd2 = m_simpleTV.Http.Request(session,{url=urld2})
 if rc2~=200 then
   m_simpleTV.Http.Close(session)
@@ -177,7 +177,7 @@ local total_pages,total_results = answerd2:match('"total_pages":(%d+),"total_res
 local answer3 = ''
 if tonumber(total_pages) == 0 then total_pages = 1 end
 for j = 1,total_pages do
-local urld3 = decode64('aHR0cHM6Ly9hcGkudGhlbW92aWVkYi5vcmcvMy9zZWFyY2gvdHY/YXBpX2tleT1kNTZlNTFmYjc3YjA4MWE5Y2I1MTkyZWFhYTc4MjNhZCZsYW5ndWFnZT1ydSZxdWVyeT0=') .. m_simpleTV.Common.toPercentEncoding(title) .. '&page=' .. j
+local urld3 = decode64('aHR0cHM6Ly9hcGkudGhlbW92aWVkYi5vcmcvMy9zZWFyY2gvdHY/YXBpX2tleT1kNTZlNTFmYjc3YjA4MWE5Y2I1MTkyZWFhYTc4MjNhZCZsYW5ndWFnZT1ydSZxdWVyeT0=') .. m_simpleTV.Common.toPercentEncoding(title) .. '&year=' .. title_year .. '&page=' .. j
 local rc3,answerd3 = m_simpleTV.Http.Request(session,{url=urld3})
 if rc3~=200 then
   m_simpleTV.Http.Close(session)
@@ -1337,12 +1337,14 @@ local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; r
 
 	local tmdb_search = getConfigVal('search/media') or ''
 	tmdb_search = m_simpleTV.Common.fromPercentEncoding(tmdb_search)
+	local year = tmdb_search:match(' %((%d%d%d%d)%)$') or ''
+	local title = tmdb_search:gsub(' %(%d%d%d%d%)$',''):gsub(' %(%)$','')
 	local title1 = 'Поиск TMDb: ' .. tmdb_search
 
-	local t1, nm1 = find_movie(tmdb_search)
-	local t2, nm2 = find_series(tmdb_search)
-	local t3, nm3 = findpersonIdByName(tmdb_search)
-	local t4, nm4 = find_collectons(tmdb_search)
+	local t1, nm1 = find_movie(title,year)
+	local t2, nm2 = find_series(title,year)
+	local t3, nm3 = findpersonIdByName(title)
+	local t4, nm4 = find_collectons(title)
 
 	local tt = {
 	{"Фильмы","","./luaScr/user/show_mi/IconVideo.png",""},
