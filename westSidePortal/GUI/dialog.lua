@@ -1,4 +1,4 @@
--- SergeyVS, west_side 23.03.23
+-- SergeyVS, west_side 21.04.23
 require("westSidePortal")
 
 ----------------------------------------------------------------------
@@ -83,7 +83,7 @@ m_simpleTV.Control.ExecuteAction(37)
 	{'EX-FS',''},
 	{'Rezka',''},
 	{'Filmix',''},
---	{'KinoGo',''},
+	{'KinoGo',''},
 	{'KinoKong',''},
 	{'UA',''},
 	{'Kinopub',''},
@@ -108,14 +108,14 @@ m_simpleTV.Control.ExecuteAction(37)
   elseif t1[id].Name == 'EX-FS' then search_media()
   elseif t1[id].Name == 'Rezka' then search_rezka()
   elseif t1[id].Name == 'Filmix' then search_filmix_media()
-  elseif t1[id].Name == 'Трекеры' then content_adr_page('http://api.vokino.tv/v2/list?name=' .. search_ini)
-  elseif t1[id].Name == 'RipsClub (HEVC)' then search_hevc('https://rips.club/search/?part=0&year=&cat=0&standard=0&bit=0&order=1&search=' .. search_ini)
+  elseif t1[id].Name == 'Трекеры' then content_adr_page('http://api.vokino.tv/v2/list?name=' .. search_ini:gsub('%%28.-%%29',''))
+  elseif t1[id].Name == 'RipsClub (HEVC)' then search_hevc('https://rips.club/search/?part=0&year=&cat=0&standard=0&bit=0&order=1&search=' .. search_ini:gsub('%%28.-%%29',''))
   elseif t1[id].Name == 'KinoGo' then search_kinogo()
   elseif t1[id].Name == 'KinoKong' then search_kinokong()
   elseif t1[id].Name == 'UA' then search_ua()
-  elseif t1[id].Name == 'Kinopub' then show_select('https://kino.pub/item/search?query=' .. search_ini)
+  elseif t1[id].Name == 'Kinopub' then show_select('https://kino.pub/item/search?query=' .. search_ini:gsub('%%28.-%%29',''))
   elseif t1[id].Name == 'YouTube' then search_youtube()
-  elseif t1[id].Name == 'VideoCDN' then m_simpleTV.Control.PlayAddress('*' .. m_simpleTV.Common.UTF8ToMultiByte(m_simpleTV.Common.fromPercentEncoding(search_ini)))
+--  elseif t1[id].Name == 'VideoCDN' then m_simpleTV.Control.PlayAddress('*' .. m_simpleTV.Common.UTF8ToMultiByte(m_simpleTV.Common.fromPercentEncoding(search_ini)))
   end
   end
   if ret == 3 then
