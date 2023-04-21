@@ -1,5 +1,5 @@
 -- events for Audio plugin
--- author west_side 19.03.23
+-- author west_side 25.03.23
 
 	if m_simpleTV.Control.CurrentAddress==nil then return end
 	if m_simpleTV.Control.IsVideo() then return end
@@ -73,6 +73,25 @@ local function get_img1(s)
 	m_simpleTV.User.AudioWS.logos=t1
 end
 
+	local tab = {
+	{"NOSTALGIE","https://www.nostalgie.fr/uploads/assets/nostalgie/icons/android-icon-192x192.png","https://www.nostalgie.fr/onair"},
+	{"NRJ","https://www.nrj.fr/uploads/assets/nrj/icons/android-icon-192x192.png","https://www.nrj.fr/onair"},
+	{"RIRE","https://www.rireetchansons.fr/uploads/assets/rire/icons/android-icon-192x192.png","https://www.rireetchansons.fr/onair"},
+	{"CHERIE","https://www.cheriefm.fr/uploads/assets/cherie/icons/android-icon-192x192.png","https://www.cheriefm.fr/onair"},
+	}
+
+local function getadr(name)
+	local adr = ''
+	for i=1,#tab do
+--	debug_in_file(tab[i][1] .. '\n',m_simpleTV.MainScriptDir .. 'user/audioWS/getmeta.txt')
+		if string.find(name, tab[i][1],1,true) then
+		adr = tab[i][3]
+		break
+		end
+	end
+	return adr
+	end
+
 local title, track, typerad
 local inAdr = m_simpleTV.Control.CurrentAddress
 if inAdr:match('https?://213%.141%..-:8000/.+')
@@ -90,6 +109,41 @@ if inAdr:match('https?://213%.141%..-:8000/.+')
 	if rc ~= 200 then return end
 	title = answer:match('>Current Song.-streamdata">(.-)<')
 	-- debug_in_file(title .. '\n',m_simpleTV.MainScriptDir .. 'user/audioWS/getmeta.txt')
+end
+
+if inAdr:match('^https://.-playernostalgie.+') then
+	typerad = 'NRJ'
+	local userAgent = ('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML,like Gecko) Chrome/81.0.3785.143 Safari/537.36')
+	local session = m_simpleTV.Http.New(userAgent)
+	if not session then return end
+	m_simpleTV.Http.SetTimeout(session, 8000)
+	local name
+	if m_simpleTV.User.AudioWS.Name then
+		name = m_simpleTV.User.AudioWS.Name
+	else
+		local t1 = m_simpleTV.Control.GetCurrentChannelInfo()
+		name = t1.Name:gsub('%&amp%;','&')
+	end
+
+	url = getadr(name:gsub(' .-$',''))
+--	debug_in_file(name .. ': ' .. url .. '\n',m_simpleTV.MainScriptDir .. 'user/audioWS/getmeta.txt')
+	local rc, answer = m_simpleTV.Http.Request(session, {url = url})
+	if rc ~= 200 then return end
+		require('json')
+		if not answer then return end
+		answer = answer:gsub('\\', '\\\\'):gsub('\\"', '\\\\"'):gsub('\\/', '/'):gsub('(%[%])', '""')
+
+		local tt = json.decode(answer)
+		local k = 1
+		if not tt or not tt[1] or not tt[1].name then return end
+		while true do
+			if not tt[k] or not tt[k].name then break end
+--			debug_in_file(tt[k].name .. ': ' .. tt[k].playlist[1].song.artist .. ' - ' .. tt[k].playlist[1].song.title:gsub('\\u0027',"'") .. '\n',m_simpleTV.MainScriptDir .. 'user/audioWS/getmeta.txt')
+			if tt[k].name == name then
+			title = tt[k].playlist[1].song.artist .. ' - ' .. tt[k].playlist[1].song.title:gsub('\\u0027',"'")
+			end
+			k=k+1
+		end
 end
 
 	if m_simpleTV.Control.Reason == 'Playing' then
@@ -131,19 +185,27 @@ end
 		if not session then return end
 		m_simpleTV.Http.SetTimeout(session, 10000)
 		local rc = m_simpleTV.Http.Request(session, {url= m_simpleTV.User.AudioWS.img})
-		if rc~=200 then
+		if rc~=200 and m_simpleTV.User.AudioWS.images and m_simpleTV.User.AudioWS.images[1] and m_simpleTV.User.AudioWS.images[1].image then
 		m_simpleTV.User.AudioWS.img = m_simpleTV.User.AudioWS.images[math.random(#m_simpleTV.User.AudioWS.images)].image
 		end
 		rc = m_simpleTV.Http.Request(session, {url= m_simpleTV.User.AudioWS.logo})
-		if rc~=200 then
+		if rc~=200 and m_simpleTV.User.AudioWS.logos and m_simpleTV.User.AudioWS.logos[1] and m_simpleTV.User.AudioWS.logos[1].image then
 		m_simpleTV.User.AudioWS.logo = m_simpleTV.User.AudioWS.logos[math.random(#m_simpleTV.User.AudioWS.logos)].image
 		end
 		rc = m_simpleTV.Http.Request(session, {url= m_simpleTV.User.AudioWS.img})
-		if rc~=200 then
+		if rc~=200 and m_simpleTV.User.AudioWS.images and m_simpleTV.User.AudioWS.images[1] and m_simpleTV.User.AudioWS.images[1].image then
 		m_simpleTV.User.AudioWS.img = m_simpleTV.User.AudioWS.images[math.random(#m_simpleTV.User.AudioWS.images)].image
 		end
 		rc = m_simpleTV.Http.Request(session, {url= m_simpleTV.User.AudioWS.logo})
-		if rc~=200 then
+		if rc~=200 and m_simpleTV.User.AudioWS.logos and m_simpleTV.User.AudioWS.logos[1] and m_simpleTV.User.AudioWS.logos[1].image then
+		m_simpleTV.User.AudioWS.logo = m_simpleTV.User.AudioWS.logos[math.random(#m_simpleTV.User.AudioWS.logos)].image
+		end
+		rc = m_simpleTV.Http.Request(session, {url= m_simpleTV.User.AudioWS.img})
+		if rc~=200 and m_simpleTV.User.AudioWS.images and m_simpleTV.User.AudioWS.images[1] and m_simpleTV.User.AudioWS.images[1].image then
+		m_simpleTV.User.AudioWS.img = m_simpleTV.User.AudioWS.images[math.random(#m_simpleTV.User.AudioWS.images)].image
+		end
+		rc = m_simpleTV.Http.Request(session, {url= m_simpleTV.User.AudioWS.logo})
+		if rc~=200 and m_simpleTV.User.AudioWS.logos and m_simpleTV.User.AudioWS.logos[1] and m_simpleTV.User.AudioWS.logos[1].image then
 		m_simpleTV.User.AudioWS.logo = m_simpleTV.User.AudioWS.logos[math.random(#m_simpleTV.User.AudioWS.logos)].image
 		end
 		m_simpleTV.Http.Close(session)

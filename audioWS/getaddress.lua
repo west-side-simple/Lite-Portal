@@ -1,13 +1,14 @@
 -- getaddress for Audio plugin
--- author west_side 19.03.23
+-- author west_side 25.03.23
 
 	if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 	if tonumber(m_simpleTV.User.AudioWS.Use) ~= 1 then return end
-	if tonumber(m_simpleTV.User.AudioWS.Use) == 1 then m_simpleTV.Control.EventPlayingInterval=10000 end
+	if tonumber(m_simpleTV.User.AudioWS.Use) == 1 then m_simpleTV.Control.EventPlayingInterval=1000 end
 	if not m_simpleTV.Control.CurrentAddress:match('^http://23%.111%.104%.132') and
 	not m_simpleTV.Control.CurrentAddress:match('%.hostingradio%.ru') and
 	not m_simpleTV.Control.CurrentAddress:match('pcradio%.ru') and
-	not m_simpleTV.Control.CurrentAddress:match('^http://.-8000/.+')
+	not m_simpleTV.Control.CurrentAddress:match('^http://.-8000/.+') and
+	not m_simpleTV.Control.CurrentAddress:match('^https://.-playernostalgie.+')
 	then return end
 	m_simpleTV.User.AudioWS.Name = nil
 	m_simpleTV.User.AudioWS.logo = nil
