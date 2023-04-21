@@ -24,7 +24,7 @@
 	local userAgent = 'Mozilla/5.0 (Windows NT 10.0; rv:96.0) Gecko/20100101 Firefox/96.0'
 	local session = m_simpleTV.Http.New(userAgent)
 		if not session then return end
-	m_simpleTV.Http.SetTimeout(session, 12000)
+	m_simpleTV.Http.SetTimeout(session, 16000)
 	if not m_simpleTV.User then
 		m_simpleTV.User = {}
 	end
@@ -214,7 +214,7 @@
 		m_simpleTV.User.westSide.PortalTable = m_simpleTV.User.collaps.ua
 	end
 	inAdr = inAdr:gsub('&kinopoisk', ''):gsub('&kinogo=.-$', ''):gsub('&kino4ua=.-$', '')
-	local rc, answer = m_simpleTV.Http.Request(session, {url = inAdr, headers = 'Referer: ' .. inAdr})
+	local rc, answer = m_simpleTV.Http.Request(session, {url = inAdr})
 		if rc ~= 200 then
 			showMsg('collaps ошибка: 1', ARGB(255, 255, 102, 0))
 		 return
@@ -256,6 +256,7 @@
 				season_title = ' (' .. t0[1].Name .. ')'
 			end
 		end
+		m_simpleTV.User.collaps.season = t0
 		local i = 1
 		local tr = {}
 			while tab[seson].episodes[1].audio.names[i] do

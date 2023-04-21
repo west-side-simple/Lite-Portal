@@ -1,6 +1,6 @@
 -- видеоскрипт для видеобалансера "videocdn" https://videocdn.tv (01/07/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod - west_side (23/03/23)
+-- mod - west_side (21/04/23)
 -- ## открывает подобные ссылки ##
 -- https://32.svetacdn.in/fnXOUDB9nNSO?kp_id=5928
 -- https://32.tvmovies.in/fnXOUDB9nNSO/tv-series/92
@@ -24,6 +24,7 @@ local proxy = ''
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/33cHYTFTAlwP')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/fz41ePu9lzFL')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/SZLMKH3vCY0W')
+			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/ra5OAHwotvWa')
 --			and not m_simpleTV.Control.CurrentAddress:match('^https?://[%w%.]*svetacdn%.')
 			and not m_simpleTV.Control.CurrentAddress:match('^$videocdn')
 		then
@@ -147,7 +148,7 @@ local function title_translate(translate)
 			if tonumber(t[i].Action) == tonumber(translate) then name_translate = unescape3(t[i].InfoPanelTitle) end
 			i = i + 1
 		end
-		return name_translate or ''
+		return name_translate or 'Озвучка'
 	end
 end
 	local psevdotv
@@ -487,7 +488,7 @@ end
 	transl = translate or transl or '%d+'
 	translate = transl
 	m_simpleTV.User.Videocdn.translate = translate
-	m_simpleTV.User.Videocdn.title_translate = title_translate(translate)
+	m_simpleTV.User.Videocdn.title_translate = title_translate(translate):gsub('%) %(',', '):gsub('Профессиональный','Проф.'):gsub('Любительский','Люб.'):gsub('Авторский','Авт.')
 	local answer = answer:match('id="files" value=\'(.-)\'')
 		if not answer then return end
 --	debug_in_file(answer .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer.txt')
@@ -520,12 +521,12 @@ end
 				local _, id = m_simpleTV.OSD.ShowSelect_UTF8(title, 0, s, 10000, 1)
 				id = id or 1
 				seson = s[id].Address
-				season_title = ' (' .. s[id].Name .. ')'
+				season_title = ' ' .. s[id].Name
 			else
 				seson = s[1].Address
 				local ses = s[1].Name:match('%d+') or '0'
 				if tonumber(ses) > 1 then
-					season_title = ' (' .. s[1].Name .. ')'
+					season_title = ' ' .. s[1].Name
 				end
 			end
 				while true do

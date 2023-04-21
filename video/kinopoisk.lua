@@ -1,8 +1,8 @@
 -- видеоскрипт для сайта http://www.kinopoisk.ru
 -- Copyright © 2017-2023 Nexterr | https://github.com/Nexterr/simpleTV
--- mod west_side (add VB, ZF, Videoapi) - (20.03.23)
+-- mod west_side - (21.04.23)
 -- ## необходимы ##
--- видеоскрипты: videocdn.lua, hdvb-vb.lua, collaps.lua, voidboost.lua, videoapi.lua, zetflix.lua
+-- видеоскрипты: videocdn.lua, hdvb-vb.lua, collaps.lua, voidboost.lua, zetflix.lua
 -- ## открывает подобные ссылки ##
 -- https://www.kinopoisk.ru/film/5928
 -- https://www.kinopoisk.ru/level/1/film/46225/sr/1/
@@ -164,7 +164,7 @@ tname = {
 -- 'Videoframe',
  'Hdvb',
  'Collaps',
- 'Kodik',
+-- 'Kodik',
 -- 'КиноПоиск онлайн',
 -- 'Seasonvar',
 -- 'ivi',
@@ -222,6 +222,19 @@ end
 	local usvar, i, u = 1, 1, 1
 	local function unescape_html(str)
 	 return htmlEntities.decode(str)
+	end
+
+	local function zona(kpid)
+		local rc, answer = m_simpleTV.Http.Request(session, {url = decode64('aHR0cDovL3pzb2xyLnpvbmFzZWFyY2guY29tL3NvbHIvbW92aWUvc2VsZWN0Lz93dD1qc29uJmZsPXllYXIsbmFtZV9ydXMsZGVzY3JpcHRpb24mcT1pZDo=') .. kpid})
+			if rc ~= 200 then return end
+			if not answer:match('^{') then return end
+		answer = answer:gsub('%[%]', '""'):gsub(string.char(239, 187, 191), '')
+		local tab = json.decode(answer)
+			if not tab or not tab.response or not tab.response.docs or not tab.response.docs[1] then return end
+		local year = tab.response.docs[1].year or 0
+		local title = tab.response.docs[1].name_rus
+		local desc = tab.response.docs[1].description or ''
+	 return	title,year,desc
 	end
 
 	local function ukp(kp)
@@ -565,6 +578,12 @@ end
 	else
 		title = name_tmdb
 		year = year_tmdb
+	end
+
+	if not title or (title and title == '') then
+		title_kp, year_kp, overview_kp = zona(kpid)
+		title = title_kp
+		year = year_kp
 	end
 
 	if not title or (title and title == '') then

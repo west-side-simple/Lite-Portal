@@ -1,6 +1,6 @@
 -- видеоскрипт для сайта https://filmix.ac (23/07/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- west_side mod for lite (14/02/23)
+-- west_side mod for lite (21/04/23)
 -- ## авторизация ##
 -- логин, пароль установить в 'Password Manager', для id - filmix
 -- ## необходим ##
@@ -624,15 +624,14 @@ end
 					id = 1
 				end
 				sesnom = s[id].Address
-				season_title = ' (' .. s[id].Name .. ')'
+				season_title = ' ' .. s[id].Name
 			else
 				sesnom = s[1].Address
 				local ses = s[1].Name:match('%d+') or '0'
 				if tonumber(ses) > 1 then
-					season_title = ' (' .. s[1].Name .. ')'
+					season_title = ' ' .. s[1].Name
 				end
 			end
-			season_title = season_title:gsub('%(%s+', '(')
 				while true do
 						if not tab[sesnom].folder[i] then break end
 					t[i] = {}

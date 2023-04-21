@@ -48,7 +48,7 @@ end
 		t[i].InfoPanelName = title
 		t[i].InfoPanelShowTime = 8000
 		t[i].InfoPanelLogo = poster
-		if adr:match('/api%.tobaco%.ws') or adr:match('/api%.getcodes%.ws') then t[i].Name = 'Collaps' elseif adr:match('/ashdi') then t[i].Name = 'HD' elseif adr:match('youtube%.com') then t[i].Name = 'Trailer' end
+		if adr:match('/api%.tobaco%.ws') or adr:match('/api%.getcodes%.ws') or adr:match('/api%.strvid%.ws') then t[i].Name = 'Collaps' elseif adr:match('/ashdi') then t[i].Name = 'HD' elseif adr:match('youtube%.com') then t[i].Name = 'Trailer' end
 		i=i+1
 	end
 		local hash, res = {}, {}

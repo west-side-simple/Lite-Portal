@@ -1,4 +1,4 @@
--- видеоскрипт для запросов потоков Rezka по ID кинопоиска и IMDB (18.03.23)
+-- видеоскрипт для запросов потоков Rezka по ID кинопоиска и IMDB (21.04.23)
 -- nexterr, west_side
 -- ## открывает подобные ссылки ##
 -- https://voidboost.net/embed/280179
@@ -17,6 +17,28 @@
 		end
 	m_simpleTV.Http.SetTimeout(session, 30000)
 	require 'playerjs'
+
+	local function zona(kpid)
+		local rc, answer = m_simpleTV.Http.Request(session, {url = decode64('aHR0cDovL3pzb2xyLnpvbmFzZWFyY2guY29tL3NvbHIvbW92aWUvc2VsZWN0Lz93dD1qc29uJmZsPXllYXIsbmFtZV9ydXMsZGVzY3JpcHRpb24mcT1pZDo=') .. kpid})
+			if rc ~= 200 then return end
+			if not answer:match('^{') then return end
+		answer = answer:gsub('%[%]', '""'):gsub(string.char(239, 187, 191), '')
+		local tab = json.decode(answer)
+			if not tab or not tab.response or not tab.response.docs or not tab.response.docs[1] then return end
+		local year = tab.response.docs[1].year or 0
+		local title = tab.response.docs[1].name_rus
+		local desc = tab.response.docs[1].description or ''
+	 return	title,year,desc
+	end
+
+	local function ukp(kp)
+	local rc,answer = m_simpleTV.Http.Request(session,{url = decode64('aHR0cHM6Ly9raW5vcG9pc2thcGl1bm9mZmljaWFsLnRlY2gvYXBpL3YyLjIvZmlsbXMv') .. kp, method = 'get', headers = 'X-API-KEY: ' .. decode64('OTczODMxMzUtNjM0ZC00ODA4LWEzMzQtNGIwMjg3ZjZiZDBh') .. '\nContent-Type: application/json'})
+	if rc ~= 200 then return '','','' end
+	local title = answer:match('"nameRu"%:"(.-)"') or answer:match('"nameEn"%:"(.-)"') or answer:match('"nameOriginal"%:"(.-)"')
+	local year = answer:match('"year"%:(%d%d%d%d)')
+	local overview = answer:match('"description"%:"(.-)"') or ''
+	return title,year,overview
+	end
 
 	local function imdbid(kpid)
 	local url_vn = decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvc2hvcnQ/YXBpX3Rva2VuPW9TN1d6dk5meGU0SzhPY3NQanBBSVU2WHUwMVNpMGZtJmtpbm9wb2lza19pZD0=') .. kpid
@@ -100,6 +122,10 @@
 	if not m_simpleTV.User.Rezka.title and title_v and title_v~='' then
 		m_simpleTV.User.Rezka.title = title_v .. ' (' .. year_v .. ')'
 	elseif not m_simpleTV.User.Rezka.title then
+		title_b,year_b = zona(kp_id)
+		m_simpleTV.User.Rezka.title = title_b .. ' (' .. year_b .. ')'
+		m_simpleTV.User.Rezka.background = 'https://st.kp.yandex.net/images/film_iphone/iphone360_' .. kp_id .. '.jpg'
+	elseif not m_simpleTV.User.Rezka.title then
 		title_b,year_b = ukp(kp_id)
 		m_simpleTV.User.Rezka.title = title_b .. ' (' .. year_b .. ')'
 		m_simpleTV.User.Rezka.background = 'https://st.kp.yandex.net/images/film_iphone/iphone360_' .. kp_id .. '.jpg'
@@ -152,7 +178,7 @@
 		local url = urls:match("file\'(:.-)return pub")
 		url = url:gsub(": ",''):gsub("'#",'#'):gsub("'\n.-$",'')
 		url = playerjs.decode(url, m_simpleTV.User.Rezka.playerjs_url)
-		debug_in_file(url, 'c://1/bas.txt')
+--		debug_in_file(url, 'c://1/bas.txt')
 		local qlty, adr
 			for qlty, adr in url:gmatch('%[(.-)%](http.-) ') do
 			if not qlty:match('%d+') then break end

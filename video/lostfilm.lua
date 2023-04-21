@@ -1,5 +1,6 @@
 -- видеоскрипт для сайта http://www.lostfilm.tv (15/10/20)
 -- Copyright © 2017-2020 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
+-- mod and up west_side 04.04.23 (movies)
 -- ## необходим ##
 -- Acestream
 -- ## Авторизация ##
@@ -13,7 +14,7 @@
 -- http://www.lostfilm.tv/series/The_Night_Manager
 -- http://www.lostfilm.tv/series/The_Punisher/video/2
 -- ## зеркало ##
-local zer = ''
+local zer = 'https://www.lostfilmtv5.site'
 -- '' = нет
 -- 'https://www.lostfilmtv1.site' (пример)
 -- ## прокси ##
@@ -25,6 +26,7 @@ local prx = ''
 	local inAdr = m_simpleTV.Control.CurrentAddress
 		if not inAdr then return end
 		if not inAdr:match('^https?://www%.lostfilm[tv%d]*%.[^/]+/series/')
+			and not inAdr:match('^https?://www%.lostfilm[tv%d]*%.[^/]+/movies/')
 			and not inAdr:match('https?://n%.tracktor%.')
 			and not inAdr:match('&lostfilm')
 			and not inAdr:match('^https?://store%.bogi%.ru')
@@ -322,7 +324,7 @@ local prx = ''
 		local name, c, s, e
 			for ww in answer:gmatch('markEpisodeAsWatched.-</span>') do
 				name = ww:match('<div>(.-)<') or ''
-				c, s, e = ww:match('data%-code=\"(%d+)%-(%d+)%-(%d+)\"')
+				c, s, e = ww:match('data%-episode=\"(%d%d%d)(%d%d%d)(%d%d%d)\"')
 					if not c or not s or not e then break end
 				if s == '999' then
 					name = e .. '. ' .. name:gsub('[\r\n]', '')
@@ -416,7 +418,7 @@ local prx = ''
 	m_simpleTV.Http.Close(session)
 	m_simpleTV.Control.SetTitle(title)
 	m_simpleTV.Control.CurrentTitle_UTF8 = title
-	
+
 	m_simpleTV.OSD.ShowMessageT({text = title, color = 0xff9999ff, showTime = 1000 * 5, id = 'channelName'})
 	m_simpleTV.Control.CurrentAddress = retAdr
 -- debug_in_file(retAdr .. '\n')
