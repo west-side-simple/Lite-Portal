@@ -55,11 +55,12 @@ end
 	return urlv
 	end
 	local function kpid(imdbid)
+	if imdbid == 'tt0086333' then return '77264' end
 	local url_vn = decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvc2hvcnQ/YXBpX3Rva2VuPXROamtaZ2M5N2JtaTlqNUl5NnFaeXNtcDlSZG12SG1oJmltZGJfaWQ9') .. imdbid
 	local rc5,answer_vn = m_simpleTV.Http.Request(session,{url=url_vn})
 
 		if rc5~=200 then
-		return ''
+		return vb_asw(imdbid)
 		end
 		require('json')
 		answer_vn = answer_vn:gsub('\\', '\\\\'):gsub('\\"', '\\\\"'):gsub('\\/', '/'):gsub('(%[%])', '"nil"')

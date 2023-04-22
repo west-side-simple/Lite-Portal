@@ -20,8 +20,8 @@
 
 	local function zona(kpid)
 		local rc, answer = m_simpleTV.Http.Request(session, {url = decode64('aHR0cDovL3pzb2xyLnpvbmFzZWFyY2guY29tL3NvbHIvbW92aWUvc2VsZWN0Lz93dD1qc29uJmZsPXllYXIsbmFtZV9ydXMsZGVzY3JpcHRpb24mcT1pZDo=') .. kpid})
-			if rc ~= 200 then return end
-			if not answer:match('^{') then return end
+			if rc ~= 200 then return '','','' end
+			if not answer:match('^{') then return '','','' end
 		answer = answer:gsub('%[%]', '""'):gsub(string.char(239, 187, 191), '')
 		local tab = json.decode(answer)
 			if not tab or not tab.response or not tab.response.docs or not tab.response.docs[1] then return end
@@ -115,25 +115,29 @@
 	local title_v, year_v, title_b, year_b
 	if kp_id then imdb_id, title_v, year_v = imdbid(kp_id) end
 	local logo = 'https://static.hdrezka.ac/templates/hdrezka/images/avatar.png'
-	if imdb_id and imdb_id~='' and bg_imdb_id(imdb_id)~='' then
+	if imdb_id and imdb_id~='' and bg_imdb_id(imdb_id) then
 	m_simpleTV.User.Rezka.background, m_simpleTV.User.Rezka.title = bg_imdb_id(imdb_id)
+	if m_simpleTV.User.Rezka.background ~= '' then
 	m_simpleTV.Control.ChangeChannelLogo(m_simpleTV.User.Rezka.background, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
+	end
 	end
 	if not m_simpleTV.User.Rezka.title and title_v and title_v~='' then
 		m_simpleTV.User.Rezka.title = title_v .. ' (' .. year_v .. ')'
-	elseif not m_simpleTV.User.Rezka.title then
+	elseif not m_simpleTV.User.Rezka.title and kp_id then
 		title_b,year_b = zona(kp_id)
 		m_simpleTV.User.Rezka.title = title_b .. ' (' .. year_b .. ')'
 		m_simpleTV.User.Rezka.background = 'https://st.kp.yandex.net/images/film_iphone/iphone360_' .. kp_id .. '.jpg'
-	elseif not m_simpleTV.User.Rezka.title then
+	elseif not m_simpleTV.User.Rezka.title and kp_id then
 		title_b,year_b = ukp(kp_id)
 		m_simpleTV.User.Rezka.title = title_b .. ' (' .. year_b .. ')'
 		m_simpleTV.User.Rezka.background = 'https://st.kp.yandex.net/images/film_iphone/iphone360_' .. kp_id .. '.jpg'
 	end
-	if not m_simpleTV.User.Rezka.background or m_simpleTV.User.Rezka.background=='' then
+--[[	if not m_simpleTV.User.Rezka.background or m_simpleTV.User.Rezka.background=='' then
 		m_simpleTV.Control.ChangeChannelLogo(logo, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
+	end--]]
+	if m_simpleTV.User.Rezka.title then 
+	m_simpleTV.Control.SetTitle(m_simpleTV.User.Rezka.title) 
 	end
-	m_simpleTV.Control.SetTitle(m_simpleTV.User.Rezka.title)
 	local function showError(str)
 		m_simpleTV.OSD.ShowMessageT({text = 'hdrezka ошибка: ' .. str, showTime = 5000, color = 0xffff1000, id = 'channelName'})
 	end

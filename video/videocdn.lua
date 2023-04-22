@@ -45,6 +45,7 @@ local proxy = ''
 		end
 	end
 local function imdbid(kpid)
+	if kpid == '77264' then return 'tt0086333','Шерлок Холмс и доктор Ватсон: Сокровища Агры','1983' end
 	local url_vn = decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvc2hvcnQ/YXBpX3Rva2VuPW9TN1d6dk5meGU0SzhPY3NQanBBSVU2WHUwMVNpMGZtJmtpbm9wb2lza19pZD0=') .. kpid
 	local rc5,answer_vn = m_simpleTV.Http.Request(session,{url=url_vn})
 		if rc5~=200 then

@@ -1,6 +1,6 @@
 -- видеоскрипт для сайта http://www.kinopoisk.ru
 -- Copyright © 2017-2023 Nexterr | https://github.com/Nexterr/simpleTV
--- mod west_side - (21.04.23)
+-- mod west_side - (22.04.23)
 -- ## необходимы ##
 -- видеоскрипты: videocdn.lua, hdvb-vb.lua, collaps.lua, voidboost.lua, zetflix.lua
 -- ## открывает подобные ссылки ##
@@ -148,6 +148,7 @@ tname = {
 -- 'КиноПоиск онлайн',
 -- 'Seasonvar',
 -- 'ivi',
+ 'Magnets',
 	}
 -- ##
 elseif tonumber(m_simpleTV.Config.GetValue('mediabaze', 'LiteConf.ini')) == 2 then
@@ -168,6 +169,7 @@ tname = {
 -- 'КиноПоиск онлайн',
 -- 'Seasonvar',
 -- 'ivi',
+ 'Magnets',
 	}
 -- ##
 end
@@ -414,6 +416,29 @@ end
 			rc,answer = m_simpleTV.Http.Request(session,{url = url, method = 'get', headers = 'User-agent: Mozilla/5.0 (Windows NT 10.0; rv:97.0) Gecko/20100101 Firefox/97.0\nReferer: https://hdi.zetflix.online/iplayer/player.php'})
 				if rc ~= 200 or answer:match('video_not_found') then return end
 			return url
+		elseif url:match('vokino') then
+			rc, answer = m_simpleTV.Http.Request(session, {url = url .. '&token=' .. decode64('d2luZG93c18yZmRkYTQyMWNkZGI2OTExNmUwNzY4ZjNiZmY0ZGUwNV81OTIwMjE=')})
+				if rc ~= 200 then return end
+			require('json')
+			answer = answer:gsub('(%[%])', '"nil"')
+			local tab = json.decode(answer)
+			if not tab or not tab.channels or not tab.channels[1] or not tab.channels[1].details or not tab.channels[1].details.id or not tab.channels[1].details.name
+			then
+			return end
+			m_simpleTV.Http.Close(session)
+			local t, i = {}, 1
+			while true do
+			if not tab.channels[i] or not tab.channels[i].details.id
+						then
+						break
+						end
+			local id = tab.channels[i].details.id or ''
+			local name = tab.channels[i].details.name or 'noname'
+			local released = tab.channels[i].details.released or ''
+			if name == title then return 'id=' .. id end
+			i=i+1
+			end
+			return url
 		end
 	 return
 	end
@@ -480,6 +505,8 @@ end
 			return answer
 		elseif url:match('zetflix') then
 			return answer
+		elseif url:match('vokino') then
+			return answer
 		end
 	 return
 	end
@@ -506,6 +533,7 @@ end
 	end
 
 	local function imdbid(kpid)
+	if kpid == '77264' then return 'tt0086333','Шерлок Холмс и доктор Ватсон: Сокровища Агры','1983' end
 	local url_vn = decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvc2hvcnQ/YXBpX3Rva2VuPW9TN1d6dk5meGU0SzhPY3NQanBBSVU2WHUwMVNpMGZtJmtpbm9wb2lza19pZD0=') .. kpid
 	local rc5,answer_vn = m_simpleTV.Http.Request(session,{url=url_vn})
 		if rc5~=200 then
@@ -636,6 +664,8 @@ end
 				turl[i] = {adr = decode64('aHR0cHM6Ly92b2lkYm9vc3QubmV0L2VtYmVkLw') .. kpid, tTitle = 'Большая база фильмов и сериалов', tLogo = logo_k}
 			elseif tname[i] == 'ZF' then
 				turl[i] = {adr = decode64('aHR0cHM6Ly9oZGkuemV0ZmxpeC5vbmxpbmUvaXBsYXllci92aWRlb2RiLnBocD9rcD0=') .. kpid, tTitle = 'Большая база фильмов и сериалов', tLogo = logo_k}
+			elseif tname[i] == 'Magnets' then
+				turl[i] = {adr = decode64('aHR0cDovL2FwaS52b2tpbm8udHYvdjIvbGlzdD9uYW1lPSUyQg==') .. kpid:gsub('77264','127608'), tTitle = 'Пиринговые ресурсы', tLogo = logo_k}
 			end
 		end
 	end
@@ -704,6 +734,8 @@ end
 		search_all()
 	 return
 	end
+	if retAdr:match('vokino') then content_adr_page(retAdr) end
+	if retAdr:match('^id=') then content(retAdr:gsub('id=','')) end
 	m_simpleTV.Control.CurrentTitle_UTF8 = title .. year
 	m_simpleTV.Control.SetTitle(title .. year)
 	m_simpleTV.Http.Close(session)
@@ -713,7 +745,6 @@ end
 	retAdr = retAdr:gsub('^//', 'http://')
 	if retAdr:match('svetacdn%.') then retAdr = retAdr .. '&embed=' .. kpid end
 	m_simpleTV.Control.CurrentAddress = retAdr
-
 
 	dofile(m_simpleTV.MainScriptDir_UTF8 .. 'user\\video\\video.lua')
 -- debug_in_file(retAdr .. '\n')
