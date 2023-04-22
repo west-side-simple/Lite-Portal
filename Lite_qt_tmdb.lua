@@ -360,7 +360,7 @@ local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; r
 	local rc5,answer_vn = m_simpleTV.Http.Request(session,{url=url_vn})
 
 		if rc5~=200 then
-		return ''
+		return vb_asw(imdbid)
 		end
 		require('json')
 		answer_vn = answer_vn:gsub('(%[%])', '"nil"')
