@@ -39,7 +39,7 @@
 		for w in answer:gmatch('<li data%-iframe=".-</li>') do
 			local adr,name = w:match('<li data%-iframe="(.-)">(.-)</li>')
 				if not adr then break end
-			if (name == 'HDVB' or name == 'Collaps') and adr~='' then
+			if (name == 'HDVB' or name == 'Collaps' or name == 'cdn') and adr~='' then
 				t[i] = {}
 				t[i].Id = i
 				t[i].Name = name
@@ -97,6 +97,6 @@
 	m_simpleTV.Control.CurrentTitle_UTF8 = title
 	retAdr = retAdr:gsub('^//', 'http://'):gsub('amp;', '')
 	m_simpleTV.Control.ChangeAddress = 'No'
-	m_simpleTV.Control.CurrentAddress = retAdr .. '&kinopoisk'
+	m_simpleTV.Control.CurrentAddress = retAdr
 	dofile(m_simpleTV.MainScriptDir .. 'user\\video\\video.lua')
 -- debug_in_file(retAdr .. '\n')

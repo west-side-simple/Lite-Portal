@@ -1,5 +1,5 @@
--- видеоскрипт для сайта https://kino4ua.com/ (04/08/22)
--- необходимы скрипты: ashdi (autor - westSide), collaps (autor - nexterr)
+-- видеоскрипт для сайта https://kino4ua.com/ (23/04/23)
+-- необходимы скрипты: ashdi (author - westSide), collaps (author - nexterr) mod westSide
 -- открывает подобные ссылки:
 -- https://kino4ua.com/749-titank.html
 
@@ -28,7 +28,9 @@ end
 	local title = answer:match('<h1 itemprop="name">(.-)</h1>') or answer:match('<title>(.-)</title>')
 	title = title:gsub(' дивитися онлайн.-$', ''):gsub('%&#039%;','`'):gsub('%&quot%;','"')
 	local poster = answer:match('<meta property="og:image" content="(.-)"')
+	if poster and not poster:match('^http') then
 	poster = 'https://kino4ua.com/uploads/posts/' .. poster
+	end
 	local desc = answer:match('<meta name="description" content="(.-)"')
 	m_simpleTV.Control.CurrentTitle_UTF8 = title
 	local background = poster
@@ -43,12 +45,12 @@ end
 		adr = w:match('<iframe.-src="(.-)"')
 		if not adr then break end
 		t[i] = {}
-		t[i].Address = adr
+		t[i].Address = adr:gsub('%&%#58%;',':'):gsub('^.-//','http://')
 		t[i].InfoPanelTitle = desc
 		t[i].InfoPanelName = title
 		t[i].InfoPanelShowTime = 8000
 		t[i].InfoPanelLogo = poster
-		if adr:match('/api%.tobaco%.ws') or adr:match('/api%.getcodes%.ws') or adr:match('/api%.strvid%.ws') then t[i].Name = 'Collaps' elseif adr:match('/ashdi') then t[i].Name = 'HD' elseif adr:match('youtube%.com') then t[i].Name = 'Trailer' end
+		if adr:match('/api%.tobaco%.ws') or adr:match('/api%.getcodes%.ws') or adr:match('/api%.strvid%.ws') then t[i].Name = 'Collaps' elseif adr:match('/ashdi') then t[i].Name = 'UA HD' elseif adr:match('youtube%.com') then t[i].Name = 'Trailer' end
 		i=i+1
 	end
 		local hash, res = {}, {}
@@ -62,7 +64,7 @@ end
 		for i = 1, #res do
 			res[i].Id = i
 		end
-	if #res and #res > 1 and not res[1].Address:match('/ashdi') then
+	if #res and #res > 1 then
 	local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('🎞 ' .. title, 0, res, 8000, 1 + 2)
 		id = id or 1
 		retAdr = res[id].Address

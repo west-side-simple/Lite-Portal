@@ -1,5 +1,5 @@
--- видеоскрипт для сайтов http://www.hdkinoteatr.com  https://kinogo.cc/ (18/01/23)
--- необходимы скрипты: collaps (autor - nexterr)
+-- видеоскрипт для сайтов http://www.hdkinoteatr.com  https://kinogo.cc/ (23/04/23)
+-- необходимы скрипты: collaps,hdvb (author - nexterr) mod west_side
 -- открывает подобные ссылки:
 -- http://www.hdkinoteatr.com/drama/28856-vse_ispravit.html
 -- https://kinogo.cc/75043-poslednee-voskresenie-last-station-kinogo-2009.html

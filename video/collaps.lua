@@ -1,6 +1,6 @@
 -- видеоскрипт для видеобалансера "Collaps" https://collaps.org (15/06/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod west_side (04/02/23)
+-- mod west_side (23/04/23)
 -- ## открывает подобные ссылки ##
 -- https://api1603044906.kinogram.best/embed/movie/7059
 -- https://api1603044906.kinogram.best/embed/kp/5928
@@ -17,7 +17,6 @@
 	local inAdr = m_simpleTV.Control.CurrentAddress
 	if inAdr:match('^$collaps') or not inAdr:match('&kinopoisk') then
 		m_simpleTV.OSD.ShowMessageT({text = '', showTime = 1000, id = 'channelName'})
---		m_simpleTV.Interface.SetBackground({BackColor = 0, BackColorEnd = 255, PictFileName = '', TypeBackColor = 0, UseLogo = 0, Once = 1})
 	end
 	m_simpleTV.Control.ChangeAddress = 'Yes'
 	m_simpleTV.Control.CurrentAddress = 'error'
@@ -33,7 +32,7 @@
 	end
 	m_simpleTV.User.collaps.kinogo = nil
 	m_simpleTV.User.collaps.ua = nil
-	local title
+	local title,logo,subt
 	if m_simpleTV.User.collaps.episode then
 		local index = m_simpleTV.Control.GetMultiAddressIndex()
 		if index then
@@ -43,51 +42,6 @@
 	local function showMsg(str, color)
 		local t = {text = str, showTime = 1000 * 5, color = color, id = 'channelName'}
 		m_simpleTV.OSD.ShowMessageT(t)
-	end
-	local function replaseStr(str, a, b)
-		str = split(str)
-			for i = 1, #str do
-				for h = 1, #a do
-					if str[i] == a[h] then
-						str[i] = b[h]
-					 break
-					end
-				end
-			end
-	 return table.concat(str)
-	end
-	local function replaseT()
-		local a = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-		local b = 'DlChEXitLONYRkFjAsnBbymWzSHMqKPgQZpvwerofJTVdIuUcxaG'
-	 return split(a), split(b)
-	end
-	local function GetChiperUrl(url)
-		local adr = url:match('https?://[^/]+(.+)')
-		local path = math.floor(os.time() / 3600) .. '/' .. adr
-		local origin = url:match('https?://[^/]+')
-		local base = origin .. '/x-en-x/'
-		local a, b = replaseT()
-		adr = encode64(path)
-	 return base .. replaseStr(adr, a, b)
-	end
-	local function GetFilePath(adr)
-		local path = adr:match('https?://[^/]+(/.+/)')
-			if not path then return end
-		adr = GetChiperUrl(adr)
-		local rc, answer = m_simpleTV.Http.Request(session, {url = adr})
-			if rc ~= 200 then return end
-		path = math.floor(os.time() / 3600) .. '/' .. path
-		local origin = adr:match('https?://[^/]+')
-		local base = origin .. '/x-en-x/'
-		local a, b = replaseT()
-		answer = string.gsub(answer, 'seg[^%.]+%.ts',
-				function(c)
-					c = encode64(path .. c)
-				 return base .. replaseStr(c, a, b)
-				end)
-		local filePath = m_simpleTV.Common.GetMainPath(2) .. 'temp_colaps'
-		debug_in_file(answer, filePath, true)
-	 return filePath
 	end
 	local function collapsIndex(t)
 		local lastQuality = tonumber(m_simpleTV.Config.GetValue('collaps_qlty') or 5000)
@@ -107,13 +61,13 @@
 	end
 	local function GetcollapsAdr(url)
 		url = url:gsub('^$collaps', '')
---		 url = GetChiperUrl(url)
-		local rc, answer = m_simpleTV.Http.Request(session, {url = url})
+		local rc, answer = m_simpleTV.Http.Request(session, {url = url:gsub('%$OPT.-$','')})
 			if rc ~= 200 then return end
+		local subt = url:match('(%$OPT.-)$')	or ''
 		local t = {}
 			for w, adr in answer:gmatch('EXT%-X%-STREAM%-INF(.-)\n(.-)\n') do
 				local qlty = w:match('RESOLUTION=%d+x(%d+)')
-				if adr and w:match('AUDIO="audio0"') and qlty then
+				if adr and adr:match('x%-bc') and qlty then
 					t[#t + 1] = {}
 					t[#t].Address = adr
 					t[#t].qlty = tonumber(qlty)
@@ -153,7 +107,7 @@
 		end
 			for i = 1, #t do
 				t[i].Id = i
-				t[i].Address = t[i].Address:gsub('%.m3u8', '-a' .. transl ..'.m3u8')
+				t[i].Address = t[i].Address:gsub('%.m3u8', '-a' .. transl ..'.m3u8') .. subt
 			end
 		m_simpleTV.User.collaps.Tab = t
 		local index = collapsIndex(t)
@@ -175,29 +129,22 @@
 		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('⚙ Качество', index - 1, t, 10000, 1 + 4)
 		if ret == 1 then
 			local retAdr = t[id].Address
-			-- retAdr = GetFilePath(retAdr)
-				-- if not retAdr then return end
 			m_simpleTV.Control.SetNewAddress(retAdr, m_simpleTV.Control.GetPosition())
 			m_simpleTV.Config.SetValue('collaps_qlty', t[id].qlty)
 		end
 		if ret == 2 then
+		if m_simpleTV.User.collaps.kinogo then
 		kinogo_info(m_simpleTV.User.collaps.kinogo)
+		end
+		if m_simpleTV.User.collaps.ua then
+		ua_info(m_simpleTV.User.collaps.ua)
+		end		
 		end
 	end
 	local function play(Adr, title)
 		local retAdr = GetcollapsAdr(Adr) or Adr
-		--[[	if not retAdr then
-				m_simpleTV.Control.CurrentAddress = 'http://wonky.lostcut.net/vids/error_getlink.avi'
-			 return
-			end--]]
 		m_simpleTV.Control.CurrentTitle_UTF8 = title
-		-- retAdr = GetFilePath(retAdr)
-			-- if not retAdr then
-				-- showMsg('collaps ошибка: GetFilePath', ARGB(255, 255, 102, 0))
-			 -- return
-			-- end
 		showMsg(title, ARGB(255, 153, 153, 255))
---		m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = '', TypeBackColor = 0, UseLogo = 0, Once = 1})
 		m_simpleTV.Control.CurrentAddress = retAdr:gsub('^$collaps','')
 -- debug_in_file(retAdr .. '\n')
 	end
@@ -213,7 +160,7 @@
 	if m_simpleTV.User.collaps.ua then
 		m_simpleTV.User.westSide.PortalTable = m_simpleTV.User.collaps.ua
 	end
-	inAdr = inAdr:gsub('&kinopoisk', ''):gsub('&kinogo=.-$', ''):gsub('&kino4ua=.-$', '')
+	inAdr = inAdr:gsub('&kinopoisk', ''):gsub('%&kinogo=.-$', ''):gsub('%&kino4ua=.-$', '')
 	local rc, answer = m_simpleTV.Http.Request(session, {url = inAdr})
 		if rc ~= 200 then
 			showMsg('collaps ошибка: 1', ARGB(255, 255, 102, 0))
@@ -248,12 +195,12 @@
 			local _, id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите сезон - ' .. title, 0, t0, 10000, 1)
 			id = id or 1
 		 	seson = t0[id].Address
-			season_title = ' (' .. t0[id].Name .. ')'
+			season_title = ' ' .. t0[id].Name
 		else
 			seson = t0[1].Address
 			local ses = t0[1].Name:match('%d+') or '0'
 			if tonumber(ses) > 1 then
-				season_title = ' (' .. t0[1].Name .. ')'
+				season_title = ' ' .. t0[1].Name
 			end
 		end
 		m_simpleTV.User.collaps.season = t0
@@ -301,6 +248,17 @@
 			 return
 			end
 		title = answer:match('title:%s*"(.-)",') or 'Collaps'
+		logo = answer:match('poster:%s*"(.-)",')
+		subt = answer:match('cc:%s*%[(.-)%]')
+		if subt then
+			local s = {}
+			for w in subt:gmatch('http.-%.vtt') do
+				s[#s + 1] = w:gsub('://', '/webvtt://')
+			end
+			subt = '$OPT:sub-track=0$OPT:input-slave=' .. table.concat(s, '#')
+		end
+		m_simpleTV.Interface.SetBackground({BackColor = 0, BackColorEnd = 255, PictFileName = logo, TypeBackColor = 0, UseLogo = 3, Once = 1})
+		m_simpleTV.Control.ChangeChannelLogo(logo, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
 		title = title:gsub('\\u0026', '&')
 		m_simpleTV.Control.SetTitle(title)
 		local transl = answer:match('audio:%s*({[^}]+})')
@@ -332,4 +290,5 @@
 		m_simpleTV.OSD.ShowSelect_UTF8('Collaps', 0, t1, 10000, 64 + 32 + 128)
 	end
 --	debug_in_file(inAdr .. '\n')
+	inAdr = inAdr .. (subt or '')
 	play(inAdr, title)

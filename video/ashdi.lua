@@ -44,7 +44,9 @@ local function GetInfo(Adr)
 	local title = answer:match('<h1 itemprop="name">(.-)</h1>') or answer:match('<title>(.-)</title>')
 	title = title:gsub(' дивитися онлайн.-$', ''):gsub('%&#039%;','`'):gsub('%&quot%;','"')
 	local poster = answer:match('<meta property="og:image" content="(.-)"')
+	if poster and not poster:match('^http') then
 	poster = 'https://kino4ua.com/uploads/posts/' .. poster
+	end
 	local desc = answer:match('<meta name="description" content="(.-)"')
 return title, poster, desc
 end

@@ -336,7 +336,7 @@
 	t[i]={}
 	t[i].Id = i
 	t[i].Address = inAdr:gsub('%&season=.-$','') .. '&season=' .. tonumber(tab.seasons[j].season_number) .. '&episode=' .. k
-	t[i].Name = tab.seasons[j].name:gsub('Season','Сезон') .. ', Эпизод ' .. k
+	t[i].Name = tab.seasons[j].name:gsub('Season','Сезон') .. ', Серия ' .. k
 	i=i+1
 	k=k+1
 	end
