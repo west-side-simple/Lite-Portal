@@ -1,4 +1,4 @@
--- Плагин для трекеров lite portal 21.04.23
+-- Плагин для трекеров lite portal 22.04.23
 -- author west_side
 
 function start_page()
@@ -7,6 +7,7 @@ function start_page()
 		local tt = {
 		{"http://api.vokino.tv/v2/list?sort=popular&page=1","В тренде"},
 		{"http://api.vokino.tv/v2/list?sort=updatings&page=1","Обновления"},
+		{"http://api.vokino.tv/v2/list?sort=new&type=movie&page=1","Новинки фильмов"},
 		{"http://api.vokino.tv/v2/list?sort=popular&type=movie&page=1","Фильмы"},
 		{"http://api.vokino.tv/v2/list?sort=popular&type=serial&page=1","Сериалы"},
 		{"http://api.vokino.tv/v2/list?sort=popular&type=multfilm&page=1","Мультфильмы"},

@@ -1,6 +1,6 @@
 --startup westSide portal
 --saved as utf-8 without bom
---wafee code, west_side updated 21.04.23
+--wafee code, west_side updated 24.04.23
 -------------------------------------------------------------------
 if m_simpleTV.User==nil then m_simpleTV.User={} end
 if m_simpleTV.User.westSide==nil then m_simpleTV.User.westSide={} end
@@ -45,13 +45,6 @@ end
 -------------------------------------------------------------------
 function mediabaze()
  m_simpleTV.Control.ExecuteAction(37)
- local function getConfigVal(key)
-	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
- end
-
- local function setConfigVal(key,val)
-	m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
- end
  local tt2={
   {'Избранные медиабалансеры (быстро)',1},
   {'Все медиабалансеры (медленно)',2},
@@ -76,7 +69,7 @@ function mediabaze()
 	run_westSide_portal()
   end
 end
---------------------------------------
+-------------------------------------------------------------------
 function KP_Get_History()
 
 -- wafee code for history
@@ -111,7 +104,7 @@ function KP_Get_History()
    t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Portal '}
    t.ExtButton1 = {ButtonEnable = true, ButtonName = ' Cleane '}
    local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Кинопоиск: История просмотра',0,t,9000,1+4+8)
-   if id==nil then 
+   if id==nil then
    run_westSide_portal()
    end
    if ret==1 then
@@ -127,7 +120,7 @@ function KP_Get_History()
 	  run_westSide_portal()
    end
    end
---------------------------------------------------
+-------------------------------------------------------------------
 function run_westSide_portal()
  m_simpleTV.Control.ExecuteAction(37)
  local tt1={

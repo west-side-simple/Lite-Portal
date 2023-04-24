@@ -182,12 +182,12 @@ function select_keyboard()
     t[i].Action = kb_pack[i][2]
 	t[i].InfoPanelLogo = m_simpleTV.MainScriptDir_UTF8 .. 'user/westSidePortal/GUI/img/' .. kb_pack[i][2] .. '.svg'
 	t[i].InfoPanelShowTime = 10000
-    end	
+    end
 	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Skins '}
 	local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Keyboard Pack',cur_keyboard,t,9000,1+4+8)
     if id==nil then return end
     if ret == 1 then
-	  setConfigVal('keyboard/number',t[id].Action)	 
+	  setConfigVal('keyboard/number',t[id].Action)
 	  dofile(m_simpleTV.MainScriptDir_UTF8 .. 'user\\westSidePortal\\GUI\\showDialog.lua')
     end
 	if ret == 2 then
@@ -205,4 +205,4 @@ end
  t.location = 0
  t.image= m_simpleTV.MainScriptDir_UTF8 .. 'user/show_mi/emptyLogo.png'
  m_simpleTV.Interface.AddExtMenuT(t)
-------------------------------------------------------------------- 
+-------------------------------------------------------------------

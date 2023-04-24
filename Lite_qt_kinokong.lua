@@ -1,4 +1,4 @@
---kinokong portal - lite version west_side 29.07.22
+--kinokong portal - lite version west_side 23.04.23
 
 function run_lite_qt_kinokong()
 	local function getConfigVal(key)
@@ -284,7 +284,17 @@ function kinokong_info(url)
 		j=j+1
 		end
 		t1.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🢀 '}
+		local ind=1
+		for w in answer:gmatch('<li data%-iframe=".-</li>') do
+			local adr,name = w:match('<li data%-iframe="(.-)">(.-)</li>')
+				if not adr then break end
+			if (name == 'HDVB' or name == 'Collaps' or name == 'cdn') and adr~='' then
+				ind = ind+1
+			end
+		end
+		if ind>1 then
 		t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' Play '}
+		end
 		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('KinoKong: ' .. title, 0, t1, 30000, 1 + 4 + 8 + 2)
 		if ret == 1 then
 			if id == 1 then
