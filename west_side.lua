@@ -30,9 +30,7 @@ function show_portal_window()
 			elseif m_simpleTV.User.TMDB and m_simpleTV.User.TMDB.Id and m_simpleTV.User.TMDB.tv then
 			media_info_tmdb(m_simpleTV.User.TMDB.Id,m_simpleTV.User.TMDB.tv)
 			elseif m_simpleTV.User.collaps and m_simpleTV.User.collaps.ua then
-			ua_info(m_simpleTV.User.westSide.PortalTable)
-			elseif m_simpleTV.User.hdua and m_simpleTV.User.hdua.serial then
-			ua_serial()
+			ua_info(m_simpleTV.User.westSide.PortalTable)			
 			elseif m_simpleTV.User.collaps and m_simpleTV.User.collaps.kinogo then
 			kinogo_info(m_simpleTV.User.westSide.PortalTable)
 			elseif m_simpleTV.User.torrent and m_simpleTV.User.torrent.content then

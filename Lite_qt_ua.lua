@@ -1,4 +1,4 @@
---UA portal - lite version west_side 04.08.22
+--UA portal - lite version west_side 25.04.23
 
 function run_lite_qt_ua()
 	local function getConfigVal(key)
@@ -12,6 +12,11 @@ function run_lite_qt_ua()
 	local last_adr = getConfigVal('info/kino4ua') or ''
 			local pll={
 		{"/filmy/","Фільми - надходження"},
+		{"/serialy/","Серіали - надходження"},
+		{"/multfilmy/","Мультфильми"},
+		{"/multserialy_ukrainskou/","Мультсеріали"},
+		{"/anime_ukrainskou/","Аніме"},
+		{"/tb_show_ukraynske/","ТБ - шоу"},
 		{"/filmy/vitchyzniani/","Вітчизняні"},
 		{"/filmy/boyovik/","Бойовик"},
 		{"/filmy/viyskovi/","Військовий"},
@@ -31,11 +36,6 @@ function run_lite_qt_ua()
 		{"/filmy/fantasy/","Фентезі"},
 		{"/filmy/simeyni/","Сімейні"},
 		{"/filmy/dytiachi/","Дитячі"},
-		{"/serialy/","Серіали - надходження"},
-		{"/multfilmy/","Мультфильми"},
-		{"/multserialy_ukrainskou/","Мультсеріали"},
-		{"/anime_ukrainskou/","Аніме"},
-		{"/tb_show_ukraynske/","ТБ - шоу"},
 		{"","ПОШУК"},
 }
 
