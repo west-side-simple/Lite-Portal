@@ -61,7 +61,7 @@ if m_simpleTV.Control.Reason=='EndReached' and m_simpleTV.Control.CurrentAddress
 	end
 	m_simpleTV.Control.Action = 'stop'
 end
-if (m_simpleTV.Control.Reason=='Stopped' or m_simpleTV.Control.Reason=='Error' or m_simpleTV.Control.GetPosition() and m_simpleTV.Control.GetPosition()>=0.5)
+if (m_simpleTV.Control.Reason=='Stopped' or m_simpleTV.Control.Reason=='Error' or m_simpleTV.Control.GetPosition() and m_simpleTV.Control.GetPosition()>=0.9)
 	and (m_simpleTV.User.westSide.UP==nil or m_simpleTV.User.westSide.UP~=true)
 	and m_simpleTV.Control.CurrentAddress:match('/main/video%d+%.mp4') then
 	if m_simpleTV.Control.MainMode == 0 then
