@@ -1,4 +1,4 @@
--- видеоскрипт для сайта https://kino4ua.com/ (23/04/23)
+-- видеоскрипт для сайта https://kino4ua.com/ (25/04/23)
 -- необходимы скрипты: ashdi (author - westSide), collaps (author - nexterr) mod westSide
 -- открывает подобные ссылки:
 -- https://kino4ua.com/749-titank.html
@@ -65,18 +65,25 @@ end
 			res[i].Id = i
 		end
 	if #res and #res > 1 then
+	if res[1].Name == 'UA HD' then
+		retAdr = res[1].Address
+	else
 	local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('🎞 ' .. title, 0, res, 8000, 1 + 2)
 		id = id or 1
 		retAdr = res[id].Address
-	else
-		retAdr = res[1].Address
 	end
+	elseif res[1] and res[1].Address then
+		retAdr = res[1].Address
+	else
+		retAdr = nil
+	end
+		setConfigVal('info/kino4ua',inAdr:gsub('%&seriaua=.-$',''))
 		if not retAdr then
-			m_simpleTV.OSD.ShowMessage_UTF8('<kino4ua ошибка[2]', 255, 5)
-		 return
+			m_simpleTV.OSD.ShowMessage_UTF8('контент не доступен', 255, 10)
+		 return ua_info(getConfigVal('info/kino4ua'))
 		end
 
-	setConfigVal('info/kino4ua',inAdr:gsub('%&seriaua=.-$',''))
+
 
 	m_simpleTV.Control.ChangeAdress = 'No'
 
