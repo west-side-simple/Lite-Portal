@@ -1,6 +1,6 @@
 -- видеоскрипт для сайта http://www.kinopoisk.ru
 -- Copyright © 2017-2023 Nexterr | https://github.com/Nexterr/simpleTV
--- mod west_side - (22.04.23)
+-- mod west_side - (14.05.23)
 -- ## необходимы ##
 -- видеоскрипты: videocdn.lua, hdvb-vb.lua, collaps.lua, voidboost.lua, zetflix.lua
 -- ## открывает подобные ссылки ##
@@ -723,14 +723,14 @@ end
 	menu()
 	if #rett == 0 then
 		m_simpleTV.Control.ExecuteAction(37)
-		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'Kinopoisk: Медиаконтент не найден', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1" src="' .. m_simpleTV.MainScriptDir .. 'user/westSide/icons/liteportal.png"', text = 'Kinopoisk: Медиаконтент не найден', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
 		search_all()
 	 return
 	end
 	selectmenu()
 	if not retAdr or retAdr == 0 then
 		m_simpleTV.Control.ExecuteAction(37)
-		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'Kinopoisk: Медиаконтент не найден', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1" src="' .. m_simpleTV.MainScriptDir .. 'user/westSide/icons/liteportal.png"', text = 'Kinopoisk: Медиаконтент не найден', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
 		search_all()
 	 return
 	end

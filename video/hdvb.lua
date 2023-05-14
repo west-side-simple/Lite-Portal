@@ -1,6 +1,6 @@
 -- видеоскрипт для видеобалансера "Hdvb" https://hdvb.tv (16/06/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod west_side (16/06/22)
+-- mod west_side (29/04/23)
 -- ## открывает подобные ссылки ##
 -- https://vid1647324294.vb17121coramclean.pw/movie/c77fd8d3ec03509000778d9af49f8d86/iframe
 -- https://vid1648222294.vb17121coramclean.pw/serial/77de2d434d279e861121237797af59a26ae2a19b53718d36ce15bcca908eaed2/iframe
@@ -11,11 +11,11 @@
 		 return
 		end
 	local inAdr = m_simpleTV.Control.CurrentAddress
-	if not inAdr:match('&kinopoisk') then
+--[[	if not inAdr:match('&kinopoisk') then
 		if m_simpleTV.Control.MainMode == 0 then
 			m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = '', TypeBackColor = 0, UseLogo = 0, Once = 1})
 		end
-	end
+	end--]]
 	require 'json'
 	m_simpleTV.Control.ChangeAddress = 'Yes'
 	m_simpleTV.Control.CurrentAddress = 'error'
@@ -210,7 +210,7 @@
 			end
 		id = id or 1
 		m_simpleTV.User.hdvb.season = id
-		m_simpleTV.User.hdvb.seasonName = ' (' .. t[id].Name .. ')'
+		m_simpleTV.User.hdvb.seasonName = ' ' .. t[id].Name
 	 return true
 	end
 	local function episodes()
@@ -220,7 +220,7 @@
 			while tab[season].folder[i] do
 				t[i] = {}
 				t[i].Id = i
-				t[i].Name = tab[season].folder[i].title
+				t[i].Name = 'Серия ' .. tab[season].folder[i].title:gsub(' серия','')
 				t[i].Address = '$hdvb' .. tab[season].folder[i].folder[1].file
 				t[i].Table = tab[season].folder[i].folder
 				i = i + 1
@@ -236,7 +236,7 @@
 		if m_simpleTV.User.paramScriptForSkin_buttonOptions then
 			t.ExtButton0 = {ButtonEnable = true, ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonOptions, ButtonScript = 'qlty_hdvb()'}
 		else
-			t.ExtButton0 = {ButtonEnable = true, ButtonName = '⚙', ButtonScript = 'qlty_hdvb()'}
+			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ Качество ', ButtonScript = 'qlty_hdvb()'}
 		end
 		if m_simpleTV.User.paramScriptForSkin_buttonOk then
 			t.OkButton = {ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonOk}
@@ -244,7 +244,7 @@
 		if m_simpleTV.User.paramScriptForSkin_buttonPlst then
 			t.ExtButton1 = {ButtonEnable = true, ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonPlst, ButtonScript = 'transl_hdvb()'}
 		else
-			t.ExtButton1 = {ButtonEnable = true, ButtonName = '📋', ButtonScript = 'transl_hdvb()'}
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 Озвучка ', ButtonScript = 'transl_hdvb()'}
 		end
 		t.ExtParams = {}
 		t.ExtParams.LuaOnCancelFunName = 'OnMultiAddressCancel_hdvb'
@@ -254,7 +254,7 @@
 		t.ExtParams.StopAfterPlay = 1
 		t.ExtParams.PlayMode = 1
 		m_simpleTV.OSD.ShowSelect_UTF8(title, 0, t, 10000, 2 + 64)
-		m_simpleTV.User.hdvb.episodeTitle = title .. ': ' .. t[1].Name
+		m_simpleTV.User.hdvb.episodeTitle = title .. ', ' .. t[1].Name
 		m_simpleTV.Control.CurrentAddress = 'wait'
 		m_simpleTV.Control.SetNewAddressT({address = m_simpleTV.Control.CurrentAddress})
 	end
@@ -268,7 +268,7 @@
 		if m_simpleTV.User.paramScriptForSkin_buttonOptions then
 			t.ExtButton0 = {ButtonEnable = true, ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonOptions, ButtonScript = 'qlty_hdvb()'}
 		else
-			t.ExtButton0 = {ButtonEnable = true, ButtonName = '⚙', ButtonScript = 'qlty_hdvb()'}
+			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ Качество ', ButtonScript = 'qlty_hdvb()'}
 		end
 		if m_simpleTV.User.paramScriptForSkin_buttonOk then
 			t.OkButton = {ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonOk}
@@ -276,7 +276,7 @@
 		if m_simpleTV.User.paramScriptForSkin_buttonClose then
 			t.ExtButton1 = {ButtonEnable = true, ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonClose, ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
 		else
-			t.ExtButton1 = {ButtonEnable = true, ButtonName = '✕', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' ✕ ', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
 		end
 		m_simpleTV.OSD.ShowSelect_UTF8('Hdvb', 0, t, 10000, 64 + 32 + 128)
 		play(adr, title)
@@ -323,7 +323,7 @@
 		t.ExtButton0 = {ButtonEnable = true, ButtonName = 'Сезоны'}
 		local transl_id = m_simpleTV.User.hdvb.transl_id
 		m_simpleTV.User.hdvb.transl_name = m_simpleTV.User.hdvb.transl[transl_id].Name
-		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('Перевод', transl_id - 1, t, 10000, 1 + 2 + 4)
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('Озвучка', transl_id - 1, t, 10000, 1 + 2 + 4)
 		if ret == 1 then
 			local retAdr = getStream(t[id].Address)
 				if not retAdr then return end
@@ -361,7 +361,7 @@
 		else
 			t.ExtButton1 = {ButtonEnable = true, ButtonName = '✕', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
 		end
-		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('⚙ Качество', index - 1, t, 10000, 1 + 2 + 4)
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('⚙ Качество - hdvb', index - 1, t, 10000, 1 + 2 + 4)
 		if ret == 1 then
 			m_simpleTV.Control.SetNewAddressT({address = t[id].Address, position = m_simpleTV.Control.GetPosition()})
 			m_simpleTV.Config.SetValue('hdvb_qlty', t[id].qlty)
@@ -392,7 +392,7 @@
 				and t.MultiHeader
 				and t.MultiName
 			then
-				title = t.MultiHeader .. ': ' .. t.MultiName
+				title = t.MultiHeader .. ', ' .. t.MultiName:gsub(' серия','')
 				m_simpleTV.User.hdvb.tabEpisode = m_simpleTV.User.hdvb.tab[m_simpleTV.User.hdvb.season].folder[t.MultiIndex +1].folder
 				transl()
 				local transl_id = m_simpleTV.User.hdvb.transl_id
@@ -426,8 +426,8 @@
 			episodes()
 		end
 	else
-		if m_simpleTV.Control.MainMode == 0 then
+--[[		if m_simpleTV.Control.MainMode == 0 then
 			m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = '', TypeBackColor = 0, UseLogo = 0, Once = 1})
-		end
+		end--]]
 		movie()
 	end

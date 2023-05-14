@@ -1,6 +1,6 @@
 -- видеоскрипт для видеобалансера "videocdn" https://videocdn.tv (01/07/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod - west_side (21/04/23)
+-- mod - west_side (30/04/23)
 -- ## открывает подобные ссылки ##
 -- https://32.svetacdn.in/fnXOUDB9nNSO?kp_id=5928
 -- https://32.tvmovies.in/fnXOUDB9nNSO/tv-series/92
@@ -408,8 +408,8 @@ end
 	end
 	t[i].Name = t1[i].Name
 	end
-	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_Videocdn()'}
-		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('Перевод', tonumber(current_id)-1, t, 5000, 1 + 4 + 2)
+	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ Качество ', ButtonScript = 'Qlty_Videocdn()'}
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('Озвучка', tonumber(current_id)-1, t, 5000, 1 + 4 + 2)
 		if ret == -1 or not id then
 			return
 		end
@@ -478,7 +478,7 @@ end
 		if #t > 1 then
 			local _, id
 			if not psevdotv and not translate then
-				_, id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите перевод - ' .. title, selected, t, 10000, 1 + 2 + 4 + 8)
+				_, id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите озвучку - ' .. title, selected, t, 10000, 1 + 2 + 4 + 8)
 			end
 			id = id or selected + 1
 			transl = translate or t[id].Address
@@ -489,7 +489,7 @@ end
 	transl = translate or transl or '%d+'
 	translate = transl
 	m_simpleTV.User.Videocdn.translate = translate
-	m_simpleTV.User.Videocdn.title_translate = title_translate(translate):gsub('%) %(',', '):gsub('Профессиональный','Проф.'):gsub('Любительский','Люб.'):gsub('Авторский','Авт.')
+	m_simpleTV.User.Videocdn.title_translate = title_translate(translate):gsub('%) %(',', '):gsub('%)',''):gsub('%(',''):gsub('Профессиональный','Проф.'):gsub('Любительский','Люб.'):gsub('Авторский','Авт.'):gsub(' закадровый','')
 	local answer = answer:match('id="files" value=\'(.-)\'')
 		if not answer then return end
 --	debug_in_file(answer .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer.txt')
