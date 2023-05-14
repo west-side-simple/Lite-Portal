@@ -33,5 +33,11 @@
 		m_simpleTV.User.AudioWS.Use = 1
 	end
 
+	value= getConfigVal("AudioWS_Slide") or 1
+	m_simpleTV.User.AudioWS.Slide = 0
+	if tonumber(value) == 1 then
+		m_simpleTV.User.AudioWS.Slide = 1
+	end
+
 	value= getConfigVal("AudioWS_Cookies") or ''
 	m_simpleTV.User.AudioWS.Cookies = value
