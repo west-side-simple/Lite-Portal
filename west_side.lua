@@ -122,53 +122,53 @@ function KP_Get_History()
 function run_westSide_portal()
  m_simpleTV.Control.ExecuteAction(37)
  local tt1={
- {'Поиск',''},
- {'Кинопоиск: История',''},
- {'Закладки',''},
- {'TMDb',''},
- {'Трекеры',''},
- {'RipsClub (HEVC)',''},
- {'EX-FS',''},
- {'Rezka',''},
- {'Filmix',''},
- {'Kinopub',''},
- {'Озвучка',''},
- {'KinoGo',''},
- {'KinoKong',''},
- {'UA',''},
- {'YouTube',''},
- {'Медиабазы',''},
- {'SimpleTV - видеоинструкции',''},
+ {'Поиск','1'},
+ {'Кинопоиск: История','2'},
+ {'Закладки','3'},
+ {'TMDb','4'},
+ {'Трекеры','5'},
+ {'RipsClub (HEVC)','6'},
+ {'EX-FS','7'},
+ {'Rezka','8'},
+ {'Filmix','9'},
+ {'Kinopub','10'},
+ {'Озвучка','11'},
+ {'KinoGo','12'},
+ {'KinoKong','13'},
+ {'UA','14'},
+ {'YouTube','15'},
+ {'Медиабазы','16'},
+ {'SimpleTV - видеоинструкции','17'},
            }
-  local t1={}
+  local t1,item={},(m_simpleTV.User.westSide.item or 1)
   for i=1,#tt1 do
     t1[i] = {}
     t1[i].Id = i
     t1[i].Name = tt1[i][1]
+	t1[i].Item = tt1[i][2]
   end
-  local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Menu Lite Portal',0,t1,9000,1+4+8)
+  local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Menu Lite Portal',tonumber(item)-1,t1,9000,1+4+8)
   if id==nil then return end
   if ret==1 then
-  if t1[id].Name == 'TMDb' then run_lite_qt_tmdb()
-  elseif t1[id].Name == 'EX-FS' then run_lite_qt_exfs()
-  elseif t1[id].Name == 'Rezka' then run_lite_qt_rezka()
-  elseif t1[id].Name == 'Filmix' then run_lite_qt_filmix()
-  elseif t1[id].Name == 'Kinopub' then run_lite_qt_kinopub()
-  elseif t1[id].Name == 'YouTube' then run_youtube_portal()
-  elseif t1[id].Name == 'Поиск' then
+  if t1[id].Name == 'TMDb' then m_simpleTV.User.westSide.item = t1[id].Item run_lite_qt_tmdb()
+  elseif t1[id].Name == 'EX-FS' then m_simpleTV.User.westSide.item = t1[id].Item run_lite_qt_exfs()
+  elseif t1[id].Name == 'Rezka' then m_simpleTV.User.westSide.item = t1[id].Item run_lite_qt_rezka()
+  elseif t1[id].Name == 'Filmix' then m_simpleTV.User.westSide.item = t1[id].Item run_lite_qt_filmix()
+  elseif t1[id].Name == 'Kinopub' then m_simpleTV.User.westSide.item = t1[id].Item run_lite_qt_kinopub()
+  elseif t1[id].Name == 'YouTube' then m_simpleTV.User.westSide.item = t1[id].Item run_youtube_portal()
+  elseif t1[id].Name == 'Поиск' then m_simpleTV.User.westSide.item = t1[id].Item
 --  search()
   dofile(m_simpleTV.MainScriptDir_UTF8 .. 'user\\westSidePortal\\GUI\\showDialog.lua')
-  elseif t1[id].Name == 'Закладки' then
-  m_simpleTV.Control.ExecuteAction(100)
-  elseif t1[id].Name == 'Кинопоиск: История' then KP_Get_History()
-  elseif t1[id].Name == 'Медиабазы' then mediabaze()
-  elseif t1[id].Name:match('SimpleTV') then highlight()
-  elseif t1[id].Name == 'Озвучка' then run_lite_qt_cdntr()
-  elseif t1[id].Name == 'Трекеры' then start_page()
-  elseif t1[id].Name == 'KinoGo' then run_lite_qt_kinogo()
-  elseif t1[id].Name == 'KinoKong' then run_lite_qt_kinokong()
-  elseif t1[id].Name == 'UA' then run_lite_qt_ua()
-  elseif t1[id].Name == 'RipsClub (HEVC)' then start_hevc()
+  elseif t1[id].Name == 'Закладки' then m_simpleTV.User.westSide.item = t1[id].Item m_simpleTV.Control.ExecuteAction(100)
+  elseif t1[id].Name == 'Кинопоиск: История' then m_simpleTV.User.westSide.item = t1[id].Item KP_Get_History()
+  elseif t1[id].Name == 'Медиабазы' then m_simpleTV.User.westSide.item = t1[id].Item mediabaze()
+  elseif t1[id].Name:match('SimpleTV') then m_simpleTV.User.westSide.item = t1[id].Item highlight()
+  elseif t1[id].Name == 'Озвучка' then m_simpleTV.User.westSide.item = t1[id].Item run_lite_qt_cdntr()
+  elseif t1[id].Name == 'Трекеры' then m_simpleTV.User.westSide.item = t1[id].Item start_page()
+  elseif t1[id].Name == 'KinoGo' then m_simpleTV.User.westSide.item = t1[id].Item run_lite_qt_kinogo()
+  elseif t1[id].Name == 'KinoKong' then m_simpleTV.User.westSide.item = t1[id].Item run_lite_qt_kinokong()
+  elseif t1[id].Name == 'UA' then m_simpleTV.User.westSide.item = t1[id].Item run_lite_qt_ua()
+  elseif t1[id].Name == 'RipsClub (HEVC)' then m_simpleTV.User.westSide.item = t1[id].Item start_hevc()
   end
   end
 end

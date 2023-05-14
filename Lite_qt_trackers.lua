@@ -16,8 +16,12 @@ function start_page()
 		{"http://api.vokino.tv/v2/list?sort=popular&type=docuserial&page=1","Документальные сериалы"},
 		{"http://api.vokino.tv/v2/list?sort=popular&type=anime&page=1","Аниме"},
 		{"http://api.vokino.tv/v2/list?sort=popular&type=tvshow&page=1","ТВ Шоу"},
-		{"http://api.vokino.tv/v2/compilations/list?page=","Подборки"},
-		{"","ПОИСК"},
+		{"http://api.vokino.tv/v2/compilations/list?page=","💼 Подборки"},
+		{"http://api.vokino.tv/v2/v4k?type=2160p.HDR&page=1","💲 4K HDR - Filmix PRO account"},
+		{"http://api.vokino.tv/v2/v4k?type=2160p&page=1","💲 4K - Filmix PRO account"},
+		{"http://api.vokino.tv/v2/v4k?type=2160p.DolbyVision&page=1","💲 4K DolbyVision - Filmix PRO account"},
+		{"http://api.vokino.tv/v2/v4k?type=60FPS&page=1","💲️ 60FPS - Filmix PRO account"},
+		{"","🔎 ПОИСК"},
 		}
 		local t0={}
 		for i=1,#tt do
@@ -35,9 +39,9 @@ function start_page()
 			return
 		end
 		if ret == 1 then
-			if t0[id].Name == 'ПОИСК' then
+			if t0[id].Name == '🔎 ПОИСК' then
 				search()
-			elseif t0[id].Name == 'Подборки' then
+			elseif t0[id].Name == '💼 Подборки' then
 				content_compilation_page(1)
 			else
 				content_adr_page(t0[id].Action)
@@ -49,6 +53,72 @@ function start_page()
 		if ret == 3 then
 		run_westSide_portal()
 		end
+end
+
+local function get_hdvb(title, year)
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
+	if not session then return end
+	m_simpleTV.Http.SetTimeout(session, 10000)
+	local url = decode64('aHR0cHM6Ly92YjE3MTIxY29yYW1jbGVhbi5wdy9hcGkvdmlkZW9zLmpzb24/dG9rZW49Yzk5NjZiOTQ3ZGEyZjNjMjliMzBjMGUwZGNjYTZjZjQmdGl0bGU9') .. m_simpleTV.Common.toPercentEncoding(title)
+	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
+	if rc~=200 then
+		m_simpleTV.Http.Close(session)
+		return false
+	end
+	answer = unescape1(answer)
+--	debug_in_file(title .. ' ' .. year .. '\n' .. answer .. '\n','c://1/content.txt')
+	local t = {}
+		for ru_title, in_year, kp_id, tr, url in answer:gmatch('"title_ru":"(.-)".-"year":(%d%d%d%d).-"kinopoisk_id":(%d+).-"translator":"(.-)".-"iframe_url":"(.-)"') do
+			if ru_title and ru_title == title and tonumber(in_year) == tonumber(year) then
+				t[#t + 1] = {}
+				t[#t].Id = #t
+				t[#t].Address = url:gsub('\\','')
+				t[#t].Name = tr
+--	debug_in_file(tr .. ' ' .. url:gsub('\\','') .. '\n','c://1/content.txt')
+			end
+		end
+	if #t ~= 0 then
+	return t
+	end
+	return false
+end
+
+local function check(url)
+
+	local token = decode64('d2luZG93c18yZmRkYTQyMWNkZGI2OTExNmUwNzY4ZjNiZmY0ZGUwNV81OTIwMjE=')
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
+	if not session then return end
+	m_simpleTV.Http.SetTimeout(session, 10000)
+	local rc,answer = m_simpleTV.Http.Request(session,{url=url .. '&token=' .. token})
+	if rc~=200 then
+		m_simpleTV.Http.Close(session)
+		return false
+	end
+	if answer and answer:match('"ident":".-"%,"stream_url":".-"') and answer:match('"stream_url":"(.-)"')~='' then
+		if m_simpleTV.User.torrent.seria_id and answer:match('"ident":"' .. m_simpleTV.User.torrent.seria_id .. '"%,"stream_url":".-"') then
+			m_simpleTV.User.torrent.is_set_position = true
+			return 'content_id=' .. m_simpleTV.User.torrent.seria_id .. '&balanser=seriahd&' .. answer:match('"ident":"' .. m_simpleTV.User.torrent.seria_id .. '"%,"stream_url":"(.-)"'):gsub('\\','')
+		end
+		m_simpleTV.User.torrent.is_set_position = false
+		return 'content_id=' .. answer:match('"ident":"(.-)"') .. '&balanser=seriahd&' .. answer:match('"stream_url":"(.-)"'):gsub('\\','')
+	end
+	if answer and answer:match('"stream_url":".-".-%,"ident":".-"') and answer:match('"stream_url":"(.-)"')~='' then
+		if m_simpleTV.User.torrent.seria_id and answer:match('"stream_url":".-".-%,"ident":"' .. m_simpleTV.User.torrent.seria_id .. '"') then
+			m_simpleTV.User.torrent.is_set_position = true
+			return 'content_id=' .. m_simpleTV.User.torrent.seria_id .. '&balanser=videocdn&' .. answer:match('"stream_url":"(.-)".-%,"ident":"' .. m_simpleTV.User.torrent.seria_id .. '"'):gsub('\\','')
+		end
+		m_simpleTV.User.torrent.is_set_position = false
+		return 'content_id=' .. answer:match('"ident":"(.-)"') .. '&balanser=videocdn&' .. answer:match('"stream_url":"(.-)"'):gsub('\\','')
+	end
+	if answer and answer:match('"stream_url":"(.-)"') and answer:match('"stream_url":"(.-)"')~='' then
+		if m_simpleTV.User.torrent.content and answer:match('"ident":"' .. m_simpleTV.User.torrent.content .. '"') then
+			m_simpleTV.User.torrent.is_set_position = true
+		else
+			m_simpleTV.User.torrent.is_set_position = false
+		end
+		return answer:match('"stream_url":"(.-)"'):gsub('\\','')
+	end
+	return false
 end
 
 function content_compilation_page(page)
@@ -243,10 +313,18 @@ function content(content_id)
 	local age = tab.details.age or 0
 	local rating_kp = tab.details.rating_kp or 0
 	local rating_imdb = tab.details.rating_imdb or 0
+	local tag = ''
+	local is_tv = tab.details.is_tv
+	if tab.details.tags and tab.details.tags[1] then
+		tag = ', ' .. tab.details.tags[1]
+	end
+	if tab.details.tags and tab.details.tags[2] then
+		tag = tag .. ', ' .. tab.details.tags[2]
+	end
 	local videodesc= '<table width="100%" border="0"><tr><td style="padding: 15px 15px 5px;"><img src="' .. poster .. '" height="300"></td><td style="padding: 0px 5px 5px; color: #EBEBEB; vertical-align: middle;"><h4><font color=#00FA9A>' .. name .. '</font></h4><h5><font color=#BBBBBB>' .. originalname .. '</font></h5><h5><font color=#EBEBEB>' ..  country .. ' • </font><font color=#E0FFFF>' .. released .. '</font></h5><h5><font color=#EBEBEB>' .. genre .. '</font> • ' .. age .. '+</h5><h5>Кинопоиск: ' .. rating_kp .. ', IMDB: ' .. rating_imdb .. '</h5><h5><font color=#E0FFFF>' .. duration .. '</font></h5><h5>Режиссеры: <font color=#EBEBEB>' .. director .. '</font></h5><h5><font color=#EBEBEB>' .. about .. '</font></h5></td></tr></table>'
 	videodesc = videodesc:gsub('"', '\"')
 	local title = name:gsub(' $','') .. ' (' .. released .. ')'
-		local t,j={},3
+		local t,j={},2
 		t[1] = {}
 		t[1].Id = 1
 		t[1].Address = ''
@@ -257,21 +335,70 @@ function content(content_id)
 		t[1].InfoPanelTitle = about
 		t[1].InfoPanelShowTime = 10000
 
-		t[2] = {}
-		t[2].Id = 2
-		t[2].Name = 'Online: TMDB'
+		if tab.online and tab.online.VideoCDN then
+		local check = check(tab.online.VideoCDN)
+		if check and check~=false then
+		if is_tv == false and m_simpleTV.User.torrent.content and m_simpleTV.User.torrent.content == content_id then
+			m_simpleTV.User.torrent.is_set_position = true
+		end
+		t[j] = {}
+		t[j].Id = j
+		t[j].Name = 'Online: VideoCDN'
+		t[j].Address = check
+		j=j+1
+		end
+		end
+
+		if tab.online and tab.online.Collaps then
+		local check = check(tab.online.Collaps)
+		if check and check~=false then
+		if m_simpleTV.User.torrent.content and m_simpleTV.User.torrent.content == content_id then
+			m_simpleTV.User.torrent.is_set_position = true
+		end
+		t[j] = {}
+		t[j].Id = j
+		t[j].Name = 'Online: Collaps'
+		t[j].Address = check
+		j=j+1
+		end
+		end
+
+		if tab.online and tab.online.SeriaHD then
+		local check = check(tab.online.SeriaHD)
+		if check and check~=false then
+		t[j] = {}
+		t[j].Id = j
+		t[j].Name = 'Online: SeriaHD'
+		t[j].Address = check
+		j=j+1
+		end
+		end
+
+		local hdvb = get_hdvb(name, released)
+		if hdvb~=false then
+		t[j] = {}
+		t[j].Id = j
+		t[j].Name = 'Online: HDVB'
+		t[j].Address = hdvb
+		j=j+1
+		end
+
+		t[j] = {}
+		t[j].Id = j
+		t[j].Name = '🔎 TMDB'
+		j=j+1
 
 		if tab.online and tab.online.Filmix then
 		t[j] = {}
 		t[j].Id = j
-		t[j].Name = 'Online: Filmix'
+		t[j].Name = '🔎 Filmix' .. tag
 		j=j+1
 		end
 
 		if tab.online and tab.online.HDRezka then
 		t[j] = {}
 		t[j].Id = j
-		t[j].Name = 'Online: HDRezka'
+		t[j].Name = '🔎 HDRezka'
 		j=j+1
 		end
 
@@ -339,7 +466,7 @@ function content(content_id)
 		t[j].InfoPanelLogo = tab.casts[n].poster or ''
 		t[j].InfoPanelLogo = t[j].InfoPanelLogo:gsub('w600_and_h900_bestv2','w500_and_h282_face')
 		t[j].InfoPanelName =  tab.casts[n].title .. ' (' ..  (tab.casts[n].birthday or 'not info') .. ') ' .. (tab.casts[n].place_of_birth or '')
-		t[j].InfoPanelTitle = tab.casts[n].biography
+		t[j].InfoPanelTitle = tab.casts[n].biography:gsub('\n',' ')
 		t[j].InfoPanelShowTime = 10000
 		n=n+1
 		j=j+1
@@ -370,16 +497,37 @@ function content(content_id)
 		end
 		end
 
-		t.ExtButton0 = {ButtonEnable = true, ButtonName = 'Главная '}
-		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' Трекеры'}
+		t.ExtButton0 = {ButtonEnable = true, ButtonName = 'Главная 🎦'}
+		t.ExtButton1 = {ButtonEnable = true, ButtonName = '🧲 Трекеры'}
 		local current_id = m_simpleTV.User.torrent.id_balanser or 1
 		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8(title, tonumber(current_id) - 1, t, 30000, 1+4+8+2)
 		if ret == -1 or not id then
 			return
 		end
 		if ret == 1 then
+		m_simpleTV.User.torrent.audio_id = nil
 		if t[id].Name:match('Similar: ') then
 			content(t[id].Address)
+		elseif t[id].Name:match('Collaps') then
+			m_simpleTV.Control.PlayAddressT({address='content_id=' .. content_id .. '&balanser=collaps&' .. t[id].Address, title=title})
+		elseif t[id].Name:match('SeriaHD') or t[id].Name:match('VideoCDN') then
+			m_simpleTV.Control.PlayAddressT({address=t[id].Address, title=title})
+		elseif t[id].Name:match('HDVB') then
+		if is_tv == false and m_simpleTV.User.torrent.content and m_simpleTV.User.torrent.content == content_id then
+			m_simpleTV.User.torrent.is_set_position = true
+			local t1 = t[id].Address
+			if #t1 > 1 then
+			local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('🔊 Озвучка', 0, t1, 10000, 1 + 4 + 8 + 2)
+			id = id or 1
+			if ret == 1 then
+				m_simpleTV.Control.PlayAddressT({address='content_id=' .. content_id .. '&' .. t1[id].Address, title=title})
+			end
+			else
+				m_simpleTV.Control.PlayAddressT({address='content_id=' .. content_id .. '&' .. t[id].Address[1].Address, title=title})
+			end
+		else
+			m_simpleTV.Control.PlayAddressT({address='content_id=' .. content_id .. '&' .. t[id].Address[1].Address, title=title})
+		end
 		elseif t[id].Name:match('TMDB') then
 			m_simpleTV.Config.SetValue('search/media',m_simpleTV.Common.toPercentEncoding(title),'LiteConf.ini')
 			search_tmdb()
@@ -397,6 +545,9 @@ function content(content_id)
 		start_page()
 		end
 		if ret == 3 then
+		if is_tv == false and m_simpleTV.User.torrent.content and m_simpleTV.User.torrent.content == content_id then
+			m_simpleTV.User.torrent.is_set_position = true
+		end
 		torrents(tab.torrents .. 'seed_desc')
 		end
 end
@@ -431,15 +582,22 @@ function content_adr_page(adr)
 	t[i]={}
 	local id = tab.channels[i].details.id or ''
 	local name = tab.channels[i].details.name or 'noname'
-	local poster = tab.channels[i].details.poster or ''
+	local poster = tab.channels[i].details.wide_poster or tab.channels[i].details.poster or ''
 	local originalname = tab.channels[i].details.originalname or ''
 	local released = tab.channels[i].details.released or ''
 	local about = tab.channels[i].details.about or ''
 	local genre = tab.channels[i].details.genre or ''
 	local type = tab.channels[i].details.type or ''
 	local address = tab.channels[i].playlist_url
+	local tag = ''
+	if tab.channels[i].details.tags and tab.channels[i].details.tags[1] then
+		tag =  ', ' .. tab.channels[i].details.tags[1]
+	end
+	if tab.channels[i].details.tags and tab.channels[i].details.tags[2] then
+		tag =  tag .. ', ' .. tab.channels[i].details.tags[2]
+	end
 	t[i].Id = i
-	t[i].Name = name .. ' (' .. released .. ') - ' .. type
+	t[i].Name = name .. ' (' .. released .. ') - ' .. type .. tag
 	t[i].InfoPanelLogo = poster
 	t[i].Address = id
 	t[i].InfoPanelName = name .. ' / ' .. originalname .. ' (' .. released .. ') ' .. genre
@@ -612,6 +770,7 @@ function torrents_tracker(adr)
 			return
 		end
 		if ret == 1 then
+			m_simpleTV.User.torrent.audio_id = nil
 			m_simpleTV.Control.PlayAddressT({address='content_id=' .. content_id .. '&' .. t[id].Address, title=t[id].Name})
 		end
 		if ret == 2 then

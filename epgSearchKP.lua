@@ -43,6 +43,6 @@
 	t.name = 'КиноПоиск'
 	t.lua_as_scr = true
 	t.luastring = 'local action,param,extParam = ...;findEPGInKP(extParam)'
-	t.location = 2 -- LOCATION_EPG_MENU
+	t.location = 'LOCATION_EPG_MENU' -- LOCATION_EPG_MENU
 	t.image = m_simpleTV.Common.GetMainPath(0) .. 'Icons/menuKP.png'
 	m_simpleTV.Interface.AddExtMenuT(t)
