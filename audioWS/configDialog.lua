@@ -18,6 +18,9 @@
 		value= getConfigVal("AudioWS_Enable") or 1
 		m_simpleTV.Dialog.SetCheckBoxValue(Object,'AudioWS_Enable',value)
 
+		value= getConfigVal("AudioWS_Slide") or 1
+		m_simpleTV.Dialog.SetCheckBoxValue(Object,'AudioWS_Slide',value)
+
 		value= getConfigVal("AudioWS_Cookies") or ''
 		m_simpleTV.Dialog.SetElementValueString_UTF8(Object,'AudioWS_Cookies',value)
 	end
@@ -30,6 +33,14 @@
 			m_simpleTV.User.AudioWS.Use = 1
 			if tonumber(value) == 0 then
 				m_simpleTV.User.AudioWS.Use = 0
+			end
+		end
+		value=m_simpleTV.Dialog.GetCheckBoxValue(Object,'AudioWS_Slide')
+		if value ~= nil then
+			setConfigVal("AudioWS_Slide",value)
+			m_simpleTV.User.AudioWS.Slide = 1
+			if tonumber(value) == 0 then
+				m_simpleTV.User.AudioWS.Slide = 0
 			end
 		end
 		value=m_simpleTV.Dialog.GetElementValueString_UTF8(Object,'AudioWS_Cookies')

@@ -1,18 +1,47 @@
 -- events for Audio plugin
--- author west_side 25.03.23
+-- author west_side 14.05.23
 
 	if m_simpleTV.Control.CurrentAddress==nil then return end
-	if m_simpleTV.Control.IsVideo() then return end
+	if m_simpleTV.Control.IsVideo() then
+		m_simpleTV.Interface.RestoreBackground()
+		m_simpleTV.OSD.ShowMessageT({text = '', color = ARGB(255, 255, 255, 255), showTime = 1000 * 1})
+		m_simpleTV.OSD.RemoveElement('USER_LOGO1_IMG_ID')
+		m_simpleTV.OSD.RemoveElement('ID_DIV1')
+		m_simpleTV.OSD.RemoveElement('ID_DIV5')
+		m_simpleTV.OSD.RemoveElement('TEXT2_ID')
+		m_simpleTV.OSD.RemoveElement('TEXT3_ID')
+		m_simpleTV.OSD.RemoveElement('TEXT23_ID')
+		m_simpleTV.User.AudioWS.title = nil
+		m_simpleTV.User.AudioWS.logo = nil
+		m_simpleTV.User.AudioWS.Name = nil
+		m_simpleTV.User.AudioWS.img = nil
+		m_simpleTV.User.AudioWS.images = nil
+		m_simpleTV.User.AudioWS.logos = nil
+	return
+	end
 	if m_simpleTV.User==nil then m_simpleTV.User={} end
 	if m_simpleTV.User.AudioWS==nil then m_simpleTV.User.AudioWS={} end
 	if m_simpleTV.User.AudioWS.Use and m_simpleTV.User.AudioWS.Use == 0 then return end
 	if m_simpleTV.User.AudioWS.images==nil then m_simpleTV.User.AudioWS.images={} end
 	if m_simpleTV.User.AudioWS.logos==nil then m_simpleTV.User.AudioWS.logos={} end
 
-local function get_img(s)
+local function check_img(adr)
 	local session = m_simpleTV.Http.New()
 		if not session then return end
 		m_simpleTV.Http.SetTimeout(session, 10000)
+	local rc, answer = m_simpleTV.Http.Request(session, {url = adr, method = 'head'})
+		if rc == 200 then
+			return true
+		end
+	return false
+end
+
+local function get_img(s)
+--	local timer1, timer2
+--	timer1 = os.time()
+	local session = m_simpleTV.Http.New()
+		if not session then return end
+		m_simpleTV.Http.SetTimeout(session, 30000)
 	local url = 'https://www.google.com/search?as_st=y&tbm=isch&hl=ru&as_epq=&as_oq=&as_eq=&cr=&as_sitesearch=&safe=images&tbs=iar:w&as_q='
 	url = url .. m_simpleTV.Common.toPercentEncoding(s)
 	local t={}
@@ -25,26 +54,35 @@ local function get_img(s)
 	return
 	end
 --	debug_in_file('-- прямоугольные ------------\n',m_simpleTV.MainScriptDir .. 'user/audioWS/getmeta.txt')
+	local slide = 5
+	if m_simpleTV.User.AudioWS.Slide and m_simpleTV.User.AudioWS.Slide == 0 then slide = 1 end
 	local t1, i = {}, 1
 	for w in answer:gmatch('%["https://encrypted.-%[".-"') do
 
 		local img = w:match('encrypted.-%["(.-)"')
 		if not img then break end
-		if img:match('%.jpg') and not img:match('notado%.ru') and not img:match('webkind%.ru') and not img:match('cdvpodarok%.ru') then
+		if img:match('%.jpg') and not img:match('notado%.ru') and not img:match('webkind%.ru') and not img:match('cdvpodarok%.ru') and check_img(img:gsub('%.jpg.-$','.jpg')) then
+		if i > slide then break end
 			t1[i] = {}
 			t1[i].image = img:gsub('%.jpg.-$','.jpg')
+			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1" src="' .. m_simpleTV.MainScriptDir .. 'user/audioWS/img/audioWS.png"', text = ' Background: ' .. i, color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
 --			debug_in_file(t1[i].image .. ' - ' .. i .. '\n',m_simpleTV.MainScriptDir .. 'user/audioWS/getmeta.txt')
 			i = i + 1
 		end
 	end
+--	timer2 = os.time() - timer1
+--	debug_in_file(timer2 .. ' -- прямоугольные\n',m_simpleTV.MainScriptDir .. 'user/audioWS/getmeta.txt')
 	m_simpleTV.Http.Close(session)
 	m_simpleTV.User.AudioWS.images=t1
+	if m_simpleTV.User.AudioWS.images and #m_simpleTV.User.AudioWS.images ~= 0 then
+		m_simpleTV.Interface.SetBackground({BackColor = 0, BackColorEnd = 255, PictFileName = m_simpleTV.User.AudioWS.images[math.random(#m_simpleTV.User.AudioWS.images)].image, TypeBackColor = 0, UseLogo = 3, Once = 1})
+	end
 end
 
 local function get_img1(s)
 	local session = m_simpleTV.Http.New()
 		if not session then return end
-		m_simpleTV.Http.SetTimeout(session, 10000)
+		m_simpleTV.Http.SetTimeout(session, 30000)
 	local url = 'https://www.google.com/search?as_st=y&tbm=isch&hl=ru&as_epq=&as_oq=&as_eq=&cr=&as_sitesearch=&safe=images&tbs=iar:s&as_q='
 	url = url .. m_simpleTV.Common.toPercentEncoding(s)
 	local t={}
@@ -57,14 +95,18 @@ local function get_img1(s)
 	return
 	end
 --	debug_in_file('-- квадратные ---------------\n',m_simpleTV.MainScriptDir .. 'user/audioWS/getmeta.txt')
+	local slide = 5
+	if m_simpleTV.User.AudioWS.Slide and m_simpleTV.User.AudioWS.Slide == 0 then slide = 1 end
 	local t1, i = {}, 1
 	for w in answer:gmatch('%["https://encrypted.-%[".-"') do
 
 		local img = w:match('encrypted.-%["(.-)"')
 		if not img then break end
-		if img:match('%.jpg') and not img:match('notado%.ru') and not img:match('webkind%.ru') and not img:match('cdvpodarok%.ru') then
+		if img:match('%.jpg') and not img:match('notado%.ru') and not img:match('webkind%.ru') and not img:match('cdvpodarok%.ru') and check_img(img:gsub('%.jpg.-$','.jpg')) then
+		if i > slide then break end
 			t1[i] = {}
 			t1[i].image = img:gsub('%.jpg.-$','.jpg')
+			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1" src="' .. m_simpleTV.MainScriptDir .. 'user/audioWS/img/audioWS.png"', text = ' Logo: ' .. i, color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
 --			debug_in_file(t1[i].image .. ' - ' .. i .. '\n',m_simpleTV.MainScriptDir .. 'user/audioWS/getmeta.txt')
 			i = i + 1
 		end
@@ -94,6 +136,7 @@ local function getadr(name)
 
 local title, track, typerad
 local inAdr = m_simpleTV.Control.CurrentAddress
+
 if inAdr:match('https?://213%.141%..-:8000/.+')
 	or inAdr:match('https?://79%.111%..-:8000/.+')
 	or inAdr:match('https?://79%.120%..-:8000/.+') then
@@ -146,6 +189,11 @@ if inAdr:match('^https://.-playernostalgie.+') then
 		end
 end
 
+if inAdr:match('^http://content%.audioaddict%.com.+') then
+	typerad = 'WWW'
+	title = m_simpleTV.User.AudioWS.title_track
+end
+
 	if m_simpleTV.Control.Reason == 'Playing' then
 
 		m_simpleTV.Control.EventPlayingInterval=10000
@@ -167,6 +215,125 @@ end
 		title = title:gsub('A %- HA','A-HA'):gsub(' %-.-$','')
 
 		if title and title~='' and title~=m_simpleTV.User.AudioWS.title or title and title==m_simpleTV.User.AudioWS.title and m_simpleTV.User.AudioWS.images == nil then
+
+		if m_simpleTV.Control.MainMode == 0 then
+
+			local  t, AddElement = {}, m_simpleTV.OSD.AddElement
+			 t.BackColor = 0
+			 t.BackColorEnd = 255
+			 t.PictFileName = m_simpleTV.User.AudioWS.img1
+			 t.TypeBackColor = 0
+			 t.UseLogo = 4
+			 t.Once = 1
+			 t.Blur = 5
+			 m_simpleTV.Interface.SetBackground(t)
+
+			 t = {}
+			 t.id = 'ID_DIV1'
+			 t.cx=-100
+			 t.cy=-50
+			 t.class="DIV"
+			 t.minresx=0
+			 t.minresy=0
+			 t.align = 0x0201
+			 t.left=0
+			 t.top=30
+			 t.once=1
+			 t.zorder=0
+			 t.background = -1
+			 t.backcolor0 = 0xff0000000
+			 AddElement(t)
+
+			 t = {}
+			 t.id = 'ID_DIV5'
+			 t.cx=700
+			 t.cy=-95
+			 t.class="DIV"
+			 t.minresx=0
+			 t.minresy=0
+			 t.align = 0x0101
+			 t.left=20
+			 t.top=20
+			 t.once=1
+			 t.zorder=0
+			 t.background = -1
+			 t.backcolor0 = 0x7fFFFF00
+			 AddElement(t,'ID_DIV1')
+
+			 t = {}
+			 t.id = 'USER_LOGO1_IMG_ID'
+			 t.cx=180
+			 t.cy=180
+			 t.class="IMAGE"
+			 t.imagepath = m_simpleTV.User.AudioWS.logo1
+			 t.minresx=-1
+			 t.minresy=-1
+			 t.align = 0x0101
+			 t.left=20
+			 t.top=0
+			 t.transparency = 200
+			 t.zorder=0
+			 t.borderwidth = 2
+			 t.bordercolor = -6250336
+			 t.backroundcorner = 20*20
+			 t.borderround = 20
+			 AddElement(t,'ID_DIV1')
+
+			 t={}
+			 t.id = 'TEXT2_ID'
+			 t.cx=0
+			 t.cy=0
+			 t.class="TEXT"
+			 t.align = 0x0101
+			 t.text = m_simpleTV.User.AudioWS.Name
+			 t.color = -2113993
+			 t.font_height = -40
+			 t.font_weight = 400
+			 t.font_underline = 1
+			 t.font_name = "Impact"
+			 t.textparam = 0--1+4
+			 t.left = 200
+			 t.top  = 0
+			 t.glow = 3 -- коэффициент glow эффекта
+			 t.glowcolor = 0xFF000077 -- цвет glow эффекта
+			 AddElement(t,'USER_LOGO1_IMG_ID')
+
+			 t={}
+			 t.id = 'TEXT23_ID'
+			 t.cx=0
+			 t.cy=0
+			 t.class="TEXT"
+			 t.align = 0x0101
+			 t.text = title:gsub('%&amp%;','&')
+			 t.color = -2113993
+			 t.font_height = -30
+			 t.font_weight = 300
+			 t.font_name = "Impact"
+			 t.textparam = 0--1+4
+			 t.left = 200
+			 t.top  = 70
+			 t.glow = 2 -- коэффициент glow эффекта
+			 t.glowcolor = 0xFF000077 -- цвет glow эффекта
+			 AddElement(t,'USER_LOGO1_IMG_ID')
+
+			 t={}
+			 t.id = 'TEXT3_ID'
+			 t.cx=0
+			 t.cy=0
+			 t.class="TEXT"
+			 t.align = 0x0101
+			 t.text = track:gsub('%&amp%;','&')
+			 t.color = -2113993
+			 t.font_height = -20
+			 t.font_weight = 300
+			 t.font_name = "Impact"
+			 t.textparam = 0--1+4
+			 t.left = 200
+			 t.top  = 120
+			 t.glow = 2 -- коэффициент glow эффекта
+			 t.glowcolor = 0xFF000077 -- цвет glow эффекта
+			 AddElement(t,'USER_LOGO1_IMG_ID')
+		end
 			get_img(title .. ' музыка песни')
 			get_img1(title .. ' музыка песни')
 		end
@@ -212,7 +379,7 @@ end
 
 		m_simpleTV.User.AudioWS.title = title
 
-		if m_simpleTV.Control.MainMode == 0 and m_simpleTV.User.AudioWS.logo then
+		if m_simpleTV.Control.MainMode == 0 and m_simpleTV.User.AudioWS.logo and (m_simpleTV.User.AudioWS.cur_img == nil or m_simpleTV.User.AudioWS.cur_img and m_simpleTV.User.AudioWS.cur_img ~= m_simpleTV.User.AudioWS.img ) then
 
 			local  t, AddElement = {}, m_simpleTV.OSD.AddElement
 			 t.BackColor = 0
@@ -330,12 +497,18 @@ end
 			 t.glowcolor = 0xFF000077 -- цвет glow эффекта
 			 AddElement(t,'USER_LOGO1_IMG_ID')
 
+			m_simpleTV.User.AudioWS.cur_img = m_simpleTV.User.AudioWS.img
 			m_simpleTV.User.AudioWS.img = nil
 			m_simpleTV.User.AudioWS.logo = nil
+
 		end
 	end
 
-	if m_simpleTV.Control.Reason == 'Stopped' or m_simpleTV.Control.Reason=='EndReached' then
+--[[	if m_simpleTV.Control.Reason=='EndReached' and inAdr:match('^http://content%.audioaddict%.com.+') then
+		m_simpleTV.Control.Action = 'repeat'
+	end--]]
+
+	if m_simpleTV.Control.Reason == 'Stopped' or m_simpleTV.Control.Reason=='EndReached' and not inAdr:match('^http://content%.audioaddict%.com.+') then
 		m_simpleTV.Interface.RestoreBackground()
 		m_simpleTV.OSD.ShowMessageT({text = '', color = ARGB(255, 255, 255, 255), showTime = 1000 * 1})
 		m_simpleTV.OSD.RemoveElement('USER_LOGO1_IMG_ID')
