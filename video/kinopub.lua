@@ -1,6 +1,7 @@
--- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (12/02/23) - автор west_side
+-- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (14/06/23) - автор west_side
 -- необходим действующий аккаунт на сайте https://kino.pub
 -- работает в связке со скриптом Lite_qt_kinopub.lua - автор west_side
+-- дополнительная информация обеспечивается скриптом info_fox.lua - автор west_side
 -- необходимо сгенерировать cookies в браузере Mozilla, дополнение cookies.txt.
 -- сохранить файл в директорию ..\work\ используемого плеера SimpleTV.
 
@@ -10,7 +11,16 @@
 	if not inAdr:match('https?://kino%.pub')
 	and not inAdr:match('^%,')
 	then return end
-local proxy = ''
+	local proxy = ''
+	if not m_simpleTV.User then
+		m_simpleTV.User = {}
+	end
+	if not m_simpleTV.User.kinopub then
+		m_simpleTV.User.kinopub = {}
+	end
+	m_simpleTV.User.kinopub.address = inAdr
+	m_simpleTV.User.kinopub.tr = inAdr:match('%&tr=(%d+)$') or 1
+	inAdr = inAdr:gsub('%&tr=%d+$','')
 -- '' - нет
 -- 'http://proxy-nossl.antizapret.prostovpn.org:29976' (пример)
 -- ##
@@ -138,8 +148,8 @@ end
 	local rc, answer = m_simpleTV.Http.Request(session, {url = inAdr, headers = 'Cookie: ' .. cookies})
 --	m_simpleTV.Http.Close(session)
 		if rc ~= 200 then return end
-	debug_in_file(answer .. '\n','c://1/testpub.txt')
-	answer = answer:gsub('\n', ' ')
+--	debug_in_file(answer .. '\n','c://1/testpub.txt')
+	answer = answer:gsub(' \n', ' '):gsub('\n', ' ')
 	answer = answer:gsub('<!%-%-.-%-%->', ''):gsub('/%*.-%*/', '')
 	if inAdr:match('/tv/view/') then
 
@@ -308,24 +318,95 @@ end
 
 else
 
-	local function GetQlty(answer1)
-
-	local i, t = 1, {}
-	local index = 1
-	local adr1 = answer1:match('<a href="(.-)"')
-	for w in answer1:gmatch('<a.-</a>') do
-	local adr, qlty = w:match('<a href="(.-)">(.-)</a>')
-
-	if not qlty or not adr then break end
-	t[i] = {}
-	t[i].Id = i
-	t[i].Name = qlty
-	t[i].Address = adr
-	if qlty == tostring(m_simpleTV.Config.GetValue('kinopub_qlty')) then index = i adr1 = adr end
-	i=i+1
+	local function GetStream(retAdr, media)
+		require('json')
+		local tab = json.decode(retAdr)
+		local file0
+		local i = 1
+		if not tab or not tab[1] or not tab[1].file or not tab[1].media_id
+		then
+		return false end
+		while true do
+			if not tab[i]
+				then
+				break
+				end
+			if i == 1 then file0 = tab[i].file end
+			local media_id = tab[i].media_id
+			local file = tab[i].file
+			if tonumber(media_id) == tonumber(media) then
+				return file:gsub('\\','')
+			end
+			i = i + 1
+		end
+		return file0:gsub('\\','')
 	end
 
-	return adr1, t, index
+	local function StreamIndex(t)
+		local lastQuality = m_simpleTV.Config.GetValue('Kinopub_qlty') or 5000
+		local index = 1
+			for i = 1, #t do
+				if tonumber(t[i].qlty) == tonumber(lastQuality) then
+					index = i
+				 break
+				end
+			end
+		return index
+	end
+
+	local function GetAdr(url)
+		local transl = m_simpleTV.User.kinopub.tr
+		transl = tonumber(transl)
+		local domen = url:match('^(https:.-)/hls4/')
+		local rc, answer = m_simpleTV.Http.Request(session, {url = url})
+		if rc ~= 200 then return false end
+
+		local t = {}
+			for w, adr in answer:gmatch('EXT%-X%-STREAM%-INF(.-)\n(.-)\n') do
+				local qlty_name, audio_name = w:match('RESOLUTION=(.-)%,.-AUDIO="(.-)"')
+				if adr and qlty_name and audio_name then
+					t[#t + 1] = {}
+					t[#t].Address = domen .. adr
+					t[#t].Name = qlty_name:gsub('x',' X ')
+					t[#t].audio = audio_name
+					t[#t].qlty = qlty_name:match('%d+')
+
+				end
+			end
+			if #t == 0 then return false end
+		for i = 1, #t do
+				t[i].Id = i
+				t[i].Address = t[i].Address:gsub('%.m3u8', '-a' .. transl ..'.m3u8')
+--				debug_in_file(t[i].Address .. '\n','c://1/testpub5.txt')
+			end
+		m_simpleTV.User.kinopub.Tab = t
+		local index = StreamIndex(t)
+		local res = t[index].audio
+		local t1 = {}
+			for w1 in answer:gmatch('GROUP%-ID="' .. res .. '".-%.m3u8') do
+				local name = w1:match('NAME="(.-)"')
+				local audio_ind = w1:match('index%-a(%d+)')
+				if name and audio_ind then
+					t1[#t1 + 1] = {}
+					t1[#t1].Address = tonumber(audio_ind)
+					t1[#t1].Name = name
+				end
+			end
+			for i = 1, #t1 do
+				t1[i].Id = i
+				t1[i].Name = t1[i].Name
+				t1[i].Address = t1[i].Address
+				if tonumber(transl) == tonumber(t1[i].Address) then
+				m_simpleTV.User.kinopub.audio_name = t1[i].Name
+				end
+				i = i + 1
+			end
+			if #t1 == 0 then
+			t1 = nil
+			end
+		m_simpleTV.User.kinopub.audio_ind = t1
+
+	 return t[index].Address
 	end
 
 	function OnMultiAddressOk_kinopub(Object, id)
@@ -347,18 +428,41 @@ else
 		m_simpleTV.Control.ExecuteAction(36, 0)
 	end
 
-	function Qlty_kinopub(answer)
-
-		local adr2, t, index = GetQlty(answer)
-			t.ExtButton1 = {ButtonEnable = true, ButtonName = '✕', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
-			t.ExtButton0 = {ButtonEnable = true, ButtonName = '🢀'}
-		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('⚙ Качество', index-1, t, 5000, 1 + 4 + 2)
-		if ret == 1 then
-			m_simpleTV.Control.SetNewAddress(t[id].Address, m_simpleTV.Control.GetPosition())
-			m_simpleTV.Config.SetValue('kinopub_qlty', t[id].Name)
+	function Qlty_Kinopub()
+		local t = m_simpleTV.User.kinopub.Tab
+			if not t or #t == 0 then return end
+		m_simpleTV.Control.ExecuteAction(37)
+		local index = StreamIndex(t)
+		if m_simpleTV.User.kinopub.audio_ind then
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 Озвучка', ButtonScript = 'Audio_Stream()'}
 		end
-		if ret == 2 then
-			run_lite_qt_kinopub()
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('⚙ Качество', index - 1, t, 10000, 1 + 4)
+		if ret == 1 then
+			m_simpleTV.Config.SetValue('Kinopub_qlty', tonumber(t[id].qlty))
+			local retAdr = m_simpleTV.User.kinopub.address
+			m_simpleTV.Control.SetNewAddress(retAdr, m_simpleTV.Control.GetPosition())
+		end
+		if ret == 3 then
+			Audio_Kinopub()
+		end
+	end
+
+	function Audio_Kinopub()
+		local t = m_simpleTV.User.kinopub.audio_ind
+			if not t or #t == 0 then return end
+		m_simpleTV.Control.ExecuteAction(37)
+		local index = m_simpleTV.User.kinopub.tr
+		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' ⚙ Качество', ButtonScript = 'Qlty_Kinopub()'}
+
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('🔊 Озвучка', tonumber(index)-1, t, 10000, 1 + 4)
+		if ret == 1 then
+			m_simpleTV.User.kinopub.audio_name = t[id].Name
+			m_simpleTV.User.kinopub.tr = id
+			local retAdr = m_simpleTV.User.kinopub.address:gsub('%&tr=%d+$','') .. '&tr=' .. id
+			m_simpleTV.Control.SetNewAddress(retAdr, m_simpleTV.Control.GetPosition())
+		end
+		if ret == 3 then
+			Qlty_Kinopub()
 		end
 	end
 
@@ -405,10 +509,27 @@ else
 		j=j+1
 		end
 
+		for w1 in answer:gmatch('<div class="text%-xs">.-</a>') do
+		local adr,name = w1:match('<a href="(.-)">(.-)</a>')
+		if not adr or not name then break end
+		t1[j] = {}
+		t1[j].Id = j
+		t1[j].Address = 'https://kino.pub' .. adr
+		t1[j].Name = 'Похожее - ' .. m_simpleTV.Common.multiByteToUTF8(name:gsub('&#039;',"'"):gsub('&amp;',"&"),1251)
+		j=j+1
+		end
+
 		t1.ExtButton1 = {ButtonEnable = true, ButtonName = '✕', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
 		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('🧾 Теги', 0, t1, 30000, 1 + 4 + 8 + 2)
 		if ret == 1 then
-			show_select(t1[id].Address)
+			if t1[id].Name:match('Похожее') then
+				m_simpleTV.Control.ChangeAddress = 'No'
+				m_simpleTV.Control.ExecuteAction(37)
+				m_simpleTV.Control.CurrentAddress = t1[id].Address
+				m_simpleTV.Control.PlayAddress(t1[id].Address)
+			else
+				show_select(t1[id].Address)
+			end
 		end
 	end
 
@@ -428,18 +549,21 @@ else
 		t1[j].Name = ' Сезон ' .. name
 		j=j+1
 		end
+		if m_simpleTV.User.kinopub.audio_ind then
+			t1.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🔊 Озвучка', ButtonScript = 'Audio_Stream()'}
+		end
 			t1.ExtButton1 = {ButtonEnable = true, ButtonName = '✕', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
 		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('📺 Сезоны:', se-1, t1, 5000, 1 + 4 + 2)
 		if ret == 1 then
 			m_simpleTV.Control.PlayAddress(t1[id].Address)
 		end
+		if ret == 2 then
+			Audio_Kinopub()
+		end
 	end
 
-	local qlty = m_simpleTV.Config.GetValue('kinopub_qlty')
-	local answer1 = answer:match('<li class="dropdown%-header">HLS плейлист</li>(.-)<li class="dropdown%-header">HLS4 плейлист</li>')
 	local answer2 = answer:match('<span class="season%-title m%-l%-sm p%-r%-sm">.-</div> </div>')
-	local answer3 = answer:match('<td><strong>Год.-</tbody>')
-	local retAdr = GetQlty(answer1) or 'https://yandex-cdn.net/hls4/aWQ9MTc5MTE5OzMxNjQ4MDg1MzU7MTMzMjg0NjQ7MTYzMjE2ODMwMCZoPTVjM2lkeUVZOWVVM1JzSnZtVUgzMHcmZT0xNjMyMjU0NzAw/demo.m3u8?loc=nl'
+	local answer3 = answer:match('<td><strong>Год.-<script')
 	local title = answer:match('<title>(.-)</title>') or 'KinoPub'
 	local year = answer:match('?years=(%d+)')
 	if year then year = tonumber(year) title = title .. ' (' .. year .. ')' end
@@ -481,51 +605,33 @@ else
 		j=j+1
 		end
 		end
-		if answer:match('<div class="item episode%-thumbnail".-</a> </div>.-<li class="dropdown%-header">Файл mp4</li>') then
-		local answer3 = answer:match('<div class="item episode%-thumbnail".-</div> </div> </div> </div>')
-		for w in answer3:gmatch('<div class="item episode%-thumbnail".-</a> </div>') do
-		local adr, logo, name1 = w:match('<a href="(.-)".-<img src="(.-)".-<span class="label label%-primary episode%-number">(.-)</span>')
-		local name2 = w:match('<a href=".-".-<img src=".-".-<span class="label label%-primary episode%-number">.-</span>.-<a href=".-">(.-)<') or ''
-		if name2 ~= '' then name2 = ' - ' .. name2 end
-		if not adr then break end
-		t[i] = {}
-		t[i].Id = i
-		t[i].Address = 'https://kino.pub' .. adr
-		if inAdr == t[i].Address then e = i end
-		t[i].Name = name1:gsub('&#039;',"'"):gsub('&amp;',"&") .. name2:gsub('&#039;',"'"):gsub('&amp;',"&")
-		t[i].InfoPanelTitle = desc_text
-		if not se_name:match('Сезон') then se_name = '' end
-		t[i].InfoPanelName = title:gsub(' %(.-$',''):gsub(' %/.-$',''):gsub('&#039;',"'"):gsub('&amp;',"&") .. ' (' .. (se_name:gsub('%)',''):gsub('^.-%(','') .. ', '  .. name1:gsub('&#039;',"'"):gsub('&amp;',"&") .. name2:gsub('&#039;',"'"):gsub('&amp;',"&") .. ')'):gsub('^%, ','')
-		t[i].InfoPanelShowTime = 8000
-		t[i].InfoPanelLogo = logo
-		t[i].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
-		i=i+1
-		end
-	else
-		for w in answer:gmatch('<div class="item episode%-thumbnail".-</div> </div> </div>') do
-		local adr, logo, name1 = w:match('<a href="(.-)".-<img src="(.-)".-<span class="label label%-primary episode%-number">(.-)</span>')
 
+		for w in answer:gmatch('<div class="item episode%-thumbnail".-</div> </div> </div>') do
+		local adr, logo, name2 = w:match('<a href="(.-)".-<img src="(.-)".-episode%-number">(.-)</span>')
+		local name1 = w:match('<a href=".-".-<img src=".-".-episode%-number">.-</span>.-<a href=".-">(.-)<') or ''
+		if name1 ~= '' then name1 = ', ' .. name1:gsub('&#039;',"'"):gsub('&amp;',"&") end
 		if not adr then break end
 		t[i] = {}
 		t[i].Id = i
-		t[i].Address = 'https://kino.pub' .. adr
-		if inAdr == t[i].Address then e = i end
-		t[i].Name = name1:gsub('&#039;',"'"):gsub('&amp;',"&")
+		t[i].Address = 'https://kino.pub' .. adr .. '&tr=' .. m_simpleTV.User.kinopub.tr
+		if m_simpleTV.User.kinopub.address == t[i].Address then e = i end
+		t[i].Name = name2 .. name1:gsub('&#039;',"'"):gsub('&amp;',"&")
 		t[i].InfoPanelTitle = desc_text
 		if not se_name:match('Сезон') then se_name = '' end
-		t[i].InfoPanelName = title:gsub(' %(.-$',''):gsub(' %/.-$',''):gsub('&#039;',"'"):gsub('&amp;',"&") .. ' (' .. (se_name:gsub('%)',''):gsub('^.-%(','') .. ', ' .. name1:gsub('&#039;',"'"):gsub('&amp;',"&") .. ')'):gsub('^%, ','')
+		t[i].InfoPanelName = title:gsub(' %(.-$',''):gsub(' %/.-$',''):gsub('&#039;',"'"):gsub('&amp;',"&") .. ' (' .. (se_name:gsub('%)',''):gsub('^.-%(','') .. ', ' .. name2 .. name1:gsub('&#039;',"'"):gsub('&amp;',"&") .. ')'):gsub('^%, ','')
 		t[i].InfoPanelShowTime = 8000
 		t[i].InfoPanelLogo = logo
 		t[i].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
 		i=i+1
 		end
-	end
-		t.ExtButton0 = {ButtonEnable = true, ButtonName = '⚙', ButtonScript = 'Qlty_kinopub(\'' .. answer1 .. '\')'}
 		if se_name ~= '' and answer2 then
-		t.ExtButton1 = {ButtonEnable = true, ButtonName = '📺', ButtonScript = 'Season_kinopub(\'' .. answer2 .. '\')'}
+		t.ExtButton0 = {ButtonEnable = true, ButtonName = '📺', ButtonScript = 'Season_kinopub(\'' .. answer2 .. '\')'}
 		else
-		t.ExtButton1 = {ButtonEnable = true, ButtonName = '🧾', ButtonScript = 'tags_kinopub(\'' .. answer3 .. '\')'}
+		t.ExtButton0 = {ButtonEnable = true, ButtonName = '🔊', ButtonScript = 'Audio_Kinopub()'}
 		end
+
+		t.ExtButton1 = {ButtonEnable = true, ButtonName = '🧾', ButtonScript = 'tags_kinopub(\'' .. answer3 .. '\')'}
+
 		m_simpleTV.OSD.ShowSelect_UTF8(se_name, e-1, t, 8000, 32 + 64)
 
 	else
@@ -540,11 +646,19 @@ else
 		t[1].InfoPanelShowTime = 8000
 		t[1].InfoPanelLogo = logo
 		t[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
-		t.ExtButton0 = {ButtonEnable = true, ButtonName = '⚙', ButtonScript = 'Qlty_kinopub(\'' .. answer1 .. '\')'}
+		t.ExtButton0 = {ButtonEnable = true, ButtonName = '🔊', ButtonScript = 'Audio_Kinopub()'}
 		t.ExtButton1 = {ButtonEnable = true, ButtonName = '🧾', ButtonScript = 'tags_kinopub(\'' .. answer3 .. '\')'}
 
 		m_simpleTV.OSD.ShowSelect_UTF8('Kinopub', 0, t, 8000, 32 + 64 + 128)
 	end
+	local retAdr = answer:match('var playlist = (.-);')
+	local media_id = answer:match('data%-selected%-id="(.-)"')
+	retAdr = GetStream(retAdr, media_id)
+	retAdr = GetAdr(retAdr)
+	local episode_name = m_simpleTV.User.kinopub.address:match('s%d+e%d+')
+	if episode_name then episode_name = ' ' .. episode_name else episode_name = '' end
+	m_simpleTV.Control.CurrentTitle_UTF8 = title .. episode_name .. ' - ' .. m_simpleTV.User.kinopub.audio_name:gsub('^%d+%. ','')
+	m_simpleTV.Control.SetTitle(title .. ' - ' .. m_simpleTV.User.kinopub.audio_name:gsub('^%d+%. ',''))
 	m_simpleTV.Control.ChangeAdress = 'Yes'
 	m_simpleTV.Control.CurrentAdress = retAdr
 	end
