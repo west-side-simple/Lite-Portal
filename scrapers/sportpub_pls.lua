@@ -1,4 +1,4 @@
--- скрапер TVS для загрузки плейлиста "SPORT PUB TV ($)" с сайта https://kino.pub (20/08/22)
+-- скрапер TVS для загрузки плейлиста "SPORT PUB TV ($)" с сайта https://kino.pub (14/06/23)
 
 -- ## Переименовать каналы ##
 local filter = {
@@ -56,24 +56,24 @@ local filter = {
 	return str
 	end
 
-	local function getname(adr)
+	local function getanswer(adr)
 	local proxy = ''
 -- '' - нет
 -- 'http://proxy-nossl.antizapret.prostovpn.org:29976' (пример)
 -- ##
 	local session1 = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:103.0) Gecko/20100101 Firefox/103.0', proxy, false)
-		if not session then return end
-		m_simpleTV.Http.SetTimeout(session1, 80000)
+		if not session1 then return end
+		m_simpleTV.Http.SetTimeout(session1, 12000)
 	local cookies = cookiesFromFile()
 		local rc1, answer = m_simpleTV.Http.Request(session1, {url = 'https://kino.pub' .. adr, headers = 'Cookie: ' .. cookies})
 		if rc1 ~= 200 then return end
 		m_simpleTV.Http.Close(session1)
-		local title = answer:match('<title>(.-)</title>')
-	return title
+--		debug_in_file(answer .. '\n','c://1/testpub_sport.txt')
+	return answer
 	end
 
 	local function LoadFromSite()
-	local proxy = 'http://proxy-nossl.antizapret.prostovpn.org:29976'
+	local proxy = ''
 -- '' - нет
 -- 'http://proxy-nossl.antizapret.prostovpn.org:29976' (пример)
 -- ##
@@ -81,22 +81,37 @@ local filter = {
 		if not session then return end
 		m_simpleTV.Http.SetTimeout(session, 60000)
 		local cookies = cookiesFromFile()
+		local rc1, answer1
 		local rc, answer = m_simpleTV.Http.Request(session, {url = 'https://kino.pub/sport', headers = 'Cookie: ' .. cookies})
 		if rc ~= 200 then return end
 		m_simpleTV.Http.Close(session)
 		answer = answer:gsub('\n', ' ')
 		local t, i = {}, 1
-
+--		debug_in_file(answer .. '\n','c://1/testpub_sport.txt')
 			for w in answer:gmatch('<a href="/tv/view/.-class=') do
 				local title
 				local adr,logo = w:match('<a href="(.-)"><img src="(.-)" class=')
 					if not adr then break end
 				t[i] = {}
-				title = getname(adr)
+
+				if i == 1 then
+					answer1 = getanswer(adr)
+					answer1 = answer1:match('<div class="card%-block">.-</div>')
+				end
+
+				for w1 in answer1:gmatch('<a href=.-</a>') do
+					local adr1, title1 = w1:match('<a href="(.-)".->(.-)</a>')
+					if not adr1 then break end
+					if adr1 == adr then
+						title = title1
+					end
+				end
+
 				t[i].name = title
 				t[i].address = 'https://kino.pub' .. adr
 				t[i].group = 'Sport'
 				t[i].logo = logo
+
 				i = i + 1
 			end
 			if i == 1 then return end
