@@ -1,4 +1,4 @@
--- видеоскрипт для сайта https://rezka.ag (15/06/22)
+-- видеоскрипт для сайта https://rezka.ag (19/06/23)
 -- Copyright © 2017-2021 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
 -- mod west_side for lite version
 -- ## открывает подобные ссылки ##
@@ -133,11 +133,11 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 				t[i] = {}
 				t[i].Address = adr
 				t[i].Name = qlty
-				t[i].qlty = tonumber(qlty:match('%d+'))
+--				t[i].qlty = tonumber(qlty:match('%d+'))
 				i = i + 1
 			end
 			if i == 1 then return end
-		table.sort(t, function(a, b) return a.qlty < b.qlty end)
+--		table.sort(t, function(a, b) return a.qlty < b.qlty end)
 		local z = {
 				{'1080p Ultra', '1080p'},
 				{'1080p', '720p'},
@@ -159,6 +159,7 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 				end
 				t[i].qlty = tonumber(t[i].Name:match('%d+'))
 			end
+		table.sort(t, function(a, b) return a.qlty < b.qlty end)	
 		m_simpleTV.User.rezka.Tab = t
 		local index = rezkaIndex(t)
 	 return t[index].Address
@@ -402,6 +403,7 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 		end
 		local subt = rezkaISubt(retAdr)
 		retAdr = rezkaDeSex(retAdr)
+--		debug_in_file( '\n' .. retAdr .. '\n', 'c://1/hdrezka.txt', setnew )
 			if not retAdr or retAdr == '' then
 				m_simpleTV.Control.CurrentAddress = 'http://wonky.lostcut.net/vids/error_getlink.avi'
 				showError('2.01')
@@ -583,8 +585,10 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 			end
 			id = id or 1
 			tr = t[id].Address
+			m_simpleTV.User.rezka.tr = t[id].Name
 		else
 			tr = t[1].Address
+			m_simpleTV.User.rezka.tr = t[1].Name
 		end
 	end
 	local id = inAdr:match('/(%d+)')
@@ -711,8 +715,8 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 		else
 			inAdr = retAdr
 		end
-		m_simpleTV.Control.CurrentTitle_UTF8 = title
-		m_simpleTV.OSD.ShowMessageT({text = title, color = 0xff9999ff, showTime = 1000 * 5, id = 'channelName'})
+		m_simpleTV.Control.CurrentTitle_UTF8 = title .. ' - ' .. (m_simpleTV.User.rezka.tr or 'выбор HDRezka')
+		m_simpleTV.OSD.ShowMessageT({text = title .. ' - ' .. (m_simpleTV.User.rezka.tr or 'выбор HDRezka'), color = 0xff9999ff, showTime = 1000 * 5, id = 'channelName'})
 		m_simpleTV.Control.CurrentAddress = inAdr
 	 return
 	else
@@ -763,4 +767,4 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 			end
 			m_simpleTV.OSD.ShowSelect_UTF8('HDrezka', 0, t, 8000, 32 + 64 + 128)
 	end
-	play(inAdr, title, id)
+	play(inAdr, title .. ' - ' .. (m_simpleTV.User.rezka.tr or 'выбор HDRezka'), id)
