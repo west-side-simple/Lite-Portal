@@ -1,14 +1,16 @@
--- Плагин для трекеров lite portal 22.04.23
+-- Плагин для трекеров lite portal 20.06.23
 -- author west_side
 
 function start_page()
 
 		local last_adr = m_simpleTV.Config.GetValue('info/torrent','LiteConf.ini') or ''
 		local tt = {
+		{"","👀 Буду смотреть"},
 		{"http://api.vokino.tv/v2/list?sort=popular&page=1","В тренде"},
 		{"http://api.vokino.tv/v2/list?sort=updatings&page=1","Обновления"},
 		{"http://api.vokino.tv/v2/list?sort=new&type=movie&page=1","Новинки фильмов"},
 		{"http://api.vokino.tv/v2/list?sort=popular&type=movie&page=1","Фильмы"},
+		{"http://api.vokino.tv/v2/list?sort=new&type=serial&page=1","Новинки сериалов"},
 		{"http://api.vokino.tv/v2/list?sort=popular&type=serial&page=1","Сериалы"},
 		{"http://api.vokino.tv/v2/list?sort=popular&type=multfilm&page=1","Мультфильмы"},
 		{"http://api.vokino.tv/v2/list?sort=popular&type=multserial&page=1","Мультсериалы"},
@@ -43,6 +45,8 @@ function start_page()
 				search()
 			elseif t0[id].Name == '💼 Подборки' then
 				content_compilation_page(1)
+			elseif t0[id].Name == '👀 Буду смотреть' then
+				get_see()
 			else
 				content_adr_page(t0[id].Action)
 			end
@@ -54,6 +58,179 @@ function start_page()
 		run_westSide_portal()
 		end
 end
+
+	local function getConfigVal(key)
+		return m_simpleTV.Config.GetValue(key,'LiteConf.ini')
+	end
+
+	local function setConfigVal(key,val)
+		m_simpleTV.Config.SetValue(key,val,'LiteConf.ini')
+	end
+
+	local function find_in_see(content_id)
+		local recentAddress = getConfigVal('content_id/adr') or ''
+		local t,i={},1
+		for w in string.gmatch(recentAddress,"[^|]+") do
+			t[i] = {}
+			t[i].Address = w
+			if w == content_id then
+				return '✅ '
+			end
+			i=i+1
+			end
+		return ''
+	end
+--------------------------------------
+function get_see()
+
+	local function getConfigVal(key)
+		return m_simpleTV.Config.GetValue(key,'LiteConf.ini')
+	end
+
+	local function setConfigVal(key,val)
+		m_simpleTV.Config.SetValue(key,val,'LiteConf.ini')
+	end
+
+-- wafee code for history
+
+    local recentName = getConfigVal('content_id/title') or ''
+    local recentAddress = getConfigVal('content_id/adr') or ''
+	local recentLogo = getConfigVal('content_id/logo') or ''
+
+     local t,i={},1
+
+   if recentName~='' and recentLogo~='' and recentAddress~='' and recentIndex~='' then
+     for w in string.gmatch(recentName,"[^|]+") do
+       t[i] = {}
+       t[i].Id = i
+       t[i].Name = w
+	   t[i].InfoPanelName = w
+	   t[i].InfoPanelShowTime = 10000
+       i=i+1
+     end
+     i=1
+     for w in string.gmatch(recentAddress,"[^|]+") do
+       t[i].Address = w
+       i=i+1
+     end
+	 i=1
+     for w in string.gmatch(recentLogo,"[^|]+") do
+       t[i].InfoPanelLogo = w
+       i=i+1
+     end
+   end
+   t.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🧲 Трекеры '}
+   t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🗑 Cleane '}
+   local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('👀 Буду смотреть',0,t,9000,1+4+8)
+   if id==nil then
+   run_westSide_portal()
+   end
+   if ret==1 then
+      content(t[id].Address)
+   end
+   if ret==2 then
+	  start_page()
+   end
+   if ret==3 then
+      setConfigVal('content_id/title','')
+	  setConfigVal('content_id/logo','')
+	  setConfigVal('content_id/adr','')
+	  start_page()
+   end
+   end
+
+--------------------------------------
+function add_to_see(adr,title,logo)
+
+	local function getConfigVal(key)
+		return m_simpleTV.Config.GetValue(key,'LiteConf.ini')
+	end
+
+	local function setConfigVal(key,val)
+		m_simpleTV.Config.SetValue(key,val,'LiteConf.ini')
+	end
+
+-- wafee code for history
+	local cur_max
+	local max_history = m_simpleTV.Config.GetValue('openFrom/maxRecentItem','simpleTVConfig') or 15
+    local recentName = getConfigVal('content_id/title') or ''
+    local recentAddress = getConfigVal('content_id/adr') or ''
+	local recentLogo = getConfigVal('content_id/logo') or ''
+     local t={}
+     local tt={}
+     local i=2
+	 t[1] = {}
+     t[1].Id = 1
+     t[1].Name = title
+	 t[1].Address = adr
+	 t[1].Logo = logo
+   if recentName~='' and recentLogo~='' and recentAddress~='' then
+
+     for w in string.gmatch(recentName,"[^|]+") do
+       t[i] = {}
+       t[i].Id = i
+       t[i].Name = w
+       i=i+1
+     end
+     i=2
+     for w in string.gmatch(recentAddress,"[^|]+") do
+       t[i].Address = w
+       i=i+1
+     end
+	 i=2
+     for w in string.gmatch(recentLogo,"[^|]+") do
+       t[i].Logo = w
+       i=i+1
+     end
+
+     local function isExistAdr()
+       for i=2,#t do
+         if adr==t[i].Address then
+           return true, i
+         end
+       end
+       return false
+     end
+
+     local isExist,i=isExistAdr()
+     if isExist then
+       table.remove(t,i)
+	   table.remove(t,1)
+     end
+
+     recentName=''
+     recentAddress = ''
+     recentLogo = ''
+
+	 if #t <= tonumber(max_history) then
+		cur_max = #t
+	 else
+		cur_max = tonumber(max_history)
+	 end
+
+     for i=1,cur_max  do
+      local name = t[i].Name
+      recentName = recentName .. name .. '|'
+      recentAddress = recentAddress .. t[i].Address .. '|'
+	  recentLogo = recentLogo .. t[i].Logo .. '|'
+      t[i].Id = i
+--      debug_in_file('fromOSDmenu = ' .. t[i].Id .. ' ' .. t[i].Name .. ' ' .. t[i].Address .. '\n','c://1/cid.txt')
+     end
+
+	 setConfigVal('content_id/title',recentName)
+	 setConfigVal('content_id/logo',recentLogo)
+	 setConfigVal('content_id/adr',recentAddress)
+
+	 else
+
+	 setConfigVal('content_id/title',title .. '|')
+	 setConfigVal('content_id/logo',logo .. '|')
+	 setConfigVal('content_id/adr',adr .. '|')
+
+   end
+end
+
+--------------------------------------
 
 local function get_hdvb(title, year)
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
@@ -68,8 +245,8 @@ local function get_hdvb(title, year)
 	answer = unescape1(answer)
 --	debug_in_file(title .. ' ' .. year .. '\n' .. answer .. '\n','c://1/content.txt')
 	local t = {}
-		for ru_title, in_year, kp_id, tr, url in answer:gmatch('"title_ru":"(.-)".-"year":(%d%d%d%d).-"kinopoisk_id":(%d+).-"translator":"(.-)".-"iframe_url":"(.-)"') do
-			if ru_title and ru_title == title and tonumber(in_year) == tonumber(year) then
+		for ru_title, en_title, in_year, kp_id, tr, url in answer:gmatch('"title_ru":"(.-)".-"title_en":"(.-)".-"year":(%d%d%d%d).-"kinopoisk_id":(%d+).-"translator":"(.-)".-"iframe_url":"(.-)"') do
+			if (ru_title and ru_title == title or en_title and en_title == title) and tonumber(in_year) == tonumber(year) then
 				t[#t + 1] = {}
 				t[#t].Id = #t
 				t[#t].Address = url:gsub('\\','')
@@ -298,10 +475,10 @@ function content(content_id)
 	local poster = tab.details.poster
 	local background = tab.details.bg_poster.backdrop
 	if poster then poster = poster:gsub('w600_and_h900','w300_and_h450')
-		else poster = 'http://m24.do.am/images/logoport.png'
+		else poster = m_simpleTV.MainScriptDir .. 'user/westSide/icons/liteportal.png'
 	end
 	if background then background = background:gsub('original','w500')
-		else background = 'http://m24.do.am/images/logoport.png'
+		else background = m_simpleTV.MainScriptDir .. 'user/westSide/icons/liteportal.png'
 	end
 	local originalname = tab.details.originalname or ''
 	local released = tab.details.released or ''
@@ -327,8 +504,8 @@ function content(content_id)
 		local t,j={},2
 		t[1] = {}
 		t[1].Id = 1
-		t[1].Address = ''
-		t[1].Name = '.: info :.'
+		t[1].Address = content_id
+		t[1].Name = find_in_see(content_id) .. '.: info :.'
 		t[1].InfoPanelLogo = background
 		t[1].InfoPanelName =  name .. ' / ' .. originalname .. ' (' .. released .. ') ' .. genre
 		t[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
@@ -387,6 +564,13 @@ function content(content_id)
 		t[j].Id = j
 		t[j].Name = '🔎 TMDB'
 		j=j+1
+
+		if tab.online and tab.online.KP then
+		t[j] = {}
+		t[j].Id = j
+		t[j].Name = '🔎 Kinopub' .. tag
+		j=j+1
+		end
 
 		if tab.online and tab.online.Filmix then
 		t[j] = {}
@@ -506,6 +690,10 @@ function content(content_id)
 		end
 		if ret == 1 then
 		m_simpleTV.User.torrent.audio_id = nil
+		if id == 1 then
+			add_to_see(content_id,t[1].InfoPanelName,background)
+			content(t[1].Address)
+		end
 		if t[id].Name:match('Similar: ') then
 			content(t[id].Address)
 		elseif t[id].Name:match('Collaps') then
@@ -531,6 +719,10 @@ function content(content_id)
 		elseif t[id].Name:match('TMDB') then
 			m_simpleTV.Config.SetValue('search/media',m_simpleTV.Common.toPercentEncoding(title),'LiteConf.ini')
 			search_tmdb()
+		elseif t[id].Name:match('Kinopub') then
+			m_simpleTV.Config.SetValue('search/media',m_simpleTV.Common.toPercentEncoding(title),'LiteConf.ini')
+			local search_ini = m_simpleTV.Config.GetValue('search/media','LiteConf.ini') or ''
+			show_select('https://kino.pub/item/search?query=' .. search_ini:gsub('%%28.-%%29',''))
 		elseif t[id].Name:match('Filmix') then
 			m_simpleTV.Config.SetValue('search/media',m_simpleTV.Common.toPercentEncoding(title),'LiteConf.ini')
 			search_filmix_media()
@@ -597,7 +789,7 @@ function content_adr_page(adr)
 		tag =  tag .. ', ' .. tab.channels[i].details.tags[2]
 	end
 	t[i].Id = i
-	t[i].Name = name .. ' (' .. released .. ') - ' .. type .. tag
+	t[i].Name = find_in_see(id) .. name .. ' (' .. released .. ') - ' .. type .. tag
 	t[i].InfoPanelLogo = poster
 	t[i].Address = id
 	t[i].InfoPanelName = name .. ' / ' .. originalname .. ' (' .. released .. ') ' .. genre
@@ -777,3 +969,4 @@ function torrents_tracker(adr)
 			torrents(adr)
 		end
 end
+
