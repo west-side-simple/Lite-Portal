@@ -1,4 +1,4 @@
--- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (14/06/23) - автор west_side
+-- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (21/06/23) - автор west_side
 -- необходим действующий аккаунт на сайте https://kino.pub
 -- работает в связке со скриптом Lite_qt_kinopub.lua - автор west_side
 -- дополнительная информация обеспечивается скриптом info_fox.lua - автор west_side
@@ -519,6 +519,7 @@ else
 		j=j+1
 		end
 
+		t1.ExtButton0 = {ButtonEnable = true, ButtonName = ' Кинопаб ', ButtonScript = 'run_lite_qt_kinopub()'}
 		t1.ExtButton1 = {ButtonEnable = true, ButtonName = '✕', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
 		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('🧾 Теги', 0, t1, 30000, 1 + 4 + 8 + 2)
 		if ret == 1 then
@@ -530,6 +531,9 @@ else
 			else
 				show_select(t1[id].Address)
 			end
+		end
+		if ret == 2 then
+			run_lite_qt_kinopub()
 		end
 	end
 
@@ -657,8 +661,8 @@ else
 	retAdr = GetAdr(retAdr)
 	local episode_name = m_simpleTV.User.kinopub.address:match('s%d+e%d+')
 	if episode_name then episode_name = ' ' .. episode_name else episode_name = '' end
-	m_simpleTV.Control.CurrentTitle_UTF8 = title .. episode_name .. ' - ' .. m_simpleTV.User.kinopub.audio_name:gsub('^%d+%. ','')
-	m_simpleTV.Control.SetTitle(title .. ' - ' .. m_simpleTV.User.kinopub.audio_name:gsub('^%d+%. ',''))
+	m_simpleTV.Control.CurrentTitle_UTF8 = title:gsub('&#039;',"'"):gsub('&amp;',"&") .. episode_name .. ' - ' .. m_simpleTV.User.kinopub.audio_name:gsub('^%d+%. ','')
+	m_simpleTV.Control.SetTitle(title:gsub('&#039;',"'"):gsub('&amp;',"&") .. ' - ' .. m_simpleTV.User.kinopub.audio_name:gsub('^%d+%. ',''))
 	m_simpleTV.Control.ChangeAdress = 'Yes'
 	m_simpleTV.Control.CurrentAdress = retAdr
 	end
