@@ -1,4 +1,4 @@
---Kinopub portal - lite version west_side 24.08.22
+--Kinopub portal - lite version west_side 21.06.23
 function run_lite_qt_kinopub()
 
 	local tt = {
@@ -87,10 +87,12 @@ local proxy = ''
 
 	local rc, answer = m_simpleTV.Http.Request(session, {url = inAdr, headers = 'Cookie: ' .. cookies})
 
-		if rc ~= 200 then m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="https://cdn.service-kp.com/logo.png"', text = 'Kinopub: Вы не авторизованы', color = ARGB(255, 255, 255, 255), showTime = 1000 * 60})
+	if rc ~= 200 then m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="https://cdn.service-kp.com/logo.png"', text = 'Kinopub: Сервис недоступен', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
 	run_lite_qt_kinopub() return end
 	answer = answer:gsub('\n', ' ')
-
+--	debug_in_file(answer .. '\n','c://1/testpub.txt')
+	local days = answer:match('title="Купить pro аккаунт">(.-)<') or '0 дн.'
+	local user_icon, user_name  = answer:match('<a data%-toggle="dropdown">.-<img src="(.-)".-alt="(.-)"')
 	local title1 = answer:match('<title>(.-)</title>') or 'Кинопаб'
 	if not m_simpleTV.Control.CurrentAdress then
 		m_simpleTV.Control.SetTitle(title1)
@@ -174,9 +176,12 @@ local proxy = ''
 				FilterType = 2
 			end
 	t.ExtParams = {FilterType = FilterType, AutoNumberFormat = AutoNumberFormat}
-	if title1:match('Авторизоваться') then 
-	m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="https://cdn.service-kp.com/logo.png"', text = 'Kinopub: Вы не авторизованы', color = ARGB(255, 255, 255, 255), showTime = 1000 * 60})
+	if title1:match('Авторизоваться') then
+	m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="https://cdn.service-kp.com/logo.png"', text = 'Kinopub: Вы не авторизованы', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
 	run_lite_qt_kinopub() return end
+
+	m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="' .. user_icon .. '"', text = user_name .. ': Вы авторизованы 💲 - ' .. days, color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
+
 	if #t > 0 then
 	local ret, id = m_simpleTV.OSD.ShowSelect_UTF8(title1, 0, t, 30000, 1 + 4 + 8 + 2)
 	if ret == -1 or not id then
@@ -287,7 +292,7 @@ local proxy = ''
 	else
 	t.ExtButton0 = {ButtonEnable = true, ButtonName = '🢀'}
 	end
-	if title1:match('Авторизоваться') then 
+	if title1:match('Авторизоваться') then
 	m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="https://cdn.service-kp.com/logo.png"', text = 'Kinopub: Вы не авторизованы', color = ARGB(255, 255, 255, 255), showTime = 1000 * 60})
 	run_lite_qt_kinopub() end
 	local ret, id = m_simpleTV.OSD.ShowSelect_UTF8(title1, 0, t, 30000, 1 + 4 + 8 + 2)
