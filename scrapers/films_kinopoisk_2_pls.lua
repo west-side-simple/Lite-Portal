@@ -1,16 +1,17 @@
--- скрапер TVS для загрузки плейлиста "Фильмы 2" (13/01/22)
+-- скрапер TVS для загрузки плейлиста "Фильмы 2" (11/05/23)
 -- base script nexterr, mod west_side
 -- ## необходим ##
--- видоскрипт: videocdn.lua
+-- видоскрипт: videocdn.lua - mod west_side
 -- ##
 	module('films_kinopoisk_2_pls', package.seeall)
 	local my_src_name = 'Фильмы 2'
 	function GetSettings()
-	 return {name = my_src_name, sortname = '', scraper = '', m3u = 'out_' .. my_src_name .. '.m3u', logo = '..\\Channel\\logo\\Icons\\serials.png', TypeSource = 1, TypeCoding = 1, DeleteM3U = 0, RefreshButton = 0, AutoBuild = 0, show_progress = 1, AutoBuildDay = {0, 0, 0, 0, 0, 0, 0}, LastStart = 0, TVS = {add = 0, FilterCH = 0, FilterGR = 0, GetGroup = 0, LogoTVG = 0}, STV = {add = 1, ExtFilter = 0, FilterCH = 0, FilterGR = 0, GetGroup = 1, HDGroup = 0, AutoSearch = 0, AutoNumber = 0, NumberM3U = 0, GetSettings = 1, NotDeleteCH = 0, TypeSkip = 1, TypeFind = 1, TypeMedia = 3}}
+	 return {name = my_src_name, sortname = '', scraper = '', m3u = 'out_' .. my_src_name .. '.m3u', logo = '..\\Channel\\logo\\Icons\\serials.png', TypeSource = 1, TypeCoding = 1, DeleteM3U = 0, RefreshButton = 0, AutoBuild = 0, show_progress = 1, AutoBuildDay = {0, 0, 0, 0, 0, 0, 0}, LastStart = 0, TVS = {add = 0, FilterCH = 0, FilterGR = 0, GetGroup = 0, LogoTVG = 0}, STV = {add = 1, ExtFilter = 0, FilterCH = 0, FilterGR = 0, GetGroup = 1, HDGroup = 0, AutoSearch = 0, AutoSearchLogo = 1, AutoNumber = 0, NumberM3U = 0, GetSettings = 1, NotDeleteCH = 0, TypeSkip = 1, TypeFind = 1, TypeMedia = 3}}
 	end
 	function GetVersion()
 	 return 2, 'UTF-8'
 	end
+
 	local function showMess(str, color, showT)
 		local t = {text = '🎞 ' .. str, color = color, showTime = showT or (1000 * 5), id = 'channelName'}
 		m_simpleTV.OSD.ShowMessageT(t)
@@ -26,15 +27,15 @@
 				local j = 1
 					while tab.data[j] and tab.data[j].iframe_src do
 						local kinopoisk_id = tab.data[j].kinopoisk_id or ''
-						
+						local imdb_id = tab.data[j].imdb_id or ''
 						local adr = tab.data[j].iframe_src
 
 							t[k] = {}
-							t[k].address = 'https:' .. adr:gsub('^https%:', '')
+							t[k].address = 'https:' .. adr:gsub('^https%:', ''):gsub('\\', '') .. '&embed=' .. kinopoisk_id .. ',' .. imdb_id
 							if kinopoisk_id ~= '' then
 							t[k].logo = string.format('https://st.kp.yandex.net/images/film_iphone/iphone360_%s.jpg', kinopoisk_id)
 							end
-							local year = tab.data[j].year or '0'
+						--[[	local year = tab.data[j].year or '0'
 							year = year:match('(%d+)%-')
 							if tonumber(year) <= 1950 then t[k].group = '1950 года и ранее' end
 							if tonumber(year) > 1950 and tonumber(year) <= 1970  then t[k].group = '1951 - 1970 года' end
@@ -49,18 +50,18 @@
 							if tonumber(year) == 2018 then t[k].group = '2018 года' end
 							if tonumber(year) == 2019 then t[k].group = '2019 года' end
 							if tonumber(year) == 2020 then t[k].group = '2020 года' end
-							if tonumber(year) > 2020 then t[k].group = '2021 года и далее' end
+							if tonumber(year) > 2020 then t[k].group = '2021 года и далее' end--]]
 
-							t[k].name = tab.data[j].ru_title:gsub('"', '%%22')
-							t[k].name = t[k].name .. ' (' .. year .. ')'
+							t[k].name = unescape3(tab.data[j].ru_title:gsub('u','\\u')):gsub('"', '%%22')
+						--	t[k].name = t[k].name .. ' (' .. year .. ')'
 
 							local n, t1 = 1, {}
 							while true do
 							if not (tab.data[j].translations and tab.data[j].translations[n] and tab.data[j].translations[n].title) then break end
 
 							t1[n] = {}
-							t1[n].perevod = tab.data[j].translations[n].title
-							if t1[n].perevod:match('Кубик') then t[k].group = 'Переводы Кубик в Кубе' end
+							t1[n].perevod = unescape3(tab.data[j].translations[n].title:gsub('u','\\u'))
+						--[[	if t1[n].perevod:match('Кубик') then t[k].group = 'Переводы Кубик в Кубе' end
 							if t1[n].perevod:match('Гоблин') then t[k].group = 'Переводы Гоблина' end
 							if t1[n].perevod:match('Кураж') then t[k].group = 'Переводы Кураж-Бамбей' end
 							if t1[n].perevod:match('Карцев') then t[k].group = 'Переводы Карцев' end
@@ -74,17 +75,22 @@
 							if t1[n].perevod:match('Мишин') then t[k].group = 'Переводы Мишин' end
 							if t1[n].perevod:match('Гаврилов') then t[k].group = 'Переводы Гаврилов' end
 							if t1[n].perevod:match('Визгунов') then t[k].group = 'Переводы Визгунов' end
-							if t1[n].perevod:match('Горчаков') then t[k].group = 'Переводы Горчаков' end
+							if t1[n].perevod:match('Горчаков') then t[k].group = 'Переводы Горчаков' end--]]
+							t[k].group = 'Озвучка'
+							if t1[n].perevod:match('Авторский') then t[k].group = 'Авторский перевод' end
+							if t1[n].perevod:match('Любительский') then t[k].group = 'Любительский перевод' end
+							if t1[n].perevod:match('Профессиональный') then t[k].group = 'Профессиональный перевод' end
+							if t1[n].perevod:match('Полное') then t[k].group = 'Полное дублирование' end
 
 							n = n + 1
 
 							end
 
-							if kinopoisk_id == '' and imdb_id == '' then t[k].group = 'Без ID' end
+						--[[	if kinopoisk_id == '' and imdb_id == '' then t[k].group = 'Без ID' end
 							if kinopoisk_id == '' and imdb_id ~= '' then t[k].group = 'Без ID Кинопоиска' end
-							if kinopoisk_id ~= '' and imdb_id == '' then t[k].group = 'Без ID IMDb' end
+							if kinopoisk_id ~= '' and imdb_id == '' then t[k].group = 'Без ID IMDb' end--]]
 
-							
+
 
 							k = k + 1
 
@@ -92,23 +98,20 @@
 					end
 			 return t, k
 			end
-			for c = 1, 600 do
-			
+			for c = 1, 650 do
+
 				local url = string.format(decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvbW92aWVzP2FwaV90b2tlbj10TmprWmdjOTdibWk5ajVJeTZxWnlzbXA5UmRtdkhtaCZsaW1pdD0xMDAmcGFnZT0lcw=='), c)
+				local t1,t2
 				local rc, answer = m_simpleTV.Http.Request(session, {url = url})
 				if rc == 200 and answer:match('"id"') then
-				if c==1 then t1=os.time() inpage = answer:match('last_page_url.-page=(%d+)') end
+				if c==1 then inpage = answer:match('last_page_url.-page=(%d+)') end
 					answer = answer:gsub('%[%]', '""')
 					local tab = json.decode(answer)
 					if tab and tab.data then
 						t, i = getTbl(t, i, tab)
 					end
-				else
-				t2=os.time()
-				m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/poisk.png"', text = 'Время загрузки ' .. t2-t1 .. ' сек. Приятного просмотра', color = ARGB(255, 255, 255, 255), showTime = 1000 * 60})
-				 break
 				end
-				m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/progress1/p' .. math.floor(c/inpage*100+0.5) .. '.png"', text = ' - общий прогресс загрузки: ' .. c, color = ARGB(255, 255, 255, 255), showTime = 1000 * 60})
+				m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/progress1/p' .. math.floor(c/inpage*100+0.5) .. '.png"', text = ' - общий прогресс загрузки: ' .. c, color = ARGB(255, 255, 255, 255), showTime = 1000 * 30})
 			end
 		m_simpleTV.Http.Close(session)
 			if #t == 0 then return end
