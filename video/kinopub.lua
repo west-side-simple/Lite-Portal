@@ -1,4 +1,4 @@
--- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (21/06/23) - автор west_side
+-- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (29/06/23) - автор west_side
 -- необходим действующий аккаунт на сайте https://kino.pub
 -- работает в связке со скриптом Lite_qt_kinopub.lua - автор west_side
 -- дополнительная информация обеспечивается скриптом info_fox.lua - автор west_side
@@ -357,7 +357,7 @@ else
 	local function GetAdr(url)
 		local transl = m_simpleTV.User.kinopub.tr
 		transl = tonumber(transl)
-		local domen = url:match('^(https:.-)/hls4/')
+		local domen = url:match('^(http.-)/hls4/')
 		local rc, answer = m_simpleTV.Http.Request(session, {url = url})
 		if rc ~= 200 then return false end
 
