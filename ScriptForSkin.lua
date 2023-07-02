@@ -1,4 +1,4 @@
---Плагин быстрого доступа к замене скина, обоев, виртуальной клавиатуры, расположения контролпанели для lite portal - west_side 11.02.23
+--Плагин быстрого доступа к замене скина, обоев, виртуальной клавиатуры, расположения контролпанели для lite portal - west_side 02.07.23
 function background_skin()
 	local currentbackground = m_simpleTV.Config.GetValue('mainView/logo/file','simpleTVConfig') or ''
 	local path = m_simpleTV.Common.GetMainPath(2) .. 'work/Channel/logo/Wallpapers/'
@@ -194,6 +194,9 @@ function select_keyboard()
 	  skin_schema_settings()
     end
 end
+		if not m_simpleTV.Config.GetValue('mainPlayController/playLastChannelOnStartup','simpleTVConfig') == true and not io.open(m_simpleTV.MainScriptDir .. 'user/startup/ScriptForAssemblage.lua', 'r') then
+			m_simpleTV.Control.PlayAddressT({title='SimpleTV',address='SimpleTV'})-- fix title
+		end
 -------------------------------------------------------------------
  local t={}
  t.utf8 = true

@@ -1,4 +1,4 @@
---Плагин автообновления сборки для lite portal - автор west_side 24.04.23
+--Плагин автообновления сборки для lite portal - автор west_side 02.07.23
 --Необходимы скрипты /luaScr/user/video/hello_world.lua, /luaScr/user/startup/west_side.lua, /luaScr/user/westSide/events.lua - автор west_side
 -------------------------------------------------------------------
 	if not m_simpleTV.User then
@@ -30,9 +30,12 @@
 
 	local rc,answer = m_simpleTV.Http.Request(session,{url='http://m24.do.am/_fr/0/upd.txt'})
 	if rc~=200 then
-		m_simpleTV.Http.Close(session)		
+		m_simpleTV.Http.Close(session)
 		m_simpleTV.User.westSide.UP=true -- глобальная переменная для обновлений nil, true, false
-		return m_simpleTV.OSD.ShowMessageT({text = 'Обновление не доступно\nТекущее время: ' .. data, color = ARGB(255, 255, 255, 255), showTime = 2000 * 5}) 
+		if not m_simpleTV.Config.GetValue('mainPlayController/playLastChannelOnStartup','simpleTVConfig') == true then
+			m_simpleTV.Control.PlayAddressT({title='SimpleTV',address='SimpleTV'})-- fix title
+		end
+		return m_simpleTV.OSD.ShowMessageT({text = 'Обновление не доступно\nТекущее время: ' .. data, color = ARGB(255, 255, 255, 255), showTime = 2000 * 5})
 		-- нет доступа к хостингу обновлений
 	else
 		m_simpleTV.Http.Close(session)
@@ -118,5 +121,8 @@
 				m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = str5 , TypeBackColor = 0, UseLogo = 4, Once = 1})
 			end
 			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.5" src="http://m24.do.am/images/liteportal.png"' , text = str6 ,  color = ARGB(255, 255, 255, 255), showTime = 1700 * 10})
+			if not m_simpleTV.Config.GetValue('mainPlayController/playLastChannelOnStartup','simpleTVConfig') == true then
+				m_simpleTV.Control.PlayAddressT({title='SimpleTV',address='SimpleTV'})-- fix title
+			end
 		end
 	end
