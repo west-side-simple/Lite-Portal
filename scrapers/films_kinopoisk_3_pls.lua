@@ -487,7 +487,7 @@
 				m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/poisk.png"', text = 'Время загрузки ' .. t2-t1 .. ' сек. Приятного просмотра', color = ARGB(255, 127, 63, 255), showTime = 1000 * 60})
 				 break
 				end
-				m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/progress1/p' .. math.floor(c/500*100+0.5) .. '.png"', text = ' - общий прогресс загрузки: ' .. c, color = ARGB(255, 63, 63, 255), showTime = 1000 * 60})
+				m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/progress1/p' .. math.floor(c/1400*100+0.5) .. '.png"', text = ' - общий прогресс загрузки: ' .. c, color = ARGB(255, 63, 63, 255), showTime = 1000 * 60})
 			end
 		m_simpleTV.Http.Close(session)
 			if #t == 0 then return end
