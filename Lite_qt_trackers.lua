@@ -236,7 +236,7 @@ local function get_hdvb(title, year)
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 10000)
-	local url = decode64('aHR0cHM6Ly92YjE3MTIxY29yYW1jbGVhbi5wdy9hcGkvdmlkZW9zLmpzb24/dG9rZW49Yzk5NjZiOTQ3ZGEyZjNjMjliMzBjMGUwZGNjYTZjZjQmdGl0bGU9') .. m_simpleTV.Common.toPercentEncoding(title)
+	local url = decode64('aHR0cHM6Ly92YjE3MTIzZmlsaXBwYWFuaWtldG9zLnB3L2FwaS92aWRlb3MuanNvbj90b2tlbj1jOTk2NmI5NDdkYTJmM2MyOWIzMGMwZTBkY2NhNmNmNCZ0aXRsZT0=') .. m_simpleTV.Common.toPercentEncoding(title)
 	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
 	if rc~=200 then
 		m_simpleTV.Http.Close(session)
@@ -251,13 +251,51 @@ local function get_hdvb(title, year)
 				t[#t].Id = #t
 				t[#t].Address = url:gsub('\\','')
 				t[#t].Name = tr
+				t[#t].kp_id = kp_id
 --	debug_in_file(tr .. ' ' .. url:gsub('\\','') .. '\n','c://1/content.txt')
 			end
 		end
 	if #t ~= 0 then
-	return t
+--	debug_in_file( 'kp_id=' .. t[1].kp_id .. '\n', 'c://1/cdnmovies.txt', setnew )
+	return t, t[1].kp_id
 	end
 	return false
+end
+
+local function get_cdnmovies(kp_id)
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
+	if not session then return end
+	m_simpleTV.Http.SetTimeout(session, 10000)
+	local url = decode64('aHR0cHM6Ly9jZG5tb3ZpZXMubmV0L2FwaT90b2tlbj0wYWVmZDdjMWQ2ZjY0YzAzNzRjYmE4ZmRiZTZmOTE2MyZraW5vcG9pc2tfaWQ9') .. kp_id
+	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
+	if rc~=200 then
+		m_simpleTV.Http.Close(session)
+		return false
+	end
+	answer = answer:gsub('\\','')
+--	debug_in_file( answer .. '\n', 'c://1/cdnmovies.txt', setnew )
+	if answer:match('iframe src="(.-)"') then
+		return 'http:' .. answer:match('iframe src="(.-)"')
+	end
+	return false
+end
+
+local function get_voidboost(kp_id)
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
+	if not session then return end
+	m_simpleTV.Http.SetTimeout(session, 10000)
+	local url = decode64('aHR0cHM6Ly92b2lkYm9vc3QubmV0L2VtYmVkLw') .. kp_id
+	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
+	if rc~=200 then
+		m_simpleTV.Http.Close(session)
+		return false
+	end
+--	answer = answer:gsub('\\','')
+--	debug_in_file( answer .. '\n', 'c://1/cdnmovies.txt', setnew )
+--	if answer:match('iframe src="(.-)"') then
+--		return 'http:' .. answer:match('iframe src="(.-)"')
+--	end
+	return url
 end
 
 local function check(url)
@@ -412,7 +450,7 @@ function content_compilation(list_id)
 	local genre = tab.channels[i].details.genre
 	local type = tab.channels[i].details.type
 	t[i].Id = i
-	t[i].Name = name .. ' (' .. released .. ') - ' .. type
+	t[i].Name = find_in_see(id) .. name .. ' (' .. released .. ') - ' .. type
 	t[i].InfoPanelLogo = poster
 	t[i].Address = id
 	t[i].InfoPanelName = name .. ' / ' .. originalname .. ' (' .. released .. ') ' .. genre
@@ -448,8 +486,11 @@ function content(content_id)
 	m_simpleTV.Http.SetTimeout(session, 10000)
 	local url = 'http://api.vokino.tv/v2/view?id='	.. content_id .. '&token=' .. token
 	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
-	if rc~=200 then
+--	debug_in_file(rc .. ' - ' .. url .. '\n' .. answer .. '\n','c://1/deb.txt')
+	if rc~=200 or answer and answer:match('"success":false') then
 		m_simpleTV.Http.Close(session)
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="https://raw.githubusercontent.com/west-side-simple/logopacks/main/MoreLogo/liteportal.png"', text = 'Медиаконтент недоступен', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
+		start_page()
 		return
 	end
 	if not m_simpleTV.User then
@@ -462,7 +503,6 @@ function content(content_id)
 	if m_simpleTV.Config.GetValue('mainOsd/showEpgInfoAsWindow', 'simpleTVConfig') then tooltip_body = ''
 	else tooltip_body = 'bgcolor="#182633"'
 	end
---	debug_in_file(rc .. ' - ' .. url .. '\n' .. answer .. '\n','c://1/deb.txt')
 	require('json')
 	answer = answer:gsub('(%[%])', '"nil"')
 	local tab = json.decode(answer)
@@ -551,13 +591,35 @@ function content(content_id)
 		end
 		end
 
-		local hdvb = get_hdvb(name, released)
+		local hdvb, kp_id = get_hdvb(name, released)
 		if hdvb~=false then
 		t[j] = {}
 		t[j].Id = j
 		t[j].Name = 'Online: HDVB'
 		t[j].Address = hdvb
 		j=j+1
+		end
+
+		if kp_id then
+		local cdnmovies = get_cdnmovies(kp_id)
+		if cdnmovies~=false then
+		t[j] = {}
+		t[j].Id = j
+		t[j].Name = 'Online: CDN Movies'
+		t[j].Address = cdnmovies
+		j=j+1
+		end
+		end
+
+		if kp_id then
+		local voidboost = get_voidboost(kp_id)
+		if voidboost~=false then
+		t[j] = {}
+		t[j].Id = j
+		t[j].Name = 'Online: VB'
+		t[j].Address = voidboost
+		j=j+1
+		end
 		end
 
 		t[j] = {}
@@ -667,7 +729,7 @@ function content(content_id)
 		t[j] = {}
 		t[j].Id = j
 		t[j].Address = tab.similars[o].details.id
-		t[j].Name = 'Similar: ' .. tab.similars[o].details.name .. ' - ' .. tab.similars[o].details.type
+		t[j].Name = 'Similar: ' .. find_in_see(tab.similars[o].details.id) .. tab.similars[o].details.name .. ' - ' .. tab.similars[o].details.type
 		if not tab.similars[o].details.wide_poster or tab.similars[o].details.wide_poster == '' then
 			t[j].InfoPanelLogo = tab.similars[o].details.poster
 		else
@@ -716,6 +778,16 @@ function content(content_id)
 		else
 			m_simpleTV.Control.PlayAddressT({address='content_id=' .. content_id .. '&' .. t[id].Address[1].Address, title=title})
 		end
+		elseif t[id].Name:match('CDN Movies') then
+			if is_tv == false and m_simpleTV.User.torrent.content and m_simpleTV.User.torrent.content == content_id then
+				m_simpleTV.User.torrent.is_set_position = true
+			end
+			m_simpleTV.Control.PlayAddressT({address='content_id=' .. content_id .. '&' .. t[id].Address, title=title})
+		elseif t[id].Name:match('VB') then
+			if is_tv == false and m_simpleTV.User.torrent.content and m_simpleTV.User.torrent.content == content_id then
+				m_simpleTV.User.torrent.is_set_position = true
+			end
+			m_simpleTV.Control.PlayAddressT({address='content_id=' .. content_id .. '&' .. t[id].Address, title=title})
 		elseif t[id].Name:match('TMDB') then
 			m_simpleTV.Config.SetValue('search/media',m_simpleTV.Common.toPercentEncoding(title),'LiteConf.ini')
 			search_tmdb()
