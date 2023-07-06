@@ -1,6 +1,6 @@
 -- видеоскрипт для видеобалансера "Hdvb" https://hdvb.tv (16/06/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod west_side (29/04/23)
+-- mod west_side (06/07/23)
 -- ## открывает подобные ссылки ##
 -- https://vid1647324294.vb17121coramclean.pw/movie/c77fd8d3ec03509000778d9af49f8d86/iframe
 -- https://vid1648222294.vb17121coramclean.pw/serial/77de2d434d279e861121237797af59a26ae2a19b53718d36ce15bcca908eaed2/iframe
@@ -49,6 +49,8 @@
 		m_simpleTV.OSD.ShowMessageT(t)
 	end
 	local function getAddress(adr)
+--	debug_in_file( '\n' .. adr .. '\n', 'c://1/hdvb.txt', setnew )
+		if not adr then return end
 			if adr:match('^http') then
 			 return adr
 			end
@@ -56,6 +58,7 @@
 		adr = adr:gsub('^~', '/playlist/')
 		adr = m_simpleTV.User.hdvb.host .. adr .. '.txt'
 		local rc, answer = m_simpleTV.Http.Request(session, {url = adr, headers = m_simpleTV.User.hdvb.headers, method = 'post'})
+--		debug_in_file( '\n' .. answer .. '\n', 'c://1/hdvb.txt', setnew )
 	 return answer
 	end
 	local function getIndex(t)
@@ -88,7 +91,7 @@
 		local t, i = {}, 1
 		local qlty, adr
 			for w in answer:gmatch('#EXT%-X%-STREAM%-INF:(.-\n.-)\n') do
-				qlty = w:match('RESOLUTION=%d+x(%d+)')
+				qlty = w:match('RESOLUTION=.-/(%d+)')--fix
 				adr = w:match('\n(.+)')
 					if not qlty or not adr then break end
 				t[i] = {}
@@ -142,7 +145,7 @@
 		m_simpleTV.OSD.ShowMessageT({text = title, showTime = 1000 * 5, id = 'channelName'})
 		m_simpleTV.Control.CurrentAddress = retAdr
 	end
-	local function transl()
+	local function transl(movie)
 		local tab = m_simpleTV.User.hdvb.tabEpisode
 		local transl_name = m_simpleTV.User.hdvb.transl_name or m_simpleTV.User.hdvb.tabEpisode[1].title
 		local transl_id = m_simpleTV.User.hdvb.transl_id
@@ -168,6 +171,9 @@
 		end
 		m_simpleTV.User.hdvb.transl_id = transl_id
 		m_simpleTV.User.hdvb.transl = t
+		if movie then
+			m_simpleTV.User.hdvb.adr = t[1].Address
+		end
 	 return true
 	end
 	local function seasons(transl_menu)
@@ -244,7 +250,7 @@
 		if m_simpleTV.User.paramScriptForSkin_buttonPlst then
 			t.ExtButton1 = {ButtonEnable = true, ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonPlst, ButtonScript = 'transl_hdvb()'}
 		else
-			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 Озвучка ', ButtonScript = 'transl_hdvb()'}
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 📢 Озвучка ', ButtonScript = 'transl_hdvb()'}
 		end
 		t.ExtParams = {}
 		t.ExtParams.LuaOnCancelFunName = 'OnMultiAddressCancel_hdvb'
@@ -260,7 +266,7 @@
 	end
 	local function movie()
 		local title = m_simpleTV.User.hdvb.title
-		local adr = m_simpleTV.User.hdvb.tab
+		local adr = m_simpleTV.User.hdvb.adr
 		local t = {}
 		t[1] = {}
 		t[1].Id = 1
@@ -273,10 +279,15 @@
 		if m_simpleTV.User.paramScriptForSkin_buttonOk then
 			t.OkButton = {ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonOk}
 		end
-		if m_simpleTV.User.paramScriptForSkin_buttonClose then
+--[[		if m_simpleTV.User.paramScriptForSkin_buttonClose then
 			t.ExtButton1 = {ButtonEnable = true, ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonClose, ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
 		else
 			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' ✕ ', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
+		end--]]
+		if m_simpleTV.User.paramScriptForSkin_buttonPlst then
+			t.ExtButton1 = {ButtonEnable = true, ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonPlst, ButtonScript = 'transl_hdvb(true)'}
+		else
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = '📋', ButtonScript = 'transl_hdvb(true)'}
 		end
 		m_simpleTV.OSD.ShowSelect_UTF8('Hdvb', 0, t, 10000, 64 + 32 + 128)
 		play(adr, title)
@@ -300,15 +311,17 @@
 		rc, answer = m_simpleTV.Http.Request(session, {url = url, headers = m_simpleTV.User.hdvb.headers, method = 'post'})
 			if rc ~= 200 then return end
 		answer = answer:gsub('%[%]', '""')
-		answer = answer:gsub('\\', '\\\\')
+--		answer = answer:gsub('\\', '\\\\')
 		answer = unescape3(answer)
+--		debug_in_file( '\n' .. answer .. '\n', 'c://1/hdvb.txt', setnew )
 		local err, tab = pcall(json.decode, answer)
 		if err == false then
 			tab = answer
 		end
-	 return tab
+		local ser = answer:match('folder')
+	 return tab, ser
 	end
-	function transl_hdvb()
+	function transl_hdvb(movie)
 		local t = m_simpleTV.User.hdvb.transl
 			if not t then return end
 		m_simpleTV.Control.ExecuteAction(37)
@@ -320,10 +333,12 @@
 		else
 			t.ExtButton1 = {ButtonEnable = true, ButtonName = '✕', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
 		end
-		t.ExtButton0 = {ButtonEnable = true, ButtonName = 'Сезоны'}
+		if not movie then
+			t.ExtButton0 = {ButtonEnable = true, ButtonName = 'Сезоны'}
+		end
 		local transl_id = m_simpleTV.User.hdvb.transl_id
 		m_simpleTV.User.hdvb.transl_name = m_simpleTV.User.hdvb.transl[transl_id].Name
-		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('Озвучка', transl_id - 1, t, 10000, 1 + 2 + 4)
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('📣 Озвучка - Hdvb', transl_id - 1, t, 10000, 1 + 2 + 4)
 		if ret == 1 then
 			local retAdr = getStream(t[id].Address)
 				if not retAdr then return end
@@ -400,7 +415,7 @@
 			end
 		 return
 		end
-	local tab = getData()
+	local tab, ser = getData()
 		if not tab then
 			showMsg('нет данных')
 		 return
@@ -421,7 +436,17 @@
 	m_simpleTV.User.hdvb.transl_id = nil
 	m_simpleTV.User.hdvb.season = nil
 	m_simpleTV.User.hdvb.transl_name = nil
-	if type(tab) == 'table' then
+--[[	if type(tab) == 'table' then
+		if seasons() then
+			episodes()
+		end
+	else
+		if m_simpleTV.Control.MainMode == 0 then
+			m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = '', TypeBackColor = 0, UseLogo = 0, Once = 1})
+		end
+		movie()
+	end--]]
+	if ser then
 		if seasons() then
 			episodes()
 		end
@@ -429,5 +454,8 @@
 --[[		if m_simpleTV.Control.MainMode == 0 then
 			m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = '', TypeBackColor = 0, UseLogo = 0, Once = 1})
 		end--]]
-		movie()
+		m_simpleTV.User.hdvb.tabEpisode = m_simpleTV.User.hdvb.tab
+		if transl(true) then
+			movie()
+		end
 	end

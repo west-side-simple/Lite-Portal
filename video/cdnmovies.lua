@@ -1,24 +1,22 @@
--- видеоскрипт для видеобалансера "CDN Movies" https://cdnmovies.net (18/4/22)
--- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
+-- видеоскрипт для видеобалансера "CDN Movies" https://cdnmovies.net (24/6/23)
+-- Copyright © 2017-2023 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
 -- ## необходим ##
 -- модуль: /core/playerjs.lua
 -- ## открывает подобные ссылки ##
--- http://moonwalk.cam/movie/4514
--- http://moonwalk.cam/serial/5311
--- https://700filmov.ru/serial/2042
+-- http://640f39bd678cb.sarnage.cc/movie/66674
+-- https://640f39bd678cb.sarnage.cc/serial/12503
 		if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
-		if not m_simpleTV.Control.CurrentAddress:match('^https?://moonwalk%.cam')
-			and not m_simpleTV.Control.CurrentAddress:match('^https?://700filmov%.ru')
+		if not m_simpleTV.Control.CurrentAddress:match('^https?://[^.]+%.sarnage%.cc')
 			and not m_simpleTV.Control.CurrentAddress:match('^$cdnmovies')
 		then
 		 return
 		end
 	local inAdr = m_simpleTV.Control.CurrentAddress
-	if not inAdr:match('&kinopoisk') then
+--[[	if not inAdr:match('&kinopoisk') then
 		if m_simpleTV.Control.MainMode == 0 then
 			m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = '', TypeBackColor = 0, UseLogo = 0, Once = 1})
 		end
-	end
+	end--]]
 	require 'json'
 	require 'playerjs'
 	m_simpleTV.Control.ChangeAddress = 'Yes'
@@ -29,7 +27,7 @@
 	if not m_simpleTV.User.cdnmovies then
 		m_simpleTV.User.cdnmovies = {}
 	end
-	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; rv:99.0) Gecko/20100101 Firefox/99.0')
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; rv:102.0) Gecko/20100101 Firefox/102.0')
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 8000)
 	m_simpleTV.User.cdnmovies.DelayedAddress = nil
@@ -41,6 +39,16 @@
 		end
 		local t = {text = msg, showTime = 1000 * 8, color = color, id = 'channelName'}
 		m_simpleTV.OSD.ShowMessageT(t)
+	end
+	local function subtitle(url)
+		local subt = {}
+			for w in url:gmatch('%[[^%]]+%]([^%[,]+)') do
+				subt[#subt + 1] = w:gsub('://', '/webvtt://')
+			end
+			if #subt > 0 then
+			 return '$OPT:input-slave=' .. table.concat(subt, '#')
+			end
+	 return
 	end
 	local function getIndex(t)
 		local lastQuality = tonumber(m_simpleTV.Config.GetValue('cdnmovies_qlty') or 5000)
@@ -61,21 +69,25 @@
 	local function getAdr(url)
 			if not url then return end
 		url = url:gsub('^$cdnmovies', '')
+		local subt = subtitle(url) or ''
+		url = url:gsub('%[.+', '')
+		url = url:gsub('/%d+%.', '/hls.'):gsub('/%d+%-', '/hls-')
 		local rc, answer = m_simpleTV.Http.Request(session, {url = url})
 			if rc ~= 200 then return end
+		local extOpt = '$OPT:NO-STIMESHIFT'
 		local base = url:match('.+/')
 		local t = {}
-			for w in answer:gmatch('#EXT%-X%-STREAM.-\n.-\n') do
+			for w in answer:gmatch('#EXT%-X%-STREAM.-\n') do
 				local qlty = w:match('RESOLUTION=%d+x(%d+)')
-				local adr = w:match('\n(.+)')
-				if qlty and adr then
+				local bw = w:match('[^%-]BANDWIDTH=(%d+)')
+				if qlty and bw then
+					bw = tonumber(bw)
+					bw = bw / 1000
 					t[#t + 1] = {}
 					t[#t].Id = #t
 					t[#t].qlty = tonumber(qlty)
-					adr = adr:gsub('^[/.]+', base)
-					adr = adr:gsub(':hls:manifest.-$', '')
-					t[#t].Address = adr .. '$OPT:NO-STIMESHIFT'
 					t[#t].Name = qlty .. 'p'
+					t[#t].Address = string.format('%s$OPT:adaptive-logic=highest$OPT:adaptive-max-bw=%s%s%s', url, bw,subt, extOpt)
 				end
 			end
 			if #t == 0 then return end
@@ -102,7 +114,7 @@
 			for i = 1, #tab do
 				t[i] = {}
 				t[i].Id = i
-				t[i].Address = tab[i].file
+				t[i].Address = tab[i].file .. (tab[i].subtitle or '')
 				t[i].Name = tab[i].title
 				if t[i].Name == transl_name then
 					transl_id = i
@@ -234,7 +246,7 @@
 	end
 	local function getData()
 		local url = inAdr:gsub('&kinopoisk.+', ''):gsub('^http:', 'https:')
-		local rc, answer = m_simpleTV.Http.Request(session, {url = url, headers = 'Referer: https://cdnmovies.net/'})
+		local rc, answer = m_simpleTV.Http.Request(session, {url = url, headers = 'Referer: https://hdkinotavr.ru/'})
 			if rc ~= 200 then return end
 		local file = answer:match('file:\'([^\']+)')
 			if not file then return end
@@ -251,6 +263,7 @@
 		end
 		local titleAnswer = answer:match('<title>([^<]+)')
 		file = file:gsub('%[%]', '""')
+		debug_in_file( '\n' .. file .. '\n', 'c://1/cmov.txt', setnew )
 		local err, tab = pcall(json.decode, file)
 		local ser = file:match('folder')
 	 return tab, ser, titleAnswer
@@ -375,9 +388,9 @@
 			episodes()
 		end
 	else
-		if m_simpleTV.Control.MainMode == 0 then
+--[[		if m_simpleTV.Control.MainMode == 0 then
 			m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = '', TypeBackColor = 0, UseLogo = 0, Once = 1})
-		end
+		end--]]
 		m_simpleTV.User.cdnmovies.tabEpisode = m_simpleTV.User.cdnmovies.tab
 		if transl(true) then
 			movie()
