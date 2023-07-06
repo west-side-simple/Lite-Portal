@@ -3,7 +3,7 @@
 -- ## необходим ##
 -- видоскрипт: kinopoisk.lua
 -- ##
--- адаптация для версии с парсером по названию и году (west_side) 28.06.23 с огромной благодарностью автору))
+-- адаптация для версии с парсером по названию и году (west_side) 06.07.23 с огромной благодарностью автору))
 -- ##
 	module('films_kinopoisk_3_pls', package.seeall)
 	local my_src_name = 'Фильмы 3 Кинопоиск'
@@ -57,7 +57,8 @@
 						if kinopoisk_id then
 							t[k] = {}
 
-							t[k].logo = tab.results[j].info.poster
+--							t[k].logo = tab.results[j].info.poster
+							t[k].logo = tab.results[j].info.screenshot or 'https://raw.githubusercontent.com/west-side-simple/logopacks/main/MoreLogo/kinopoisk.png'
 							local genres = tab.results[j].info.genre or ''
 							local country = tab.results[j].info.country or ''
 							local year = tab.results[j].info.year or 0
