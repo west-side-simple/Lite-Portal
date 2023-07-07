@@ -133,7 +133,9 @@
 	 return t[index].Address
 	end
 	local function getStream(adr)
-		adr = getAddress(adr)
+		if not adr:match('^http') then
+			adr = getAddress(adr)
+		end
 			if not adr then	return end
 	 return getAdr(adr)
 	end
@@ -147,10 +149,16 @@
 	end
 	local function transl(movie)
 		local tab = m_simpleTV.User.hdvb.tabEpisode
-		local transl_name = m_simpleTV.User.hdvb.transl_name or m_simpleTV.User.hdvb.tabEpisode[1].title
+		local transl_name
+		if m_simpleTV.User.hdvb.transl_name or m_simpleTV.User.hdvb.tabEpisode[1] and m_simpleTV.User.hdvb.tabEpisode[1].title then
+		transl_name = m_simpleTV.User.hdvb.transl_name or m_simpleTV.User.hdvb.tabEpisode[1].title
+		else
+		transl_name = 'default'
+		end
 		local transl_id = m_simpleTV.User.hdvb.transl_id
 		local found_transl_name
 		local t = {}
+			if type(tab) == 'table' then
 			for i = 1, #tab do
 				local adr = tab[i].file
 				if adr then
@@ -164,7 +172,12 @@
 					end
 				end
 			end
-			if #t == 0 then return end
+			end
+			m_simpleTV.User.hdvb.transl_selected = false
+			if #t == 0 then 
+			m_simpleTV.User.hdvb.transl_name = 'default'
+			m_simpleTV.User.hdvb.adr = tab
+			return true end
 		m_simpleTV.User.hdvb.transl_name = transl_name or t[1].Name
 		if not transl_id or transl_id > #t or not found_transl_name then
 			transl_id = 1
@@ -172,7 +185,7 @@
 		m_simpleTV.User.hdvb.transl_id = transl_id
 		m_simpleTV.User.hdvb.transl = t
 		if movie then
-			m_simpleTV.User.hdvb.adr = t[1].Address
+			m_simpleTV.User.hdvb.adr = t[m_simpleTV.User.hdvb.transl_id].Address
 		end
 	 return true
 	end
@@ -298,6 +311,7 @@
 		local rc, answer = m_simpleTV.Http.Request(session, {url = url, headers = headers})
 			if rc ~= 200 then return end
 		answer = answer:gsub('\\/', '/')
+--		debug_in_file( '\n' .. answer .. '\n', 'c://1/hdvb.txt', setnew )
 		local file = answer:match('"file":"([^"]+)')
 		local key = answer:match('"key":"([^"]+)')
 			if not file or not key then return end
@@ -319,6 +333,7 @@
 			tab = answer
 		end
 		local ser = answer:match('folder')
+--		debug_in_file( '\n' .. tab .. '\n', 'c://1/hdvb.txt', setnew )
 	 return tab, ser
 	end
 	function transl_hdvb(movie)
@@ -435,7 +450,9 @@
 	m_simpleTV.User.hdvb.transl = nil
 	m_simpleTV.User.hdvb.transl_id = nil
 	m_simpleTV.User.hdvb.season = nil
-	m_simpleTV.User.hdvb.transl_name = nil
+	if m_simpleTV.User.hdvb.transl_selected == false then
+		m_simpleTV.User.hdvb.transl_name = nil
+	end
 --[[	if type(tab) == 'table' then
 		if seasons() then
 			episodes()
