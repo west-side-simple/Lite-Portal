@@ -256,7 +256,7 @@ local function get_hdvb(title, year)
 			end
 		end
 	if #t ~= 0 then
---	debug_in_file( 'kp_id=' .. t[1].kp_id .. '\n', 'c://1/cdnmovies.txt', setnew )
+--	debug_in_file( 'kp_id=' .. t[1].kp_id .. '\n', 'c://1/content.txt', setnew )
 	return t, t[1].kp_id
 	end
 	return false
@@ -766,10 +766,16 @@ function content(content_id)
 		if is_tv == false and m_simpleTV.User.torrent.content and m_simpleTV.User.torrent.content == content_id then
 			m_simpleTV.User.torrent.is_set_position = true
 			local t1 = t[id].Address
+--			debug_in_file(#t1 .. '\n','c://1/content.txt')
 			if #t1 > 1 then
 			local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('🔊 Озвучка', 0, t1, 10000, 1 + 4 + 8 + 2)
 			id = id or 1
 			if ret == 1 then
+				if not m_simpleTV.User.hdvb then
+					m_simpleTV.User.hdvb = {}
+				end
+				m_simpleTV.User.hdvb.transl_selected = true
+				m_simpleTV.User.hdvb.transl_name = t1[id].Name
 				m_simpleTV.Control.PlayAddressT({address='content_id=' .. content_id .. '&' .. t1[id].Address, title=title})
 			end
 			else
@@ -1041,4 +1047,3 @@ function torrents_tracker(adr)
 			torrents(adr)
 		end
 end
-
