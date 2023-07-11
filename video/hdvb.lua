@@ -174,7 +174,7 @@
 			end
 			end
 			m_simpleTV.User.hdvb.transl_selected = false
-			if #t == 0 then 
+			if #t == 0 then
 			m_simpleTV.User.hdvb.transl_name = 'default'
 			m_simpleTV.User.hdvb.adr = tab
 			return true end
@@ -297,10 +297,12 @@
 		else
 			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' ✕ ', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
 		end--]]
+		if m_simpleTV.User.hdvb.transl then
 		if m_simpleTV.User.paramScriptForSkin_buttonPlst then
 			t.ExtButton1 = {ButtonEnable = true, ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonPlst, ButtonScript = 'transl_hdvb(true)'}
 		else
 			t.ExtButton1 = {ButtonEnable = true, ButtonName = '📋', ButtonScript = 'transl_hdvb(true)'}
+		end
 		end
 		m_simpleTV.OSD.ShowSelect_UTF8('Hdvb', 0, t, 10000, 64 + 32 + 128)
 		play(adr, title)

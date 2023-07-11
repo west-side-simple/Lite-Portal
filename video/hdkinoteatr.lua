@@ -1,4 +1,4 @@
--- видеоскрипт для сайтов http://www.hdkinoteatr.com  https://kinogo.cc/ (23/04/23)
+-- видеоскрипт для сайтов http://www.hdkinoteatr.com  https://kinogo.cc/ (22/05/23)
 -- необходимы скрипты: collaps,hdvb (author - nexterr) mod west_side
 -- открывает подобные ссылки:
 -- http://www.hdkinoteatr.com/drama/28856-vse_ispravit.html
@@ -42,10 +42,12 @@ end
 	for w in answer:gmatch('<iframe.-</iframe>') do
 		adr = w:match('<iframe(.-)</iframe>')
 		if not adr or adr:match('youtube') or adr:match('/trailer/') or adr:match('token=') or not adr:match('//') then break end
+		if not adr:match('https://kinogo%.cc') then
 		t[i] = {}
-		t[i].Address = adr:gsub('^.-//', 'https://'):gsub(' .-$', ''):gsub('"',''):gsub('^//', 'http://'):gsub('/iframe%?.+', '/iframe'):gsub('vb17120ayeshajenkins','vb17121coramclean'):gsub('%?host=kinogo%..-$',''):gsub('%?d=kinogo%..-$','')
+		t[i].Address = adr:gsub('^.-//', 'https://'):gsub(' .-$', ''):gsub('"',''):gsub('^//', 'http://'):gsub('/iframe%?.+', '/iframe'):gsub('vb17120ayeshajenkins','vb17123filippaaniketos'):gsub('vb17121coramclean','vb17123filippaaniketos'):gsub('%?host=kinogo%..-$',''):gsub('%?d=kinogo%..-$','')
 		if adr:match('/embed/') then t[i].Name = 'Collaps' elseif adr:match('svetacdn') or adr:match('33cHYTFTAlwP') then t[i].Name = 'VideoCDN' else t[i].Name = 'HDVB' end
 		i=i+1
+		end
 	end
 		local hash, res = {}, {}
 		for i = 1, #t do
