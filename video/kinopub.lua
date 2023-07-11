@@ -1,4 +1,4 @@
--- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (29/06/23) - автор west_side
+-- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (11/07/23) - автор west_side
 -- необходим действующий аккаунт на сайте https://kino.pub
 -- работает в связке со скриптом Lite_qt_kinopub.lua - автор west_side
 -- дополнительная информация обеспечивается скриптом info_fox.lua - автор west_side
@@ -366,7 +366,8 @@ else
 				local qlty_name, audio_name = w:match('RESOLUTION=(.-)%,.-AUDIO="(.-)"')
 				if adr and qlty_name and audio_name then
 					t[#t + 1] = {}
-					t[#t].Address = domen .. adr
+--					t[#t].Address = domen .. adr
+					t[#t].Address = adr
 					t[#t].Name = qlty_name:gsub('x',' X ')
 					t[#t].audio = audio_name
 					t[#t].qlty = qlty_name:match('%d+')
