@@ -108,7 +108,7 @@ local function title_translate(translate)
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
 		if not session then return end
 		m_simpleTV.Http.SetTimeout(session, 60000)
-		for page = 1,19 do
+		for page = 1,20 do
 			rc, answer = m_simpleTV.Http.Request(session, {url = decode64(url) .. '&page=' .. page .. '&limit=100'})
 			require('json')
 			if not answer then return end
@@ -146,10 +146,10 @@ local function title_translate(translate)
 			t[i].Name = w:match('/.-/(.-)/')
 			t[i].Action = w:match('/(.-)/')
 			t[i].InfoPanelTitle = w:match('/.-/.-/(.-)/')
-			if tonumber(t[i].Action) == tonumber(translate) then name_translate = unescape3(t[i].InfoPanelTitle) end
+			if tonumber(t[i].Action) == tonumber(translate) then return unescape3(t[i].InfoPanelTitle) end
 			i = i + 1
 		end
-		return name_translate or 'Озвучка'
+		return 'Озвучка'
 	end
 end
 	local psevdotv
