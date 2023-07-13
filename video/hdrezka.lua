@@ -1,4 +1,4 @@
--- видеоскрипт для сайта https://rezka.ag (19/06/23)
+-- видеоскрипт для сайта https://rezka.ag (12/07/23)
 -- Copyright © 2017-2021 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
 -- mod west_side for lite version
 -- ## открывает подобные ссылки ##
@@ -32,6 +32,7 @@ local proxy = ''
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://hdrezka19139%.org.+')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://rd8j1em1zxge%.org.+')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://m85rnv8njgwv%.org.+')
+			and not m_simpleTV.Control.CurrentAddress:match('^https?://hdrezkah42yfy%.org/.+')
 			and not m_simpleTV.Control.CurrentAddress:match('^%$rezka')
 		then
 		 return
@@ -159,7 +160,7 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 				end
 				t[i].qlty = tonumber(t[i].Name:match('%d+'))
 			end
-		table.sort(t, function(a, b) return a.qlty < b.qlty end)	
+		table.sort(t, function(a, b) return a.qlty < b.qlty end)
 		m_simpleTV.User.rezka.Tab = t
 		local index = rezkaIndex(t)
 	 return t[index].Address
@@ -285,6 +286,7 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 		if queryType == 'testAddress' then
 		 if string.match(address, "rezka%.ag")
 		 or string.match(address, "rezkery%.com")
+		 or string.match(address, "hdrezka")
 		 or string.match(address, "upivi%.com")
 		 or string.match(address, "kinopub%.me")
 		 or string.match(address, "^#")

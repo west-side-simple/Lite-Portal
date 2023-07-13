@@ -318,11 +318,42 @@ end
 
 else
 
+	local function ShowInfo(s)
+		local q = {}
+			q.once = 1
+			q.zorder = 0
+			q.cx = 0
+			q.cy = 0
+			q.id = 'WS_INFO_TEXT'
+			q.class = 'TEXT'
+			q.align = 0x0202
+			q.top = 0
+			q.color = 0xFFFFFFF0
+			q.font_italic = 0
+			q.font_addheight = 6
+			q.padding = 20
+			q.textparam = 1 + 4
+			q.text = s
+			q.background = 0
+			q.backcolor0 = 0x900000EE
+		m_simpleTV.OSD.AddElement(q)
+		if m_simpleTV.Common.WaitUserInput(5000) == 1 then
+			m_simpleTV.OSD.RemoveElement('WS_INFO_TEXT')
+		end
+		if m_simpleTV.Common.WaitUserInput(5000) == 1 then
+			m_simpleTV.OSD.RemoveElement('WS_INFO_TEXT')
+		end
+		if m_simpleTV.Common.WaitUserInput(5000) == 1 then
+			m_simpleTV.OSD.RemoveElement('WS_INFO_TEXT')
+		end
+		m_simpleTV.OSD.RemoveElement('WS_INFO_TEXT')
+	end
+
 	local function GetStream(retAdr, media)
 		require('json')
-		local tab = json.decode(retAdr)
+		local tab = json.decode(unescape3(retAdr))
 		local file0
-		local i = 1
+		local t, i = {}, 1
 		if not tab or not tab[1] or not tab[1].file or not tab[1].media_id
 		then
 		return false end
@@ -331,14 +362,19 @@ else
 				then
 				break
 				end
+			t[i] = {}
 			if i == 1 then file0 = tab[i].file end
 			local media_id = tab[i].media_id
 			local file = tab[i].file
 			if tonumber(media_id) == tonumber(media) then
-				return file:gsub('\\','')
+				file0 = file:gsub('\\','')
 			end
+			t[i].Address = file:gsub('\\','')
+			t[i].Name = tab[i].title
+			t[i].Logo = tab[i].image
 			i = i + 1
 		end
+		m_simpleTV.User.kinopub.Tabletitle = t
 		return file0:gsub('\\','')
 	end
 
@@ -418,6 +454,42 @@ else
 		end
 	end
 
+	local function SavePlaylist()
+		if m_simpleTV.User.kinopub.Tabletitle then
+			local t = m_simpleTV.User.kinopub.Tabletitle
+			if #t > 250 then
+				m_simpleTV.OSD.ShowMessageT({text = 'Сохранение плейлиста ...', color = 0xff9bffff, showTime = 1000 * 30, id = 'channelName'})
+			end
+			local header = m_simpleTV.User.kinopub.title .. ' ' .. m_simpleTV.User.kinopub.audio_name:gsub('^%d+%. ','')
+			local adr, name, logo
+			local m3ustr = '#EXTM3U $ExtFilter="Kinopub" $BorpasFileFormat="1"\n'
+				for i = 1, #t do
+					name = t[i].Name
+					logo = t[i].Logo
+					adr = t[i].Address
+					adr = GetAdr(adr)
+					m3ustr = m3ustr .. '#EXTINF:-1 tvg-logo="' .. logo .. '" group-title="' .. header .. '",' .. name .. '\n' .. adr:gsub('$OPT:.+', '') .. '\n'
+				end
+			header = m_simpleTV.Common.UTF8ToMultiByte(header)
+			header = header:gsub('%c', ''):gsub('[\\/"%*:<>%|%?]+', ' '):gsub('%s+', ' '):gsub('^%s*', ''):gsub('%s*$', '')
+			local fileEnd = ' (Kinopub ' .. os.date('%d.%m.%y') ..').m3u'
+			local folder = m_simpleTV.Common.GetMainPath(1) .. m_simpleTV.Common.UTF8ToMultiByte('сохраненные плейлисты/')
+			lfs.mkdir(folder)
+			local folderAk = folder .. 'Kinopub/'
+			lfs.mkdir(folderAk)
+			local filePath = folderAk .. header .. fileEnd
+			local fhandle = io.open(filePath, 'w+')
+			m_simpleTV.OSD.ShowMessageT({text = '', showTime = 1000 * 1, id = 'channelName'})
+			if fhandle then
+				fhandle:write(m3ustr)
+				fhandle:close()
+				ShowInfo('плейлист сохранен в файл\n' .. m_simpleTV.Common.multiByteToUTF8(header) .. '\nв папку\n' .. m_simpleTV.Common.multiByteToUTF8(folderAk))
+			else
+				ShowInfo('невозможно сохранить плейлист')
+			end
+		end
+	end
+
 	function OnMultiAddressCancel_kinopub(Object)
 		if m_simpleTV.User.rezka.DelayedAddress then
 			local state = m_simpleTV.Control.GetState()
@@ -434,6 +506,7 @@ else
 			if not t or #t == 0 then return end
 		m_simpleTV.Control.ExecuteAction(37)
 		local index = StreamIndex(t)
+		t.ExtButton0 = {ButtonEnable = true, ButtonName = '💾', ButtonScript = 'SavePlaylist()'}
 		if m_simpleTV.User.kinopub.audio_ind then
 			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 Озвучка', ButtonScript = 'Audio_Stream()'}
 		end
@@ -446,6 +519,9 @@ else
 		if ret == 3 then
 			Audio_Kinopub()
 		end
+		if ret == 2 then
+			SavePlaylist()
+		end
 	end
 
 	function Audio_Kinopub()
@@ -453,6 +529,7 @@ else
 			if not t or #t == 0 then return end
 		m_simpleTV.Control.ExecuteAction(37)
 		local index = m_simpleTV.User.kinopub.tr
+		t.ExtButton0 = {ButtonEnable = true, ButtonName = '💾', ButtonScript = 'SavePlaylist()'}
 		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' ⚙ Качество', ButtonScript = 'Qlty_Kinopub()'}
 
 		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('🔊 Озвучка', tonumber(index)-1, t, 10000, 1 + 4)
@@ -464,6 +541,9 @@ else
 		end
 		if ret == 3 then
 			Qlty_Kinopub()
+		end
+		if ret == 2 then
+			SavePlaylist()
 		end
 	end
 
@@ -572,6 +652,7 @@ else
 	local title = answer:match('<title>(.-)</title>') or 'KinoPub'
 	local year = answer:match('?years=(%d+)')
 	if year then year = tonumber(year) title = title .. ' (' .. year .. ')' end
+	m_simpleTV.User.kinopub.title = title:gsub('&#039;',"'"):gsub('&amp;',"&")
 	local logo = answer:match('<hr>.-<img src="(.-)"') or 'https://cdn.service-kp.com/logo.png'
 	local desc_text = answer:match('id="plot">(.-)<') or ''
 	local videodesc = info_fox(title:gsub('&#039;',"'"):gsub('&amp;',"&"):gsub(' %(.-$',''):gsub(' /.-$',''),year,logo)
