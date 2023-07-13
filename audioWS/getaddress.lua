@@ -1,5 +1,5 @@
 -- getaddress for Audio plugin
--- author west_side 14.05.23
+-- author west_side 13.07.23
 
 	if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 	if tonumber(m_simpleTV.User.AudioWS.Use) ~= 1 then return end
@@ -175,6 +175,9 @@
 				t0[i].Address1 = 'http:' .. tt.tracks[i].content.assets[1].url
 --				t0[i].Address = 'webradio_network_id=' .. network_id .. '&id=' .. id .. '&track=' .. i .. '&' .. t0[i].Address1
 				t0[i].Logo = 'http:' .. tt.tracks[i].asset_url
+				t0[i].InfoPanelLogo = 'http:' .. tt.tracks[i].asset_url
+				t0[i].InfoPanelName = tt.tracks[i].track
+				t0[i].InfoPanelTitle = '👍 ' .. (tt.tracks[i].votes.up or 0) .. ' 👎 ' .. (tt.tracks[i].votes.down or 0)
 				if i == tonumber(track) then
 				current_track = i
 				m_simpleTV.User.AudioWS.track = i
@@ -192,6 +195,9 @@
 				t[i].Address1 = m_simpleTV.User.AudioWS.tracks[j].Address1
 				t[i].Address = 'webradio_network_id=' .. network_id .. '&id=' .. id .. '&track=' .. i .. '&' .. m_simpleTV.User.AudioWS.tracks[j].Address1
 				t[i].Logo = m_simpleTV.User.AudioWS.tracks[j].Logo
+				t[i].InfoPanelLogo = m_simpleTV.User.AudioWS.tracks[j].Logo
+				t[i].InfoPanelName = m_simpleTV.User.AudioWS.tracks[j].InfoPanelName
+				t[i].InfoPanelTitle = m_simpleTV.User.AudioWS.tracks[j].InfoPanelTitle
 				j = j + 1
 				i = i + 1
 			end
@@ -202,6 +208,9 @@
 				t[i].Address1 = t0[k].Address1
 				t[i].Address = 'webradio_network_id=' .. network_id .. '&id=' .. id .. '&track=' .. i .. '&' .. t0[k].Address1
 				t[i].Logo = t0[k].Logo
+				t[i].InfoPanelLogo = t0[k].Logo
+				t[i].InfoPanelName = t0[k].InfoPanelName
+				t[i].InfoPanelTitle = t0[k].InfoPanelTitle
 				k = k + 1
 				i = i + 1
 			end
@@ -214,7 +223,7 @@
 					m_simpleTV.User.AudioWS.logo1 = t[i].Logo
 					m_simpleTV.User.AudioWS.img1 = t[i].Logo
 				end
-				t[i].InfoPanelName = i .. '. ' .. t[i].Name
+--				t[i].InfoPanelName = i .. '. ' .. t[i].Name
 				i = i + 1
 			end
 		m_simpleTV.User.AudioWS.tracks = t
