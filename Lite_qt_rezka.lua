@@ -1,4 +1,4 @@
---Rezka portal - lite version west_side 07.08.22
+--Rezka portal - lite version west_side 12.07.23
 
 local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
@@ -118,8 +118,8 @@ function zerkalo_rezka()
 --		{"http://metaivi.com/","http://metaivi.com/"},
 --		{"http://rd8j1em1zxge.org/","http://rd8j1em1zxge.org/"},
 --		{"http://m85rnv8njgwv.org/","http://m85rnv8njgwv.org/"},
-		{"https://hdrezka19139.org/","https://hdrezka19139.org/"},
-		{"https://hdrezkabnbrts.net/","https://hdrezkabnbrts.net/"},
+--		{"https://hdrezka19139.org/","https://hdrezka19139.org/"},
+		{"https://hdrezkah42yfy.org/","https://hdrezkah42yfy.org/"},
 		}
 
 	local t0={}
@@ -591,7 +591,8 @@ function person_rezka_work(url)
 			media_info_rezka(url)
 		end
 		if ret == 3	then
-			setConfigVal('person/rezka',url:gsub('rezka%.ag','rezkery.com'))
+--			setConfigVal('person/rezka',url:gsub('rezka%.ag','rezkery.com'))
+			setConfigVal('person/rezka',url)
 			UpdatePersonRezka()
 		end
 end
