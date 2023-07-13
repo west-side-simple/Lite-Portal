@@ -1,4 +1,4 @@
--- скрапер TVS для загрузки плейлистов фильмографий для SimpleTV (02/11/21)
+-- скрапер TVS для загрузки плейлистов фильмографий для SimpleTV (12/07/23)
 
 	module('persons_pls', package.seeall)
 	local my_src_name = 'PERSONS'
@@ -58,12 +58,13 @@ end
 		m_simpleTV.Http.SetTimeout(session, 60000)
 		local t = {}
 	if url:match('rezkery%.com') or 
+	url:match('hdrezka') or 
 	url:match('kinopub%.me') or 
 	url:match('upivi%.com') or 
 	url:match('metaivi%.com') or 
 	url:match('rd8j1em1zxge%.org') or 
 	url:match('hdrezka19139%.org') or 
-	url:match('m85rnv8njgwv%.org')
+	url:match('hdrezkah42yfy%.org')
 	then
 		local rc, answer = m_simpleTV.Http.Request(session, {url = url:gsub('^#','')})
 		m_simpleTV.Http.Close(session)
