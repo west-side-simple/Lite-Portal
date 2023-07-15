@@ -10,15 +10,15 @@ elseif m_simpleTV.User.WestSide.info == 1 then
     m_simpleTV.Control.ExecuteAction(161,0) --KEY_OSD_SHOW_CURRENT_EPG_DESC
     m_simpleTV.Control.ExecuteAction(65,1) --CHANNEL_INFO_OSD
     m_simpleTV.Control.ExecuteAction(36,0) --KEYOSDCURPROG
-elseif m_simpleTV.User.WestSide.info >= 2 then
+elseif m_simpleTV.User.WestSide.info == 2 then
     m_simpleTV.Control.ExecuteAction(36,0) --KEYOSDCURPROG
     m_simpleTV.Control.ExecuteAction(161,1) --KEY_OSD_SHOW_CURRENT_EPG_DESC
     m_simpleTV.Control.ExecuteAction(65,0) --CHANNEL_INFO_OSD
---elseif m_simpleTV.User.WestSide.info >= 3 then
+elseif m_simpleTV.User.WestSide.info >= 3 then
 --    m_simpleTV.Control.ExecuteAction(36,0) --KEYOSDCURPROG
 --    m_simpleTV.Control.ExecuteAction(65,0) --CHANNEL_INFO_OSD
 --    m_simpleTV.Control.ExecuteAction(161,0) --KEY_OSD_SHOW_CURRENT_EPG_DESC
---	show_portal_window() --KEY_OSD_SHOW_PORTAL_INFO
+	show_portal_window() --KEY_OSD_SHOW_PORTAL_INFO
     m_simpleTV.User.WestSide.info = -1
 end
 
