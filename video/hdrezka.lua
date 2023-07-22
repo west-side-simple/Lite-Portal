@@ -1,4 +1,4 @@
--- видеоскрипт для сайта https://rezka.ag (12/07/23)
+-- видеоскрипт для сайта https://rezka.ag (22/07/23)
 -- Copyright © 2017-2021 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
 -- mod west_side for lite version
 -- ## открывает подобные ссылки ##
@@ -93,6 +93,18 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 		if index then
 			title = m_simpleTV.User.rezka.title .. ' - ' .. m_simpleTV.User.rezka.titleTab[index].Name
 		end
+	end
+	local function get_voidboost(kp_id)
+		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
+		if not session then return end
+		m_simpleTV.Http.SetTimeout(session, 10000)
+		local url = decode64('aHR0cHM6Ly92b2lkYm9vc3QubmV0L2VtYmVkLw') .. kp_id
+		local rc,answer = m_simpleTV.Http.Request(session,{url=url})
+		if rc~=200 then
+			m_simpleTV.Http.Close(session)
+			return false
+		end
+		return url
 	end
 	local function rezkaDeSex(url)
 		url = url:match('#[^"]+')
@@ -508,7 +520,7 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 	local poster = answer:match('"og:image" content="([^"]+)') or logo
 	local desc = answer:match('"og:description" content="(.-)"%s*/>')
 	local desc_text = answer:match('<div class="b%-post__description_text">([^<]+)')
-
+	local imdb_id, kp_id, voidboost, embed
 	if answer:match('<span class="b%-post__info_rates imdb"><a href="/help/.-" target="_blank" rel="nofollow">IMDb</a>') then
 	imdb_id = answer:match('<span class="b%-post__info_rates imdb"><a href="/help/(.-)/"')
 	imdb_id = decode64(imdb_id)
@@ -526,6 +538,14 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 	kp_id = kp_id:gsub('%%3A', ':'):gsub('%%2F', '/')
 	kp_id = kp_id:match('kinopoisk%.ru/.-/(%d+)/.-$')
 	else kp_id = '' end
+
+	if kp_id and kp_id ~= '' then
+		voidboost =	get_voidboost(kp_id)
+	end
+	if voidboost then
+		return
+		m_simpleTV.Control.SetNewAddress(voidboost)
+	end
 
 	if m_simpleTV.Control.MainMode == 0 then
 	if tmdb_background == '' then
