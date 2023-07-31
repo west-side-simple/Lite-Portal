@@ -296,7 +296,7 @@
 	if title then
 		title = m_simpleTV.Common.fromPercentEncoding(title)
 	else
-		title = answer:match('<title>([^<]+)') or 'Kodik'
+		title = m_simpleTV.Control.CurrentTitle_UTF8 or answer:match('<title>([^<]+)') or 'Kodik'
 	end
 	local transl = answer:match('%-translations%-box".-</div>')
 	if transl and not psevdotv then
