@@ -1,4 +1,4 @@
--- видеоскрипт для воспроизведения коллекций из TMDb (09/06/22)
+-- видеоскрипт для воспроизведения коллекций из TMDb (31/07/23)
 -- открывает подобные ссылки:
 -- collection_tmdb=645
 -- автор west_side
@@ -53,7 +53,12 @@
 	then
 	return '' end
 	local title = tab.name
-	local poster = 'http://image.tmdb.org/t/p/w500_and_h282_face' .. tab.poster_path
+	local poster
+	if tab.poster_path then
+		poster = 'http://image.tmdb.org/t/p/w500_and_h282_face' .. tab.poster_path
+	else
+		poster = 'simpleTVImage:./luaScr/user/show_mi/no-img.png'
+	end
 	local t, i, j = {}, 1, 1
 	while true do
 	if not tab.parts[j] or not tab.parts[j].id
