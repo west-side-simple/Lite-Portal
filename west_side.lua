@@ -1,13 +1,32 @@
 --startup westSide portal
 --saved as utf-8 without bom
---wafee code, west_side updated 24.04.23
+--wafee code, west_side updated 07.09.23
 -------------------------------------------------------------------
 if m_simpleTV.User==nil then m_simpleTV.User={} end
 if m_simpleTV.User.westSide==nil then m_simpleTV.User.westSide={} end
 if m_simpleTV.User.filmix==nil then m_simpleTV.User.filmix={} end
+if m_simpleTV.User.rezka==nil then m_simpleTV.User.rezka={} end
 if m_simpleTV.User.torrent==nil then m_simpleTV.User.torrent={} end
 if m_simpleTV.User.hevc==nil then m_simpleTV.User.hevc={} end
+if m_simpleTV.User.AudioWS==nil then m_simpleTV.User.AudioWS={} end
 AddFileToExecute('events', m_simpleTV.MainScriptDir .. "user/westSide/events.lua")
+require 'ex'
+local pathname = m_simpleTV.MainScriptDir .. 'user/westSidePortal/startup/'
+if os.dir(pathname) then
+for entry in os.dir(pathname) do
+	if entry.name:match('%.lua$')
+	then
+		dofile(pathname .. entry.name)
+	end
+end
+pathname = m_simpleTV.MainScriptDir .. 'user/westSidePortal/video/'
+for entry in os.dir(pathname) do
+	if entry.name:match('%.lua$')
+	then
+		AddFileToExecute('getaddress', pathname .. entry.name)
+	end
+end
+end
 -------------------------------------------------------------------
 local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
@@ -25,18 +44,24 @@ function show_portal_window()
 		m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
 	end
 	if m_simpleTV.User.westSide.PortalTable~=nil then
-		if m_simpleTV.User.filmix and m_simpleTV.User.filmix.TabSimilar then
-			similar_filmix()
+		if m_simpleTV.User.filmix and m_simpleTV.User.filmix.CurAddress then
+			similar_filmix(m_simpleTV.User.filmix.CurAddress)
+			elseif m_simpleTV.User.rezka and m_simpleTV.User.rezka.CurAddress then
+			media_info_rezka(m_simpleTV.User.rezka.CurAddress)
 			elseif m_simpleTV.User.TMDB and m_simpleTV.User.TMDB.Id and m_simpleTV.User.TMDB.tv then
 			media_info_tmdb(m_simpleTV.User.TMDB.Id,m_simpleTV.User.TMDB.tv)
 			elseif m_simpleTV.User.collaps and m_simpleTV.User.collaps.ua then
-			ua_info(m_simpleTV.User.westSide.PortalTable)			
+			ua_info(m_simpleTV.User.westSide.PortalTable)
 			elseif m_simpleTV.User.collaps and m_simpleTV.User.collaps.kinogo then
 			kinogo_info(m_simpleTV.User.westSide.PortalTable)
 			elseif m_simpleTV.User.torrent and m_simpleTV.User.torrent.content then
 			content(m_simpleTV.User.westSide.PortalTable)
 			elseif m_simpleTV.User.hevc and m_simpleTV.User.hevc.content then
 			content_hevc(m_simpleTV.User.westSide.PortalTable)
+			elseif m_simpleTV.User.AudioWS and m_simpleTV.User.AudioWS.TrackCash then
+			GetPortalTableForAudio(m_simpleTV.User.westSide.PortalTable)
+			elseif m_simpleTV.User.TVPortal and m_simpleTV.User.TVPortal.Channel_Of_Group then
+			GetPortalTableForTVPortal()
 		end
 	end
 end
@@ -122,30 +147,31 @@ function KP_Get_History()
 function run_westSide_portal()
  m_simpleTV.Control.ExecuteAction(37)
  local tt1={
- {'Поиск','1'},
- {'Кинопоиск: История','2'},
- {'Закладки','3'},
- {'TMDb','4'},
- {'Трекеры','5'},
- {'RipsClub (HEVC)','6'},
- {'EX-FS','7'},
- {'Rezka','8'},
- {'Filmix','9'},
- {'Kinopub','10'},
- {'Озвучка','11'},
- {'KinoGo','12'},
- {'KinoKong','13'},
- {'UA','14'},
- {'YouTube','15'},
- {'Медиабазы','16'},
- {'SimpleTV - видеоинструкции','17'},
+ {'Поиск',''},
+ {'Кинопоиск: История',''},
+ {'Закладки',''},
+ {'TMDb',''},
+ {'Трекеры',''},
+ {'RipsClub (HEVC)',''},
+ {'EX-FS',''},
+ {'Rezka',''},
+ {'Filmix',''},
+ {'Kinopub',''},
+ {'Озвучка',''},
+ {'KinoGo',''},
+ {'KinoKong',''},
+ {'UA',''},
+ {'TV Portal',''},
+ {'YouTube',''},
+ {'Медиабазы',''},
+ {'SimpleTV - видеоинструкции',''},
            }
   local t1,item={},(m_simpleTV.User.westSide.item or 1)
   for i=1,#tt1 do
     t1[i] = {}
     t1[i].Id = i
     t1[i].Name = tt1[i][1]
-	t1[i].Item = tt1[i][2]
+	t1[i].Item = i
   end
   local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Menu Lite Portal',tonumber(item)-1,t1,9000,1+4+8)
   if id==nil then return end
@@ -169,6 +195,7 @@ function run_westSide_portal()
   elseif t1[id].Name == 'KinoKong' then m_simpleTV.User.westSide.item = t1[id].Item run_lite_qt_kinokong()
   elseif t1[id].Name == 'UA' then m_simpleTV.User.westSide.item = t1[id].Item run_lite_qt_ua()
   elseif t1[id].Name == 'RipsClub (HEVC)' then m_simpleTV.User.westSide.item = t1[id].Item start_hevc()
+  elseif t1[id].Name == 'TV Portal' then m_simpleTV.User.westSide.item = t1[id].Item SelectTVPortal()
   end
   end
 end
