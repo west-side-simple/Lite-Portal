@@ -105,13 +105,13 @@ local proxy = ''
 	all = answer:match('<h3>.->.-(%d+).-<') or 1
 	for w in answer:gmatch('<div class="item%-poster">(.-)</div> </div> </div>') do
 	t[i]={}
-	local adr1,logo1,name1 = w:match('href="(.-)".-<img src="(.-)".-title="(.-)"')
+	local adr1,logo1,name1,name2 = w:match('href="(.-)".-<img src="(.-)".-title="(.-)".-title="(.-)"')
 					if not logo1 or not adr1 or not name1 then break end
 							t[i].Id = i
 							t[i].Address = 'https://kino.pub' .. adr1
 							t[i].Name = name1:gsub('&#039;',"'"):gsub('&amp;',"&")
 							t[i].InfoPanelLogo = logo1
-							t[i].InfoPanelName = name1:gsub('&#039;',"'"):gsub('&amp;',"&")
+							t[i].InfoPanelName = (name1:gsub('&#039;',"'"):gsub('&amp;',"&") .. ' / ' .. name2:gsub('&#039;',"'"):gsub('&amp;',"&")):gsub(' / $','')
 							t[i].InfoPanelShowTime = 30000
 					i = i + 1
 					end
@@ -123,13 +123,14 @@ local proxy = ''
 	all = answer:match('<h5>.-(%d+).-</h5>') or 1
 	for w in answer:gmatch('<div class="item%-media">(.-)</div> </div>') do
 	t[i]={}
-	local adr1,logo1,name1 = w:match('href="(.-)".-<img src="(.-)".-title="(.-)"')
+	local adr1,logo1,lable1,name1,info1 = w:match('href="(.-)".-<img src="(.-)".-"label">(.-)<.-title="(.-)".-(<a href=.-)</li>')
 					if not logo1 or not adr1 or not name1 then break end
 							t[i].Id = i
 							t[i].Address = 'https://kino.pub' .. adr1
-							t[i].Name = name1:gsub('&#039;',"'"):gsub('&amp;',"&")
+							t[i].Name = name1:gsub('&#039;',"'"):gsub('&amp;',"&") .. ' - ' .. lable1
 							t[i].InfoPanelLogo = logo1
 							t[i].InfoPanelName = name1:gsub('&#039;',"'"):gsub('&amp;',"&")
+							t[i].InfoPanelTitle = info1:gsub('<i class="fa fa%-thumbs%-up">','👍'):gsub('<.->',''):gsub('&nbsp;',''):gsub('^   ',''):gsub('    ',' '):gsub('   ',' / ')
 							t[i].InfoPanelShowTime = 30000
 					i = i + 1
 					end
@@ -146,6 +147,7 @@ local proxy = ''
 							t[i].Name = name1:gsub('&#039;',"'"):gsub('&amp;',"&")
 							t[i].InfoPanelLogo = logo1
 							t[i].InfoPanelName = name1:gsub('&#039;',"'"):gsub('&amp;',"&")
+							t[i].InfoPanelTitle = ''
 							t[i].InfoPanelShowTime = 30000
 					i = i + 1
 					end

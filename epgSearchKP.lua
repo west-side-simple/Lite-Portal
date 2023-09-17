@@ -44,5 +44,5 @@
 	t.lua_as_scr = true
 	t.luastring = 'local action,param,extParam = ...;findEPGInKP(extParam)'
 	t.location = 'LOCATION_EPG_MENU' -- LOCATION_EPG_MENU
-	t.image = m_simpleTV.Common.GetMainPath(0) .. 'Icons/menuKP.png'
+	t.image = m_simpleTV.MainScriptDir_UTF8 .. 'user/westSide/icons/portal.png'
 	m_simpleTV.Interface.AddExtMenuT(t)

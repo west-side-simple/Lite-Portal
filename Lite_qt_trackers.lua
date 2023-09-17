@@ -231,6 +231,26 @@ function add_to_see(adr,title,logo)
 end
 
 --------------------------------------
+local function xren(s)
+	if not s then
+	 return ''
+	end
+		s = s:lower()
+		s = s:gsub('*', '')
+		s = s:gsub('%s+', ' ')
+		s = s:gsub('^%s*(.-)%s*$', '%1')
+		local a = {
+				{'А', 'а'}, {'Б', 'б'}, {'В', 'в'}, {'Г', 'г'}, {'Д', 'д'}, {'Е', 'е'}, {'Ж', 'ж'}, {'З', 'з'},
+				{'И', 'и'},	{'Й', 'й'}, {'К', 'к'}, {'Л', 'л'}, {'М', 'м'}, {'Н', 'н'}, {'О', 'о'}, {'П', 'п'},
+				{'Р', 'р'}, {'С', 'с'},	{'Т', 'т'}, {'Ч', 'ч'}, {'Ш', 'ш'}, {'Щ', 'щ'}, {'Х', 'х'}, {'Э', 'э'},
+				{'Ю', 'ю'}, {'Я', 'я'}, {'Ь', 'ь'},	{'Ъ', 'ъ'}, {'Ё', 'е'},	{'ё', 'е'}, {'Ф', 'ф'}, {'Ц', 'ц'},
+				{'У', 'у'}, {'Ы', 'ы'}, {':', ''}
+				}
+			for _, v in pairs(a) do
+				s = s:gsub(v[1], v[2])
+			end
+	 return s
+end
 
 local function get_hdvb(title, year)
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
@@ -262,6 +282,36 @@ local function get_hdvb(title, year)
 	return false
 end
 
+local function get_bazon(title, year)
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
+	if not session then return end
+	m_simpleTV.Http.SetTimeout(session, 10000)
+	local url = decode64('aHR0cHM6Ly9iYXpvbi5jYy9hcGkvc2VhcmNoP3Rva2VuPTRmNmFkZGQ1MzI3YWNkZDc2OTY5Yzk3Nzk5NTM1YjE0JnRpdGxlPQ==') .. m_simpleTV.Common.toPercentEncoding(title)
+	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
+	if rc~=200 then
+		m_simpleTV.Http.Close(session)
+		return false
+	end
+	require('json')
+	answer = answer:gsub('%[%]', '"nil"'):gsub('\\', '\\\\'):gsub('\\"', '\\\\"'):gsub('\\/', '/')
+	local tab = json.decode(answer)
+	if not tab or not tab.results then
+		return false
+	end
+	local j = 1
+	while true do
+		if not tab.results[j]
+		then
+		break
+		end
+		if tab.results[j].kinopoisk_id and (tab.results[j].info and tab.results[j].info.year and math.abs( tonumber(tab.results[j].info.year) - tonumber(year) ) <= 1 and tab.results[j].info.rus and ( xren(tab.results[j].info.rus):gsub('&nbsp;', ' '):gsub('&#151;', '-'):gsub(':', ' '):gsub('%.', ' '):gsub('%-', ' '):gsub('  ', ' ') == xren(title):gsub(':', ' '):gsub('%.', ' '):gsub('%-', ' '):gsub('  ', ' ') or xren(tab.results[j].info.orig):gsub('&nbsp;', ' '):gsub('&#151;', '-'):gsub(':', ' '):gsub('%.', ' '):gsub('%-', ' '):gsub('  ', ' ') == xren(title):gsub(':', ' '):gsub('%.', ' '):gsub('%-', ' '):gsub('  ', ' '))) then
+			return tab.results[j].kinopoisk_id
+		end
+		j = j + 1
+	end
+	return false
+end
+
 local function get_cdnmovies(kp_id)
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then return end
@@ -280,6 +330,22 @@ local function get_cdnmovies(kp_id)
 	return false
 end
 
+local function get_kodik(kp_id)
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
+	if not session then return end
+	m_simpleTV.Http.SetTimeout(session, 10000)
+	local url = decode64('aHR0cDovL2tvZGlrYXBpLmNvbS9nZXQtcGxheWVyP3Rva2VuPTQ0N2QxNzllODc1ZWZlNDQyMTdmMjBkMWVlMjE0NmJlJmtpbm9wb2lza0lEPQ') .. kp_id
+	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
+	if rc~=200 then
+		m_simpleTV.Http.Close(session)
+		return false
+	end
+	if answer:match('"link":"([^"]+)') then
+		return answer:match('"link":"([^"]+)')
+	end
+	return false
+end
+
 local function get_voidboost(kp_id)
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then return end
@@ -290,11 +356,48 @@ local function get_voidboost(kp_id)
 		m_simpleTV.Http.Close(session)
 		return false
 	end
---	answer = answer:gsub('\\','')
---	debug_in_file( answer .. '\n', 'c://1/cdnmovies.txt', setnew )
---	if answer:match('iframe src="(.-)"') then
---		return 'http:' .. answer:match('iframe src="(.-)"')
---	end
+	return url
+end
+
+local function get_collaps(kp_id)
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
+	if not session then return end
+	m_simpleTV.Http.SetTimeout(session, 10000)
+	local url = 'https://api' .. os.time() .. decode64('LnN5bmNocm9uY29kZS5jb20vZW1iZWQva3Av') .. kp_id
+	local rc, answer = m_simpleTV.Http.Request(session, {url = url, headers = 'Referer: api.synchroncode.com'})
+	if rc~=200 then
+		m_simpleTV.Http.Close(session)
+		return false
+	end
+	if answer:match('embedHost') then
+		 return url
+	end
+	return false
+end
+
+local function get_zetflix(kp_id)
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
+	if not session then return end
+	m_simpleTV.Http.SetTimeout(session, 10000)
+	local url = decode64('aHR0cHM6Ly9oZGkuemV0ZmxpeC5vbmxpbmUvaXBsYXllci92aWRlb2RiLnBocD9rcD0=') .. kp_id
+	local rc,answer = m_simpleTV.Http.Request(session,{url = url, method = 'get', headers = 'User-agent: Mozilla/5.0 (Windows NT 10.0; rv:97.0) Gecko/20100101 Firefox/97.0\nReferer: https://hdi.zetflix.online/iplayer/player.php'})
+	if rc~=200 or answer:match('video_not_found') then
+		m_simpleTV.Http.Close(session)
+		return false
+	end
+	return url
+end
+
+local function get_videocdn(kp_id)
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
+	if not session then return end
+	m_simpleTV.Http.SetTimeout(session, 10000)
+	local url = decode64('aHR0cHM6Ly84MjA5LnN2ZXRhY2RuLmluL1BYazJRR2J2RVZtUz9rcF9pZD0') .. kp_id
+	local rc,answer = m_simpleTV.Http.Request(session,{url = url, method = 'get', headers = 'User-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36\nReferer: https://www.videocdn.tv/'})
+	if rc~=200 or answer:match('video_not_found') then
+		m_simpleTV.Http.Close(session)
+		return false
+	end
 	return url
 end
 
@@ -552,45 +655,6 @@ function content(content_id)
 		t[1].InfoPanelTitle = about
 		t[1].InfoPanelShowTime = 10000
 
-		if tab.online and tab.online.VideoCDN then
-		local check = check(tab.online.VideoCDN)
-		if check and check~=false then
-		if is_tv == false and m_simpleTV.User.torrent.content and m_simpleTV.User.torrent.content == content_id then
-			m_simpleTV.User.torrent.is_set_position = true
-		end
-		t[j] = {}
-		t[j].Id = j
-		t[j].Name = 'Online: VideoCDN'
-		t[j].Address = check
-		j=j+1
-		end
-		end
-
-		if tab.online and tab.online.Collaps then
-		local check = check(tab.online.Collaps)
-		if check and check~=false then
-		if m_simpleTV.User.torrent.content and m_simpleTV.User.torrent.content == content_id then
-			m_simpleTV.User.torrent.is_set_position = true
-		end
-		t[j] = {}
-		t[j].Id = j
-		t[j].Name = 'Online: Collaps'
-		t[j].Address = check
-		j=j+1
-		end
-		end
-
-		if tab.online and tab.online.SeriaHD then
-		local check = check(tab.online.SeriaHD)
-		if check and check~=false then
-		t[j] = {}
-		t[j].Id = j
-		t[j].Name = 'Online: SeriaHD'
-		t[j].Address = check
-		j=j+1
-		end
-		end
-
 		local hdvb, kp_id = get_hdvb(name, released)
 		if hdvb~=false then
 		t[j] = {}
@@ -598,6 +662,10 @@ function content(content_id)
 		t[j].Name = 'Online: HDVB'
 		t[j].Address = hdvb
 		j=j+1
+		end
+
+		if not kp_id then
+			kp_id = get_bazon(name, released)
 		end
 
 		if kp_id then
@@ -612,12 +680,95 @@ function content(content_id)
 		end
 
 		if kp_id then
+		local zetflix = get_zetflix(kp_id)
+		if zetflix~=false then
+		t[j] = {}
+		t[j].Id = j
+		t[j].Name = 'Online: ZF'
+		t[j].Address = zetflix
+		j=j+1
+		end
+		end
+
+		if kp_id then
+		local videocdn = get_videocdn(kp_id)
+		if videocdn~=false then
+		t[j] = {}
+		t[j].Id = j
+		t[j].Name = 'Online: VideoCDN'
+		t[j].Address = videocdn
+		j=j+1
+		end
+		end
+
+		if kp_id then
+		local kodik = get_kodik(kp_id)
+		if kodik~=false then
+		t[j] = {}
+		t[j].Id = j
+		t[j].Name = 'Online: Kodik'
+		t[j].Address = kodik:gsub('^//', 'http://')
+		j=j+1
+		end
+		end
+
+		if kp_id then
 		local voidboost = get_voidboost(kp_id)
 		if voidboost~=false then
 		t[j] = {}
 		t[j].Id = j
 		t[j].Name = 'Online: VB'
 		t[j].Address = voidboost
+		j=j+1
+		end
+		end
+
+		if kp_id then
+		local collaps = get_collaps(kp_id)
+		if collaps~=false then
+		t[j] = {}
+		t[j].Id = j
+		t[j].Name = 'Online: Collaps'
+		t[j].Address = collaps:gsub('^//', 'http://')
+		j=j+1
+		end
+		end
+
+		if not kp_id and tab.online and tab.online.VideoCDN then
+		local check = check(tab.online.VideoCDN)
+		if check and check~=false then
+		if is_tv == false and m_simpleTV.User.torrent.content and m_simpleTV.User.torrent.content == content_id then
+			m_simpleTV.User.torrent.is_set_position = true
+		end
+		t[j] = {}
+		t[j].Id = j
+		t[j].Name = 'Online: VideoCDN'
+		t[j].Address = check
+		j=j+1
+		end
+		end
+
+		if not kp_id and tab.online and tab.online.Collaps then
+		local check = check(tab.online.Collaps)
+		if check and check~=false then
+		if m_simpleTV.User.torrent.content and m_simpleTV.User.torrent.content == content_id then
+			m_simpleTV.User.torrent.is_set_position = true
+		end
+		t[j] = {}
+		t[j].Id = j
+		t[j].Name = 'Online: Collaps'
+		t[j].Address = check
+		j=j+1
+		end
+		end
+
+		if not kp_id and tab.online and tab.online.SeriaHD then
+		local check = check(tab.online.SeriaHD)
+		if check and check~=false then
+		t[j] = {}
+		t[j].Id = j
+		t[j].Name = 'Online: SeriaHD'
+		t[j].Address = check
 		j=j+1
 		end
 		end
@@ -758,9 +909,9 @@ function content(content_id)
 		end
 		if t[id].Name:match('Similar: ') then
 			content(t[id].Address)
-		elseif t[id].Name:match('Collaps') then
+		elseif t[id].Name:match('Collaps') and not kp_id then
 			m_simpleTV.Control.PlayAddressT({address='content_id=' .. content_id .. '&balanser=collaps&' .. t[id].Address, title=title})
-		elseif t[id].Name:match('SeriaHD') or t[id].Name:match('VideoCDN') then
+		elseif (t[id].Name:match('SeriaHD') or t[id].Name:match('VideoCDN')) and not kp_id then
 			m_simpleTV.Control.PlayAddressT({address=t[id].Address, title=title})
 		elseif t[id].Name:match('HDVB') then
 		if is_tv == false and m_simpleTV.User.torrent.content and m_simpleTV.User.torrent.content == content_id then
@@ -789,7 +940,27 @@ function content(content_id)
 				m_simpleTV.User.torrent.is_set_position = true
 			end
 			m_simpleTV.Control.PlayAddressT({address='content_id=' .. content_id .. '&' .. t[id].Address, title=title})
+		elseif t[id].Name:match('ZF') then
+			if is_tv == false and m_simpleTV.User.torrent.content and m_simpleTV.User.torrent.content == content_id then
+				m_simpleTV.User.torrent.is_set_position = true
+			end
+			m_simpleTV.Control.PlayAddressT({address='content_id=' .. content_id .. '&' .. t[id].Address, title=title})
+		elseif t[id].Name:match('VideoCDN') and kp_id then
+			if is_tv == false and m_simpleTV.User.torrent.content and m_simpleTV.User.torrent.content == content_id then
+				m_simpleTV.User.torrent.is_set_position = true
+			end
+			m_simpleTV.Control.PlayAddressT({address='content_id=' .. content_id .. '&' .. t[id].Address, title=title})
+		elseif t[id].Name:match('Kodik') then
+			if is_tv == false and m_simpleTV.User.torrent.content and m_simpleTV.User.torrent.content == content_id then
+				m_simpleTV.User.torrent.is_set_position = true
+			end
+			m_simpleTV.Control.PlayAddressT({address='content_id=' .. content_id .. '&' .. t[id].Address, title=title})
 		elseif t[id].Name:match('VB') then
+			if is_tv == false and m_simpleTV.User.torrent.content and m_simpleTV.User.torrent.content == content_id then
+				m_simpleTV.User.torrent.is_set_position = true
+			end
+			m_simpleTV.Control.PlayAddressT({address='content_id=' .. content_id .. '&' .. t[id].Address, title=title})
+		elseif t[id].Name:match('Collaps') then
 			if is_tv == false and m_simpleTV.User.torrent.content and m_simpleTV.User.torrent.content == content_id then
 				m_simpleTV.User.torrent.is_set_position = true
 			end

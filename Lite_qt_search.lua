@@ -1,4 +1,4 @@
--- Плагин поиска для lite portal - west_side 21.04.23
+-- Плагин поиска для lite portal - west_side 14.08.23
 -- необходимы скрипты Lite_qt_exfs.lua, ex-fs.lua, Lite_qt_tmdb.lua, Lite_qt_kinopub.lua, Lite_qt_filmix.lua - автор west_side
 
 function search()
@@ -520,7 +520,7 @@ function search_filmix_media()
 			local headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. filmixurl
 			local body
 			if year then
-			body = 'scf=fx&story=' .. m_simpleTV.Common.toPercentEncoding(title) .. '&search_start=0&do=search&subaction=search&years_ot=' .. tonumber(year)-1 .. '&years_do=' .. tonumber(year)+1 .. '&kpi_ot=1&kpi_do=10&imdb_ot=1&imdb_do=10&sort_name=asc&undefined=asc&sort_date=&sort_favorite='
+			body = 'scf=fx&story=' .. m_simpleTV.Common.toPercentEncoding(title) .. '&search_start=0&do=search&subaction=search&years_ot=' .. tonumber(year) .. '&years_do=' .. tonumber(year) .. '&kpi_ot=1&kpi_do=10&imdb_ot=1&imdb_do=10&sort_name=asc&undefined=asc&sort_date=&sort_favorite='
 			else
 			body = 'scf=fx&story=' .. m_simpleTV.Common.toPercentEncoding(title) .. '&search_start=0&do=search&subaction=search&years_ot=&years_do=&kpi_ot=&kpi_do=&imdb_ot=&imdb_do=&sort_name=asc&undefined=asc&sort_date=&sort_favorite='
 			end
@@ -563,6 +563,7 @@ function search_filmix_media()
 							t[i].InfoPanelShowTime = 30000
 					i = i + 1
 					end
+	rc, answer = m_simpleTV.Http.Request(session, {body = filmixurl, url = 'https://filmix.ac/api/notifications/get', method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. filmixurl .. '\nCookie:' .. m_simpleTV.User.filmix.cookies })					
 ------------------------
 	local AutoNumberFormat, FilterType
 			if #t > 4 then

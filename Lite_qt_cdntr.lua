@@ -1,4 +1,4 @@
---videocdn translations portal - lite version west_side 21.04.2023
+--videocdn translations portal - lite version west_side 17.05.2023
 --author west_side
 
 local function title_translate(translate)
@@ -13,7 +13,7 @@ local function title_translate(translate)
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
 		if not session then return end
 		m_simpleTV.Http.SetTimeout(session, 60000)
-		for page = 1,19 do
+		for page = 1,22 do
 			rc, answer = m_simpleTV.Http.Request(session, {url = decode64(url) .. '&page=' .. page .. '&limit=100'})
 			require('json')
 			if not answer then return end
@@ -25,7 +25,7 @@ local function title_translate(translate)
 			if not tab.data[j] then break end
 				t[i]={}
 				t[i].Id = i
-				t[i].Name = unescape3(tab.data[j].smart_title)
+				t[i].Name = unescape3(tab.data[j].short_title)
 				t[i].Action = tab.data[j].id
 				t[i].InfoPanelTitle = unescape3(tab.data[j].title)
 				if tonumber(t[i].Action) == tonumber(translate) then name_translate = unescape3(t[i].InfoPanelTitle) end
@@ -66,6 +66,7 @@ function run_lite_qt_cdntr()
 		m_simpleTV.User.Videocdn = {}
 	end
 	require 'lfs'
+	local tt0 = os.time()
 	local rc, answer
 	local url = 'aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvdHJhbnNsYXRpb25zP2FwaV90b2tlbj1vUzdXenZOZnhlNEs4T2NzUGpwQUlVNlh1MDFTaTBmbQ=='
 	local t,i,page,current_id = {},1,1,1
@@ -76,7 +77,7 @@ function run_lite_qt_cdntr()
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
 		if not session then return end
 		m_simpleTV.Http.SetTimeout(session, 60000)
-		for page = 1,19 do
+		for page = 1,22 do
 			rc, answer = m_simpleTV.Http.Request(session, {url = decode64(url) .. '&page=' .. page .. '&limit=100'})
 			require('json')
 			if not answer then return end
@@ -87,25 +88,52 @@ function run_lite_qt_cdntr()
 			while true do
 			if not tab.data[j] then break end
 				t[i]={}
-				t[i].Id = i
-				t[i].Name = unescape3(tab.data[j].smart_title)
+--				t[i].Id = i
+				t[i].Name = unescape3(tab.data[j].short_title)
 				t[i].Action = tab.data[j].id
-				t[i].InfoPanelName = 'Перевод'
+--				t[i].InfoPanelName = 'Перевод'
 				t[i].InfoPanelTitle = unescape3(tab.data[j].title)
 				t[i].InfoPanelLogo = 'https://raw.githubusercontent.com/west-side-simple/logopacks/main/MoreLogo/westSidePortal.png'
-				if m_simpleTV.User.Videocdn.translate and tonumber(t[i].Action) == tonumber(m_simpleTV.User.Videocdn.translate) then current_id = i end
-				str = str .. '\n/' .. t[i].Action .. '/' .. t[i].Name .. '/' .. t[i].InfoPanelTitle .. '/'
+--				if m_simpleTV.User.Videocdn.translate and tonumber(t[i].Action) == tonumber(m_simpleTV.User.Videocdn.translate) then current_id = i end
+--				str = str .. '\n/' .. t[i].Action .. '/' .. t[i].Name .. '/' .. t[i].InfoPanelTitle .. '/'
 				i = i + 1
 				j = j + 1
 			end
 			page = page + 1
 		end
 		m_simpleTV.Http.Close(session)
+		local hash, t0 = {}, {}
+		for i = 1, #t do
+			if not hash[t[i].Action]
+			then
+				t0[#t0 + 1] = t[i]
+				hash[t[i].Action] = true
+			end
+		end
+		table.sort(t0, function(a, b) return tonumber(a.Action) < tonumber(b.Action) end)
+		local tt1 = os.time()
+		m_simpleTV.Database.ExecuteSql("ATTACH DATABASE '" .. m_simpleTV.Common.GetMainPath(1) .. "/mediaportal.db' AS mediaportal;", false)
+		m_simpleTV.Database.ExecuteSql("CREATE TABLE IF NOT EXISTS mediaportal.dubbing (ID INTEGER NOT NULL, ShortName TEXT NOT NULL, FullName TEXT NOT NULL);", false)
+		m_simpleTV.Database.ExecuteSql('START TRANSACTION;/*dubbing*/')
+		for i = 1, #t0 do
+			t0[i].Id = i
+			str = str .. '\n/' .. t0[i].Action .. '/' .. t0[i].Name .. '/' .. t0[i].InfoPanelTitle .. '/'
+			m_simpleTV.Database.ExecuteSql("INSERT  INTO dubbing (ID, ShortName, FullName) VALUES ('" .. t0[i].Action .. "','" .. t0[i].Name .. "','" .. t0[i].InfoPanelTitle .. "');", true)
+--			t0[i].Name = t0[i].Name
+--			t0[i].Action = t0[i].Action
+--			t0[i].InfoPanelName = 'Перевод'
+--			t0[i].InfoPanelTitle = unescape3(tab.data[j].title)
+--			t0[i].InfoPanelLogo = 'https://raw.githubusercontent.com/west-side-simple/logopacks/main/MoreLogo/westSidePortal.png'
+		end
+		m_simpleTV.Database.ExecuteSql('COMMIT;/*dubbing*/')
+		local tt2 = os.time()
+		debug_in_file(tt1-tt0 .. ' / ' .. tt2-tt1 .. '\n',m_simpleTV.MainScriptDir .. 'user/westSidePortal/cdn.txt')
 		fhandle = io.open(filePath, 'w+')
 		if fhandle then
 			fhandle:write(str)
 			fhandle:close()
 		end
+		run_lite_qt_cdntr()
 	else
 		fhandle = io.open(filePath, 'r')
 		answer = fhandle:read('*a')
@@ -115,7 +143,7 @@ function run_lite_qt_cdntr()
 			t[i].Id = i
 			t[i].Name = w:match('/.-/(.-)/')
 			t[i].Action = w:match('/(.-)/')
-			t[i].InfoPanelName = 'Перевод'
+			t[i].InfoPanelName = 'Озвучка: ' .. t[i].Action
 			t[i].InfoPanelTitle = w:match('/.-/.-/(.-)/')
 			t[i].InfoPanelLogo = 'https://raw.githubusercontent.com/west-side-simple/logopacks/main/MoreLogo/westSidePortal.png'
 			if m_simpleTV.User.Videocdn.translate and tonumber(t[i].Action) == tonumber(m_simpleTV.User.Videocdn.translate) then current_id = i end

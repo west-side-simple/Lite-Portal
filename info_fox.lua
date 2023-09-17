@@ -79,7 +79,7 @@ end
 
 local function bg_poster_title(title, year)
 
-local urld = decode64('aHR0cHM6Ly9hcGkudGhlbW92aWVkYi5vcmcvMy9zZWFyY2gvbW92aWU/YXBpX2tleT1kNTZlNTFmYjc3YjA4MWE5Y2I1MTkyZWFhYTc4MjNhZCZsYW5ndWFnZT1ydSZleHRlcm5hbF9zb3VyY2U9aW1kYl9pZCZxdWVyeT0=') .. m_simpleTV.Common.toPercentEncoding(title) .. '&year=' .. year
+local urld = decode64('aHR0cHM6Ly9hcGkudGhlbW92aWVkYi5vcmcvMy9zZWFyY2gvbW92aWU/YXBpX2tleT1kNTZlNTFmYjc3YjA4MWE5Y2I1MTkyZWFhYTc4MjNhZCZsYW5ndWFnZT1ydSZleHRlcm5hbF9zb3VyY2U9aW1kYl9pZCZxdWVyeT0=') .. m_simpleTV.Common.toPercentEncoding(title) .. '&primary_release_year=' .. year
 local rc1,answerd = m_simpleTV.Http.Request(session,{url=urld})
 if rc1~=200 then
   m_simpleTV.Http.Close(session)
@@ -151,7 +151,7 @@ end
 
 local function tmdb_eng(title, year)
 
-local urle = decode64('aHR0cHM6Ly9hcGkudGhlbW92aWVkYi5vcmcvMy9zZWFyY2gvbW92aWU/YXBpX2tleT1kNTZlNTFmYjc3YjA4MWE5Y2I1MTkyZWFhYTc4MjNhZCZsYW5ndWFnZT1lbiZleHRlcm5hbF9zb3VyY2U9aW1kYl9pZCZxdWVyeT0=') .. m_simpleTV.Common.toPercentEncoding(title) .. '&year=' .. year
+local urle = decode64('aHR0cHM6Ly9hcGkudGhlbW92aWVkYi5vcmcvMy9zZWFyY2gvbW92aWU/YXBpX2tleT1kNTZlNTFmYjc3YjA4MWE5Y2I1MTkyZWFhYTc4MjNhZCZsYW5ndWFnZT1lbiZleHRlcm5hbF9zb3VyY2U9aW1kYl9pZCZxdWVyeT0=') .. m_simpleTV.Common.toPercentEncoding(title) .. '&primary_release_year=' .. year
 local rc3,answere = m_simpleTV.Http.Request(session,{url=urle})
 if rc3~=200 then
   m_simpleTV.Http.Close(session)
@@ -184,7 +184,7 @@ local tab = json.decode(answere2)
 end
 
 
-urlb = decode64('aHR0cHM6Ly9iYXpvbi5jYy9hcGkvc2VhcmNoP3Rva2VuPWMxMThlYjVmOGQzNjU2NWIyYjA4YjUzNDJkYTk3Zjc5JnRpdGxlPQ==') .. m_simpleTV.Common.toPercentEncoding(title)
+urlb = decode64('aHR0cHM6Ly9iYXpvbi5jYy9hcGkvc2VhcmNoP3Rva2VuPTRmNmFkZGQ1MzI3YWNkZDc2OTY5Yzk3Nzk5NTM1YjE0JnRpdGxlPQ==') .. m_simpleTV.Common.toPercentEncoding(title)
 local rc,answer = m_simpleTV.Http.Request(session,{url=urlb})
 if rc~=200 then
   m_simpleTV.Http.Close(session)

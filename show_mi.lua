@@ -184,7 +184,10 @@ function show_mediainfo(channelId)
  if title_rus == 'Летучая мышь' then year = 1979 end
  if title_rus == 'Хорошая девочка' then year = 2002 end
  if title_rus == 'Притворись моим парнем' then year = 2013 end
+ if title_rus == 'Остров сокровищ' then year = 1989 end
  if title_orig:match('Приключения Петрова и Васечкина') then year = 1983 end
+ if title_orig:match('Бриллиантовая рука') then year = 1969 end
+ if title_orig:match('Федорино горе') then year = 1973 end
  if title_rus:match('Майами') and title_orig == 'New in Town' then year = 2009 end
  title_orig = title_orig:gsub('%: %d+ серия$', ''):gsub(' %d+ серия$', ''):gsub(' chapter %d+$', ''):gsub('Сокровища Агри', 'Сокровища Агры'):gsub('20%-й Век начинается', 'Двадцатый век начинается')
  str2,background = info_fox(title_orig,year,logo)
@@ -205,7 +208,7 @@ function show_mediainfo(channelId)
 end
 
 function delta()
-return 
+return
 end
 
 --добавление кнопки в плейлист, кроме указанных в таблице исключений

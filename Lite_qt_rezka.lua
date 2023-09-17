@@ -1,4 +1,37 @@
---Rezka portal - lite version west_side 12.07.23
+--HDRezka portal - lite version west_side 28.08.23
+
+	local host = 'https://hdrezka.ag'
+	local sessionHDRezka = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36', prx, false)
+	if not sessionHDRezka then return end
+	m_simpleTV.Http.SetTimeout(sessionHDRezka, 10000)
+	if not m_simpleTV.User then
+		m_simpleTV.User = {}
+	end
+	if not m_simpleTV.User.rezka then
+		m_simpleTV.User.rezka = {}
+	end
+	local res, login, password, header = xpcall(function() require('pm') return pm.GetPassword('rezka') end, err)
+	if not login or not password or login == '' or password == '' then
+		m_simpleTV.User.rezka.cookies = ''
+	else
+		local rc, answer = m_simpleTV.Http.Request(sessionHDRezka, {body = 'login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login_not_save=0', url = 'https://hdrezka.ag/ajax/login/', method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. host})
+		debug_in_file('login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login_not_save=0\n' .. answer .. '\n','c://1/avt_rezka.txt')
+		if answer and answer:match('"success":true') then
+			m_simpleTV.User.rezka.cookies = m_simpleTV.Http.GetCookies(sessionHDRezka,host)
+			local url = 'https://hdrezka.ag/ajax/favorites/'
+			local headers = 'X-Requested-With: XMLHttpRequest\nCookie: ' .. m_simpleTV.User.rezka.cookies
+			local name_cat = {'Мои фильмы','Мои сериалы','Мои мультфильмы','Мои аниме'}
+			for i = 1,#name_cat do
+				local body = 'name=' .. name_cat[i] .. '&action=add_cat'
+				rc, answer = m_simpleTV.Http.Request(sessionHDRezka, {url = url, method = 'post', body = body, headers = headers})
+				i = i + 1
+			end
+			debug_in_file(m_simpleTV.User.rezka.cookies .. '\n','c://1/avt_rezka.txt')
+		else
+			m_simpleTV.User.rezka.cookies = ''
+		end
+	end
+	m_simpleTV.Http.Close(sessionHDRezka)
 
 local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
@@ -8,7 +41,107 @@ local function setConfigVal(key,val)
 	m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
 end
 
+local function GetFavCat()
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.3809.87 Safari/537.36', proxy, false)
+	if not session then
+		return
+	end
+	m_simpleTV.Http.SetTimeout(session, 12000)
+	rc, answer = m_simpleTV.Http.Request(session, {url = 'https://hdrezka.ag/favorites/', method = 'get', headers = 'X-Requested-With: XMLHttpRequest\nCookie: ' .. m_simpleTV.User.rezka.cookies})
+	debug_in_file(answer .. '\n','c://1/avt_rezka.txt')
+	local tf,i = {},1
+	for w in answer:gmatch('<a class="b%-favorites_content__cats_list_link.-</a>') do
+		local adr,name,num = w:match('href="(.-)".-<span class="name">(.-)</span>.-<span class="num%-holder">(.-)</span>')
+		if not adr or not name or not num then break end
+		tf[i] = {}
+		tf[i].Id = i
+		tf[i].Address = adr
+		tf[i].Name = name .. ' ' .. num:gsub('<.->','')
+		i = i + 1
+	end
+	m_simpleTV.Http.Close(session)
+	return tf
+end
+
+local function GetBalanser(kp_id)
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
+	if not session then return false end
+	m_simpleTV.Http.SetTimeout(session, 8000)
+	local url = decode64('aHR0cHM6Ly9oZGkuemV0ZmxpeC5vbmxpbmUvaXBsYXllci92aWRlb2RiLnBocD9rcD0=') .. kp_id
+	local rc,answer = m_simpleTV.Http.Request(session,{url = url, method = 'get', headers = 'User-agent: Mozilla/5.0 (Windows NT 10.0; rv:97.0) Gecko/20100101 Firefox/97.0\nReferer: https://hdi.zetflix.online/iplayer/player.php'})
+	if rc ~= 200 or answer:match('video_not_found') or (not answer:match('%.mp4') and not answer:match('%.m3u8')) then return false end
+	return url
+end
+
+function favorites_cat_rezka(cat_adr,cat_name)
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.3809.87 Safari/537.36', proxy, false)
+		if not session then
+			return
+		end
+		m_simpleTV.Http.SetTimeout(session, 6000)
+		local rc, answer = m_simpleTV.Http.Request(session, {url = cat_adr, method = 'get', headers = 'X-Requested-With: XMLHttpRequest\nCookie: ' .. m_simpleTV.User.rezka.cookies})
+		debug_in_file(answer .. '\n','c://1/avt_rezka.txt')
+		local t,i = {},1
+		for w in answer:gmatch('<div class="b%-content__inline_item".-</div></div>') do
+			local adr,logo,type_media,name,desc = w:match('url="(.-)".-src="(.-)".-"entity">(.-)<.-href=".-">(.-)<.-<div>(.-)</div>')
+			if not adr or not name then break end
+			t[i] = {}
+			t[i].Id = i
+			t[i].Name = name .. ' (' .. desc .. ') - ' .. type_media
+			t[i].Address = adr
+			t[i].InfoPanelLogo = logo
+			t[i].InfoPanelName = name .. ' (' .. desc .. ')'
+			t[i].InfoPanelShowTime = 10000
+			i=i+1
+		end
+		m_simpleTV.Http.Close(session)
+	t.ExtButton1 = {ButtonEnable = true, ButtonName = ' Rezka '}
+	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Favorites '}
+	local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('FavHDRezka: ' .. cat_name,0,t,10000,1+4+8+2)
+		if ret == -1 or not id then
+			return
+		end
+		if ret == 1 then
+			media_info_rezka(t[id].Address)
+		end
+		if ret == 2 then
+			favorites_rezka()
+		end
+		if ret == 3 then
+			run_lite_qt_rezka()
+		end
+end
+
+function favorites_rezka()
+	local t = m_simpleTV.User.rezka.favorites
+	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Rezka '}
+	t.ExtButton1 = {ButtonEnable = true, ButtonName = ' Portal '}
+	local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Favorites HDRezka',0,t,10000,1+4+8+2)
+		if ret == -1 or not id then
+			return
+		end
+		if ret == 1 then
+			if not t[id].Name:match('%(0%)') then
+				favorites_cat_rezka(t[id].Address,t[id].Name)
+			else
+				favorites_rezka()
+			end
+		end
+		if ret == 2 then
+			run_lite_qt_rezka()
+		end
+		if ret == 3 then
+			run_westSide_portal()
+		end
+end
+
 function run_lite_qt_rezka()
+
+	if m_simpleTV.User.rezka.cookies == '' then
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="https://static.hdrezka.ac/templates/hdrezka/images/favicon.ico"', text = 'HDRezka: Для использования полного функционала медиапортала\nавторизуйтесь на сайте https://hdrezka.ag\nи внесите регистрационные данные в\nменеджере паролей для id rezka.\nРекомендуется вместо логина вводить email.', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
+	else
+		m_simpleTV.User.rezka.favorites = GetFavCat()
+	end
 
 	local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
@@ -23,7 +156,18 @@ function run_lite_qt_rezka()
 	if io.open(m_simpleTV.MainScriptDir .. 'user/TVSources/m3u/out_Franchises.m3u', 'r') and ExaminFranchisesRezka() == true
 	then
 	    tt = {
-		{"","Rezka New"},
+		{"/films/?filter=last","HDRezka: Фильмы, последние поступления"},
+		{"/films/?filter=popular","HDRezka: Фильмы, популярные"},
+		{"/films/?filter=watching","HDRezka: Фильмы, сейчас смотрят"},
+		{"/series/?filter=last","HDRezka: Сериалы, последние поступления"},
+		{"/series/?filter=popular","HDRezka: Сериалы, популярные"},
+		{"/series/?filter=watching","HDRezka: Сериалы, сейчас смотрят"},
+		{"/cartoons/?filter=last","HDRezka: Мультфильмы, последние поступления"},
+		{"/cartoons/?filter=popular","HDRezka: Мультфильмы, популярные"},
+		{"/cartoons/?filter=watching","HDRezka: Мультфильмы, сейчас смотрят"},
+		{"/animation/?filter=last","HDRezka: Аниме, последние поступления"},
+		{"/animation/?filter=popular","HDRezka: Аниме, популярные"},
+		{"/animation/?filter=watching","HDRezka: Аниме, сейчас смотрят"},
 		{"","Коллекции"},
 		{"","Франшизы: Фильмы"},
 		{"","Франшизы: Мультфильмы"},
@@ -36,7 +180,18 @@ function run_lite_qt_rezka()
 	elseif ExaminFranchisesRezka() == true
 	then
 		tt = {
-		{"","Rezka New"},
+		{"/films/?filter=last","HDRezka: Фильмы, последние поступления"},
+		{"/films/?filter=popular","HDRezka: Фильмы, популярные"},
+		{"/films/?filter=watching","HDRezka: Фильмы, сейчас смотрят"},
+		{"/series/?filter=last","HDRezka: Сериалы, последние поступления"},
+		{"/series/?filter=popular","HDRezka: Сериалы, популярные"},
+		{"/series/?filter=watching","HDRezka: Сериалы, сейчас смотрят"},
+		{"/cartoons/?filter=last","HDRezka: Мультфильмы, последние поступления"},
+		{"/cartoons/?filter=popular","HDRezka: Мультфильмы, популярные"},
+		{"/cartoons/?filter=watching","HDRezka: Мультфильмы, сейчас смотрят"},
+		{"/animation/?filter=last","HDRezka: Аниме, последние поступления"},
+		{"/animation/?filter=popular","HDRezka: Аниме, популярные"},
+		{"/animation/?filter=watching","HDRezka: Аниме, сейчас смотрят"},
 		{"","Коллекции"},
 		{"","Франшизы"},
 		{"","Обновление Франшиз"},
@@ -45,7 +200,18 @@ function run_lite_qt_rezka()
 		}
     else
 		tt = {
-		{"","Rezka New"},
+		{"/films/?filter=last","HDRezka: Фильмы, последние поступления"},
+		{"/films/?filter=popular","HDRezka: Фильмы, популярные"},
+		{"/films/?filter=watching","HDRezka: Фильмы, сейчас смотрят"},
+		{"/series/?filter=last","HDRezka: Сериалы, последние поступления"},
+		{"/series/?filter=popular","HDRezka: Сериалы, популярные"},
+		{"/series/?filter=watching","HDRezka: Сериалы, сейчас смотрят"},
+		{"/cartoons/?filter=last","HDRezka: Мультфильмы, последние поступления"},
+		{"/cartoons/?filter=popular","HDRezka: Мультфильмы, популярные"},
+		{"/cartoons/?filter=watching","HDRezka: Мультфильмы, сейчас смотрят"},
+		{"/animation/?filter=last","HDRezka: Аниме, последние поступления"},
+		{"/animation/?filter=popular","HDRezka: Аниме, популярные"},
+		{"/animation/?filter=watching","HDRezka: Аниме, сейчас смотрят"},
 		{"","Коллекции"},
 		{"","Франшизы"},
 		{"","ПОИСК"},
@@ -59,6 +225,12 @@ function run_lite_qt_rezka()
 			t0[i].Name = tt[i][2]
 			t0[i].Action = tt[i][1]
 		end
+	if m_simpleTV.User.rezka.favorites and #m_simpleTV.User.rezka.favorites and #m_simpleTV.User.rezka.favorites > 0 then
+		t0[#tt+1] = {}
+		t0[#tt+1].Id = #tt+1
+		t0[#tt+1].Name = 'Избранное'
+		t0[#tt+1].Action = ''
+	end
 	if last_adr and last_adr ~= '' then
 	t0.ExtButton0 = {ButtonEnable = true, ButtonName = ' Info '}
 	end
@@ -70,10 +242,12 @@ function run_lite_qt_rezka()
 		if ret == 1 then
 			if t0[id].Name == 'ПОИСК' then
 				search()
+			elseif t0[id].Name == 'Избранное' then
+				favorites_rezka()
 			elseif t0[id].Name == 'Rezka зеркало' then
 				zerkalo_rezka()
-			elseif t0[id].Name == 'Rezka New' then
-				last_rezka()
+			elseif t0[id].Name:match('HDRezka') then
+				last_rezka(t0[id].Action, t0[id].Name)
 			elseif t0[id].Name == 'Коллекции' then
 				collection_rezka()
 			elseif t0[id].Name:match('Франшизы') then
@@ -86,7 +260,7 @@ function run_lite_qt_rezka()
 				elseif t0[id].Name:match('Аниме') then
 				franchises_rezka_ganre('Аниме')
 				else
-				franchises_rezka('https://hdrezka.ag/franchises/page/50/')
+				franchises_rezka('https://hdrezka.ag/franchises/page/72/')
 				end
 			elseif t0[id].Name == 'Обновление Франшиз' then
 				UpdateFranchisesRezka()
@@ -150,7 +324,7 @@ function zerkalo_rezka()
 		end
 end
 
-function last_rezka()
+function last_rezka(filter,filter_name)
 	local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
 	end
@@ -168,31 +342,34 @@ function last_rezka()
 	url = 'https://hdrezka.ag'
 	end
 	m_simpleTV.Http.SetTimeout(session, 8000)
-	local rc,answer = m_simpleTV.Http.Request(session,{url= url})
+	local rc,answer = m_simpleTV.Http.Request(session,{url= url .. filter:gsub('^https://.-/','/')})
 		if rc ~= 200 then return end
-	local title = 'Rezka New'
 	local t,i = {},1
 		for w in answer:gmatch('<div class="b%-content__inline_item".-</div> </div></div>') do
-			local logo, group, adr, name, title = w:match('<img src="(.-)".-<i class="entity">(.-)</i>.-<a href="(.-)">(.-)</a> <div class="misc">(.-)<')
---			year = title:match('%d%d%d%d') or 0
-					if not adr and not name then break end
+			local logo, adr, name, title = w:match('<img src="(.-)".-<a href="(.-)">(.-)</a> <div>(.-)<')
+			local info = w:match('<span class="info">(.-)</span>')
+			if not adr and not name then break end
 				t[i] = {}
 				t[i].Id = i
-				t[i].Name = name .. ' (' .. (title:match('%d%d%d%d') or 0) .. ') - ' .. group
+				t[i].Name = name .. ' (' .. (title:match('%d%d%d%d') or 0) .. ')'
 				t[i].InfoPanelLogo = logo
-				t[i].Address =  url .. adr
-				t[i].InfoPanelName = name .. ' (' .. (title:match('%d%d%d%d') or 0) .. ')'
+				t[i].Address =  adr
+				t[i].InfoPanelName = name .. ' / ' .. title
+				if info then
+					t[i].InfoPanelTitle = info
+				end
 				t[i].InfoPanelShowTime = 10000
 				i = i + 1
 			end
 		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Back '}
 		t.ExtParams = {FilterType = 0, AutoNumberFormat = '%1. %2'}
-		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8(title:gsub(' в HD онлайн','') .. ' (' .. #t .. ')',0,t,10000,1+4+8+2)
+		if filter_name == '' then filter_name = 'Rezka New' end
+		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8(filter_name,0,t,10000,1+4+8+2)
 		if ret == -1 or not id then
 			return
 		end
 		if ret == 1 then
-		media_info_rezka(t[id].Address)
+			media_info_rezka(t[id].Address)
 		end
 		if ret == 2 then
 			run_lite_qt_rezka()
@@ -546,6 +723,11 @@ function person_rezka_work(url)
 	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
 		if rc ~= 200 then return '' end
 	local title1 = answer:match('<h1><span class="t1" itemprop="name">(.-)</span>') or 'Rezka person'
+
+	local logo_person = answer:match('<img itemprop="image" src="(.-)"') or 'https://static.hdrezka.ac/templates/hdrezka/images/avatar.png'
+	local desc = answer:match('<h1><span class="t1".-<div class="b%-person__career">') or ''
+	desc = desc:gsub('<span class="t2" itemprop="alternativeHeadline">','\n'):gsub('<h2>','\n'):gsub('<.->',''):gsub('Смотреть все.-$','')
+	m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="4.0" src="' .. logo_person .. '"', text = desc, color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
 	local t,i = {},1
 	for w in answer:gmatch('<div class="b%-content__inline_item.-</div> </div></div>') do
 	local logo, group, adr, name, title = w:match('<img src="(.-)".-<span class="(.-)".-<a href="(.-)">(.-)</a> <div class="misc">(.-)<')
@@ -588,10 +770,9 @@ function person_rezka_work(url)
 			media_info_rezka(res[id].Address)
 		end
 		if ret == 2 then
-			media_info_rezka(url)
+			run_lite_qt_rezka()
 		end
 		if ret == 3	then
---			setConfigVal('person/rezka',url:gsub('rezka%.ag','rezkery.com'))
 			setConfigVal('person/rezka',url)
 			UpdatePersonRezka()
 		end
@@ -619,7 +800,7 @@ function media_info_rezka(url)
 	else tooltip_body = 'bgcolor="#182633"'
 	end
 	answer = answer:gsub('<!%-%-.-%-%->', ''):gsub('/%*.-%*/', '')
-	local poster = answer:match('<div class="b%-sidecover"> <a href="([^"]+)') or answer:match('property="og:image" content="([^"]+)') or ''
+	local poster = answer:match('<link rel="image_src" href="([^"]+)') or answer:match('<img itemprop="image" src="([^"]+)') or answer:match('<div class="b%-sidecover"> <a href="([^"]+)') or answer:match('property="og:image" content="([^"]+)') or ''
 	local name_rus = answer:match('<h1 itemprop="name">(.-)</h1>') or answer:match('<h1><span class="t1" itemprop="name">([^<]+)') or answer:match('<div class="b%-content__htitle"> <h1>(.-)</h1>') or ''
 	name_rus = name_rus:gsub(' в HD онлайн', ''):gsub('Смотреть ', '')
 	local desc = answer:match('"og:description" content="(.-)"%s*/>') or ''
@@ -637,13 +818,24 @@ function media_info_rezka(url)
 	local kpr = answer:match('Кинопоиск</a>: <span class="bold">(.-)</span> <i>') or ''
 	if kpr ~= '' then kpr = string.format('%.' .. (1 or 0) .. 'f', kpr) end
 	local imdbr = answer:match('IMDb.-: <span class="bold">(.-)</span> <i>') or ''
+	m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="4.0" src="' .. poster .. '"', text = slogan .. '\n' .. mpaa .. '\n' .. year .. '\n' .. country .. '\nКинопоиск: ' .. kpr .. '\nIMDb: ' .. imdbr .. '\n' .. time_all:gsub('<.->', ''), color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
 	local desc_text = answer:match('<div class="b%-post__description_text">(.-)</div>') or ''
 	desc_text = desc_text:gsub('<a.->', ''):gsub('</a>', '')
-	desc_text = '<table width="100%" border="0"><tr><td style="padding: 15px 15px 5px;"><img src="' .. poster .. '" height="470"></td><td style="padding: 0px 5px 5px; color: #EBEBEB; vertical-align: middle;"><h4><font color=#00FA9A>' .. name_rus .. '</font></h4><h5><i><font color=#EBEBEB>' .. slogan .. '</font></i>  <b><font color=#E0FFFF>' .. mpaa .. '</font></b></h5><h5><font color=#BBBBBB>' .. name_eng .. '</font></h5><h5><font color=#E0FFFF>' .. year .. ' • ' .. country .. ' • Кинопоиск: ' .. kpr .. ' • IMDb: ' .. imdbr .. '</font></h5>' .. time_all .. '<h4><font color=#EBEBEB>' .. desc_text .. '</font></h4></td></tr></table>'
+	desc_text = '<table width="100%" border="0"><tr><td style="padding: 15px 15px 5px;"><img src="' .. poster .. '" height="300"></td><td style="padding: 0px 5px 5px; color: #EBEBEB; vertical-align: middle;"><h2><font color=#00FA9A>' .. name_rus .. '</font></h2><h5><i><font color=#EBEBEB>' .. slogan .. '</font></i>  <b><font color=#E0FFFF>' .. mpaa .. '</font></b></h5><h3><font color=#BBBBBB>' .. name_eng .. '</font></h3><h5><font color=#E0FFFF>' .. year .. ' • ' .. country .. '<p> • Кинопоиск: ' .. kpr .. '<p> • IMDb: ' .. imdbr .. '</font></h5>' .. time_all .. '</td></tr><tr><td colspan="2" style="padding: 15px 15px 5px;"><h4><font color=#EBEBEB>' .. desc_text .. '</font></h4></td></tr></table>'
 	local answer1 = answer:match('<h2>Из серии</h2>:(.-)</tr>') or ''
 	local answer2 = answer:match('<div class="b%-sidetitle">(.-</a>)') or ''
 	local answer3 = answer:match('<div class="b%-sidelist__holder">(.-)<div id="addcomment%-title"') or ''
+	local answer4 = answer:match('<h2>Жанр</h2>:(.-)</tr>') or ''
+
 	local title = name_rus .. ' (' .. year .. ')'
+	local kp_id, balanser
+	if answer:match('<span class="b%-post__info_rates kp"><a href="/help/.-" target="_blank" rel="nofollow">Кинопоиск</a>') then
+	kp_id = answer:match('<span class="b%-post__info_rates kp"><a href="/help/(.-)"')
+	kp_id = decode64(kp_id)
+	kp_id = kp_id:gsub('%%3A', ':'):gsub('%%2F', '/')
+	kp_id = kp_id:match('kinopoisk%.ru/.-/(%d+)/.-$')
+	balanser = GetBalanser(kp_id)
+	end
 	local t1,j={},2
 		t1[1] = {}
 		t1[1].Id = 1
@@ -651,15 +843,32 @@ function media_info_rezka(url)
 		t1[1].Name = '.: info :.'
 		t1[1].InfoPanelLogo = poster
 		t1[1].InfoPanelName = title or 'Rezka info'
-		t1[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. desc_text .. '</body></html>'
+		t1[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. desc_text:gsub('"', "\"") .. '</body></html>'
 		t1[1].InfoPanelTitle = desc
 		t1[1].InfoPanelShowTime = 10000
-		if answer2 and answer2 ~= '' and answer2:match('href="(.-)"') then
+		if balanser then
 		t1[2] = {}
 		t1[2].Id = 2
-		t1[2].Address = answer2:match('href="(.-)"')
-		t1[2].Name = answer2:match('class="b%-post__franchise_link_title">(.-)</a>') or 'Франшиза'
+		t1[2].Address = balanser
+		t1[2].Name = 'Online: ZF'
 		j = 3
+		end
+		for w in answer4:gmatch('<a.-</a>') do
+		local genres = w:match('"genre">(.-)</span></a>')
+		local genres_adr = w:match('<a href="(.-)"')
+		if not genres_adr or not genres then break end
+		t1[j] = {}
+		t1[j].Id = j
+		t1[j].Address = genres_adr
+		t1[j].Name = 'Жанр: ' .. genres
+		j=j+1
+		end
+		if answer2 and answer2 ~= '' and answer2:match('href="(.-)"') then
+		t1[j] = {}
+		t1[j].Id = j
+		t1[j].Address = answer2:match('href="(.-)"')
+		t1[j].Name = answer2:match('class="b%-post__franchise_link_title">(.-)</a>') or 'Франшиза'
+		j=j+1
 		end
 		for w1 in answer1:gmatch('<a href=".-</a>') do
 		local adr,name = w1:match('<a href="(.-)">(.-)</a>')
@@ -699,15 +908,22 @@ function media_info_rezka(url)
 		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('Rezka: ' .. title, 0, t1, 30000, 1 + 4 + 8 + 2)
 		if ret == 1 then
 			if id == 1 then
-			media_info_rezka(url)
+				media_info_rezka(url)
 			elseif t1[id].Address:match('/collections/') then
-			collection_rezka_url(t1[id].Address)
+				collection_rezka_url(t1[id].Address)
 			elseif t1[id].Address:match('/franchises/') then
-			franchises_rezka_url(t1[id].Address)
+				franchises_rezka_url(t1[id].Address)
+			elseif t1[id].Name:match('Жанр') then
+				last_rezka(t1[id].Address,t1[id].Name)
 			elseif t1[id].Address:match('/person/') then
-			person_rezka_work(t1[id].Address)
+				person_rezka_work(t1[id].Address)
+			elseif t1[id].Name:match('ZF') then
+				m_simpleTV.User.filmix.CurAddress = nil
+				m_simpleTV.User.rezka.CurAddress = url
+				m_simpleTV.User.westSide.PortalTable = true
+				m_simpleTV.Control.PlayAddressT({address=t1[id].Address, title=title})
 			else
-			media_info_rezka(t1[id].Address)
+				media_info_rezka(t1[id].Address)
 			end
 		end
 		if ret == 2 then
@@ -720,6 +936,6 @@ function media_info_rezka(url)
 			m_simpleTV.Control.ChangeAddress = 'No'
 			m_simpleTV.Control.ExecuteAction(37)
 			m_simpleTV.Control.CurrentAddress = retAdr
-			m_simpleTV.Control.PlayAddress(retAdr)
+			m_simpleTV.Control.PlayAddressT({address = retAdr, title = title})
 		end
 end
