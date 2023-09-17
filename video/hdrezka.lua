@@ -1,12 +1,9 @@
--- видеоскрипт для сайта https://rezka.ag (22/07/23)
+-- видеоскрипт для сайта https://rezka.ag (31/08/23)
 -- Copyright © 2017-2021 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
 -- mod west_side for lite version
 -- ## открывает подобные ссылки ##
 -- https://rezka.ag/films/comedy/31810-horoshie-malchiki-2019.html
 -- https://rezka.ag/series/fiction/34492-porogi-vremeni-1993.html
--- https://rezka.ag/series/comedy/34512-kosmicheskie-voyska-2020.html
--- http://nexthdrezka.com/series/fiction/34385-skvoz-sneg-2020.html
--- http://betahdrezka.com/cartoons/adventures/7717-priklyucheniya-kota-v-sapogah-2015.html
 -- ## прокси ##
 local proxy = ''
 -- '' - нет
@@ -54,16 +51,16 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 	if zerkalo and zerkalo ~= '' then
 	inAdr = inAdr:gsub('^http.-://.-/',zerkalo)
 	end
-	local inAdr1 = inAdr:gsub('%$rezka.-$','')
+	local inAdr1 = inAdr:gsub('%$rezka.-$',''):gsub('%&translator_id=.-$','')
 	m_simpleTV.OSD.ShowMessageT({text = '', showTime = 1000, id = 'channelName'})
 	local logo = 'https://static.hdrezka.ac/templates/hdrezka/images/avatar.png'
-	if m_simpleTV.Control.MainMode == 0 then
+--[[	if m_simpleTV.Control.MainMode == 0 then
 		if not inAdr:match('^%$rezka') and not inAdr:match('/franchises/') then
 			m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = logo, TypeBackColor = 0, UseLogo = 1, Once = 1})
 		else
 			m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = '', TypeBackColor = 0, UseLogo = 1, Once = 1})
 		end
-	end
+	end--]]
 	local function showError(str)
 		m_simpleTV.OSD.ShowMessageT({text = 'hdrezka ошибка: ' .. str, showTime = 5000, color = 0xffff1000, id = 'channelName'})
 	end
@@ -81,7 +78,17 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 	if not m_simpleTV.User.rezka then
 		m_simpleTV.User.rezka = {}
 	end
+	m_simpleTV.User.filmix.CurAddress = nil
+	m_simpleTV.User.rezka.CurAddress = inAdr1
+	m_simpleTV.User.westSide.PortalTable = true
 	m_simpleTV.User.rezka.DelayedAddress = nil
+	m_simpleTV.User.rezka.tr = nil
+	m_simpleTV.User.rezka.tr_id = inAdr:match('%&translator_id=(%d+)')
+	if m_simpleTV.User.rezka.tr_id then
+		m_simpleTV.User.rezka.tr_is = true
+	else
+		m_simpleTV.User.rezka.tr_is = false
+	end
 	if zerkalo == '' then
 		m_simpleTV.User.rezka.host = 'https://hdrezka.ag/'
 	else
@@ -93,6 +100,41 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 		if index then
 			title = m_simpleTV.User.rezka.title .. ' - ' .. m_simpleTV.User.rezka.titleTab[index].Name
 		end
+	end
+	function Check_Translate()
+		local proxy = ''
+		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.3809.87 Safari/537.36', proxy, false)
+		local data_id = m_simpleTV.User.rezka.CurAddress:match('/(%d+)')
+		local url = m_simpleTV.User.rezka.host .. '/ajax/get_cdn_series/?t=' .. os.time()
+		local i,t = 1,{}
+		for j = 1,#m_simpleTV.User.rezka.trTabl do
+			local tr = m_simpleTV.User.rezka.trTabl[j].Address
+			local tr_name = m_simpleTV.User.rezka.trTabl[j].Name
+			local body = 'id=' .. data_id .. '&translator_id=' .. tr .. '&action=get_episodes'
+			local headers = 'X-Requested-With: XMLHttpRequest\nCookie: ' .. m_simpleTV.User.rezka.cookies
+			local rc, answer0 = m_simpleTV.Http.Request(session, {url = url, method = 'post', body = body, headers = headers})
+			answer0 = unescape3(answer0)
+			answer0 = answer0:gsub('\\/', '/')
+			answer0 = answer0:gsub('\\', '')
+			local season_id, episode_id
+			for w in answer0:gmatch('<li class="b%-simple_episode__item.-</li>') do
+				season_id = w:match('season_id="(%d+)')
+				episode_id = w:match('episode_id="(%d+)')
+				if season_id and episode_id then
+					t[i] = {}
+					t[i].Id = i
+					t[i].Name = season_id .. ' Сезон, ' .. episode_id .. ' Серия - ' .. tr_name
+					t[i].Address = string.format(m_simpleTV.User.rezka.CurAddress .. '$rezkaid=%s&translator_id=%s&season=%s&episode=%s'
+						, data_id
+						, tr
+						, season_id
+						, episode_id)
+					i = i + 1
+				end
+			end
+			j = j + 1
+		end
+		m_simpleTV.User.rezka.AllTranslate = t
 	end
 	local function get_voidboost(kp_id)
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
@@ -111,12 +153,14 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 			if not url then
 			 return url
 			end
-	 return playerjs.decode(url, m_simpleTV.User.rezka.playerjs_url)
+			local player = playerjs.decode(url, m_simpleTV.User.rezka.playerjs_url)
+--	 debug_in_file(player .. '\n============================\n','c://1/rezka_tr.txt')
+	 return player
 	end
 	local function rezkaGetStream(adr)
 		local url = m_simpleTV.User.rezka.host .. '/ajax/get_cdn_series/?t=' .. os.time()
 		local body = adr:gsub('^.-$rezka', '') .. '&action=get_stream'
-		local headers = 'X-Requested-With: XMLHttpRequest'
+		local headers = 'X-Requested-With: XMLHttpRequest\nCookie: ' .. m_simpleTV.User.rezka.cookies
 		local rc, answer = m_simpleTV.Http.Request(session, {url = url, method = 'post', body = body, headers = headers})
 			if rc ~= 200 then return end
 	 return answer
@@ -139,17 +183,27 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 	end
 	local function GetRezkaAdr(urls)
 		urls = urls:gsub('\\/', '/')
-		local t, i = {}, 1
+		local t1, i = {}, 1
 		local url = urls:match('"url":"[^"]+') or urls
 		local qlty, adr
 			for qlty, adr in url:gmatch('%[(.-)](http.-//[^%s]+)') do
-				t[i] = {}
-				t[i].Address = adr
-				t[i].Name = qlty
+				t1[i] = {}
+				t1[i].Address = adr
+				t1[i].Name = qlty
 --				t[i].qlty = tonumber(qlty:match('%d+'))
 				i = i + 1
 			end
 			if i == 1 then return end
+
+			local hash, t = {}, {}
+			for i = 1, #t1 do
+			if not hash[t1[i].Address]
+			then
+				t[#t + 1] = t1[i]
+				hash[t1[i].Address] = true
+			end
+			end
+
 --		table.sort(t, function(a, b) return a.qlty < b.qlty end)
 		local z = {
 				{'1080p Ultra', '1080p'},
@@ -230,15 +284,15 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 			local handlerInfo = {}
 			handlerInfo.luaFunction = 'PositionThumbs_Rezka'
 			handlerInfo.regexString = ''
-			handlerInfo.sizeFactor = 0.20
+			handlerInfo.sizeFactor = 0.125
 			handlerInfo.backColor = ARGB(255, 0, 0, 0)
-			handlerInfo.textColor = ARGB(240, 127, 255, 0)
+			handlerInfo.textColor = ARGB(255, 255, 153, 51)
 			handlerInfo.glowParams = 'glow="7" samples="5" extent="4" color="0xB0000000"'
 			handlerInfo.marginBottom = 0
 			handlerInfo.showPreviewWhileSeek = true
 			handlerInfo.clearImgCacheOnStop = false
-			handlerInfo.minImageWidth = 80
-			handlerInfo.minImageHeight = 45
+			handlerInfo.minImageWidth = 16
+			handlerInfo.minImageHeight = 9
 			m_simpleTV.User.rezka.PositionThumbsHandler = m_simpleTV.PositionThumbs.AddHandler(handlerInfo)
 		end
 	end
@@ -264,15 +318,10 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 		local t = m_simpleTV.User.rezka.Tab
 			if not t then return end
 		local index = rezkaIndex(t)
-		if m_simpleTV.User.paramScriptForSkin_buttonOk then
-			t.OkButton = {ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonOk}
-		end
-		if m_simpleTV.User.paramScriptForSkin_buttonClose then
-			t.ExtButton1 = {ButtonEnable = true, ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonClose}
-		else
+
 			t.ExtButton1 = {ButtonEnable = true, ButtonName = '✕', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
 			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Info '}
-		end
+
 		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('⚙ Качество', index - 1, t, 5000, 1 + 4 + 2)
 		if m_simpleTV.User.rezka.isVideo == false then
 			if m_simpleTV.User.rezka.DelayedAddress then
@@ -291,8 +340,33 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 			media_info_rezka(inAdr1)
 		end
 	end
-	function GetTranslate(inAdr1)
-		m_simpleTV.Control.SetNewAddress(inAdr1, m_simpleTV.Control.GetPosition())
+	function GetTranslate()
+		local t = m_simpleTV.User.rezka.trTabl
+		local current_tr_id
+		for i = 1,#t do
+			if m_simpleTV.User.rezka.tr_id and t[i].Address == m_simpleTV.User.rezka.tr_id then
+				current_tr_id = i - 1
+			end
+			i = i + 1
+		end
+		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_rezka()'}
+		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Info '}
+
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('🔊 Озвучка', (current_tr_id or 0), t, 5000, 1 + 4 + 2)
+		if ret == 1 then
+			m_simpleTV.User.rezka.tr = t[id].Name
+			if m_simpleTV.User.rezka.tr_is then
+			m_simpleTV.Control.SetNewAddress(m_simpleTV.Control.CurrentAddress:gsub('%&translator_id=%d+','&translator_id=' .. t[id].Address), m_simpleTV.Control.GetPosition())
+			else
+			m_simpleTV.Control.SetNewAddress(m_simpleTV.User.rezka.CurAddress .. '&translator_id=' .. t[id].Address, m_simpleTV.Control.GetPosition())
+			end
+		end
+		if ret == 2 then
+			media_info_rezka(m_simpleTV.User.rezka.CurAddress)
+		end
+		if ret == 3 then
+			Qlty_rezka()
+		end
 	end
 	function PositionThumbs_Rezka(queryType, address, forTime)
 		if queryType == 'testAddress' then
@@ -306,7 +380,7 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 		 return false
 		end
 		if queryType == 'getThumbs' then
-				if not m_simpleTV.User.rezka.ThumbsInfo  or m_simpleTV.User.rezka.ThumbsInfo == nil then
+				if not m_simpleTV.User.rezka.ThumbsInfo or m_simpleTV.User.rezka.ThumbsInfo == nil then
 				 return true
 				end
 			local imgLen = m_simpleTV.User.rezka.ThumbsInfo.samplingFrequency * m_simpleTV.User.rezka.ThumbsInfo.thumbsPerImage
@@ -376,7 +450,7 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 	local adr = answer:match('"streams":"[^"]+')
 	if adr then
 	adr = rezkaDeSex(adr)
-	adr = adr:match('%[1080p Ultra%](http.-://stream%.voidboost%..-%.m3u8)') or adr:match('%[1080p%](http.-://stream%.voidboost%..-%.m3u8)') or adr:match('%[720p%](http.-://stream%.voidboost%..-%.m3u8)') or adr:match('%[480p%](http.-://stream%.voidboost%..-%.m3u8)') or adr:match('%[360p%](http.-://stream%.voidboost%..-%.m3u8)') or adr:match('%[240p%](http.-://stream%.voidboost%..-%.m3u8)') or ''
+	adr = adr:match('%[2160p%](http.-://stream%.voidboost%..-%.m3u8)') or adr:match('%[1440p%](http.-://stream%.voidboost%..-%.m3u8)') or adr:match('%[1080p Ultra%](http.-://stream%.voidboost%..-%.m3u8)') or adr:match('%[1080p%](http.-://stream%.voidboost%..-%.m3u8)') or adr:match('%[720p%](http.-://stream%.voidboost%..-%.m3u8)') or adr:match('%[480p%](http.-://stream%.voidboost%..-%.m3u8)') or adr:match('%[360p%](http.-://stream%.voidboost%..-%.m3u8)') or adr:match('%[240p%](http.-://stream%.voidboost%..-%.m3u8)') or ''
 	else
 	adr = ''
 	end
@@ -407,7 +481,11 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 	end
 	local function play(retAdr, title, id)
 		if retAdr:match('%$rezkaid') then
-			retAdr = rezkaGetStream(retAdr)
+			if m_simpleTV.User.rezka.tr_id then
+				retAdr = rezkaGetStream(retAdr:gsub('%&translator_id=%d+','&translator_id=' .. m_simpleTV.User.rezka.tr_id))
+			else
+				retAdr = rezkaGetStream(retAdr)
+			end
 				if not retAdr then
 					m_simpleTV.Http.Close(session)
 					showError('2')
@@ -416,6 +494,12 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 				end
 		end
 		local subt = rezkaISubt(retAdr)
+		local thumb_url = retAdr:match('"thumbnails":"(.-)"')
+		if thumb_url and thumb_url ~= ''
+		then
+		thumb_url = m_simpleTV.User.rezka.host .. thumb_url
+		pars_thumb(thumb_url)
+		end
 		retAdr = rezkaDeSex(retAdr)
 --		debug_in_file( '\n' .. retAdr .. '\n', 'c://1/hdrezka.txt', setnew )
 			if not retAdr or retAdr == '' then
@@ -434,6 +518,18 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 		retAdr = retAdr .. (subt or '')
 		m_simpleTV.Control.CurrentAddress = retAdr
 -- debug_in_file(retAdr .. '\n')
+	end
+	local function GetNameTr(answer)
+		local transl = answer:match('<ul id="translators%-list".-</ul>')
+		if transl == nil then return false end
+		for w in transl:gmatch('<li.-</li>') do
+				local name = w:match('title="([^"]+)') or 'NN'
+				local Adr = w:match('data%-translator_id="([^"]+)')
+					if not name or not Adr then break end
+				if Adr == '376' then name = name .. ' (ukr)' end
+				if Adr == m_simpleTV.User.rezka.tr_id then return name end
+		end
+		return false
 	end
 ----------------------------- franchises
 	if inAdr:match('/franchises/') then
@@ -494,7 +590,7 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 -----------------------------
 	m_simpleTV.User.rezka.isVideo = nil
 	m_simpleTV.User.rezka.titleTab = nil
-	local rc, answer = m_simpleTV.Http.Request(session, {url = inAdr:gsub('$rezka.-$','') .. '?app_rules=1'})
+	local rc, answer = m_simpleTV.Http.Request(session, {url = inAdr1 .. '?app_rules=1', headers = 'X-Requested-With: XMLHttpRequest\nCookie: ' .. m_simpleTV.User.rezka.cookies})
 		if rc ~= 200 then
 			showError('4')
 			m_simpleTV.Http.Close(session)
@@ -542,10 +638,6 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 	if kp_id and kp_id ~= '' then
 		voidboost =	get_voidboost(kp_id)
 	end
-	if voidboost then
-		return
-		m_simpleTV.Control.SetNewAddress(voidboost)
-	end
 
 	if m_simpleTV.Control.MainMode == 0 then
 	if tmdb_background == '' then
@@ -561,7 +653,10 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 	end
 	if inAdr:match('%$rezka') then
 		local season, episode = inAdr:match('%&season=(%d+)%&episode=(%d+)')
-		title = title .. ' Сезон ' .. season .. ', Серия ' .. episode
+		if m_simpleTV.User.rezka.tr_id then
+			m_simpleTV.User.rezka.tr = GetNameTr(answer)
+		end
+		title = title .. ' Сезон ' .. season .. ', Серия ' .. episode .. ' - ' .. (m_simpleTV.User.rezka.tr or 'выбор HDRezka')
 		play(inAdr, title, id)
 		return
 	end
@@ -579,10 +674,17 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 				t[i].Id = i
 				t[i].Name = name
 				t[i].Address = Adr
+				if m_simpleTV.User.rezka.tr_id and Adr == m_simpleTV.User.rezka.tr_id then
+					is_translate = 'Yes'
+					tr = Adr
+					m_simpleTV.User.rezka.tr = name
+				end
 				i = i + 1
 			end
 			if i == 1 then return end
-		if i > 2 then
+			m_simpleTV.User.rezka.trTabl = t
+			Check_Translate()
+		if i > 2 and is_translate == 'No' then
 			is_translate = 'Yes'
 			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Info '}
 			if kp_id and kp_id ~= '' then
@@ -590,7 +692,7 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 			elseif imdb_id and imdb_id ~= '' then
 			t.ExtButton1 = {ButtonEnable = true, ButtonName = '🔎 IMDB '}
 			end
-			local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите перевод - ' .. title, 0, t, 5000, 1)
+			local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите озвучку - ' .. title, 0, t, 5000, 1)
 			if ret == 3 then
 			if kp_id and kp_id ~= '' then
 				setConfigVal('info/rezka',inAdr)
@@ -608,7 +710,8 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 			id = id or 1
 			tr = t[id].Address
 			m_simpleTV.User.rezka.tr = t[id].Name
-		else
+			m_simpleTV.User.rezka.tr_id = t[id].Address
+		elseif is_translate == 'No' then
 			tr = t[1].Address
 			m_simpleTV.User.rezka.tr = t[1].Name
 		end
@@ -623,7 +726,7 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 	end
 	local url = m_simpleTV.User.rezka.host .. '/ajax/get_cdn_series/?t=' .. os.time()
 	local body = 'id=' .. id .. '&translator_id=' .. tr .. '&action=get_episodes'
-	local headers = 'X-Requested-With: XMLHttpRequest'
+	local headers = 'X-Requested-With: XMLHttpRequest\nCookie: ' .. m_simpleTV.User.rezka.cookies
 	local rc, answer0 = m_simpleTV.Http.Request(session, {url = url, method = 'post', body = body, headers = headers})
 		if rc ~= 200 then
 			showError('6')
@@ -658,7 +761,7 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 								, tr
 								, season_id
 								, episode_id)
-					t[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
+					t[i].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
 					t[i].InfoPanelTitle = desc_text
 					t[i].InfoPanelName = title
 					t[i].InfoPanelShowTime = 8000
@@ -681,15 +784,15 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 		table.sort(t, function(a, b) return a.Id < b.Id end)
 		m_simpleTV.User.rezka.titleTab = t
 
-			t.ExtButton0 = {ButtonEnable = true, ButtonName = '⚙', ButtonScript = 'Qlty_rezka()'}
+			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_rezka()'}
 			if is_translate == 'Yes' then
-			t.ExtButton1 = {ButtonEnable = true, ButtonName = '🔊', ButtonScript = 'GetTranslate(\'' .. inAdr1 .. '\')'}
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'GetTranslate()'}
 			end
 			if is_translate == 'No' then
 			if kp_id and kp_id ~= '' then
-			t.ExtButton1 = {ButtonEnable = true, ButtonName = '🔎 Кинопоиск ', ButtonScript = 'm_simpleTV.Control.PlayAddress(\'**' .. kp_id .. '\')'}
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔎 Кинопоиск ', ButtonScript = 'm_simpleTV.Control.PlayAddress(\'**' .. kp_id .. '\')'}
 			elseif imdb_id and imdb_id ~= '' then
-			t.ExtButton1 = {ButtonEnable = true, ButtonName = '🔎 IMDB ', ButtonScript = 'm_simpleTV.Control.PlayAddress(\'https://www.imdb.com/title/' .. imdb_id .. '/reference\')'}
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔎 IMDB ', ButtonScript = 'm_simpleTV.Control.PlayAddress(\'https://www.imdb.com/title/' .. imdb_id .. '/reference\')'}
 			else
 			t.ExtButton1 = {ButtonEnable = true, ButtonName = '✕', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
 			end
@@ -707,15 +810,31 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 		end
 		m_simpleTV.OSD.ShowSelect_UTF8(title, 0, t, 10000, 2 + 64 + pl)
 		local retAdr = rezkaGetStream(t[1].Address)
-			if not retAdr then
+			if not retAdr or retAdr:match('"url":false') then
+				if voidboost then
+				m_simpleTV.Control.ExecuteAction(37)
+					return
+					m_simpleTV.Control.SetNewAddress(voidboost)
+				end
 				m_simpleTV.Http.Close(session)
 				showError('7.1')
 				m_simpleTV.Control.CurrentAddress = 'http://wonky.lostcut.net/vids/error_getlink.avi'
 			 return
 			end
+--		debug_in_file(retAdr .. '\n============================\n','c://1/rezka_tr.txt')
 		local subt = rezkaISubt(retAdr)
+		thumb_url = retAdr:match('"thumbnails":"(.-)"')
+		if thumb_url and thumb_url ~= ''
+		then
+			thumb_url = m_simpleTV.User.rezka.host .. thumb_url
+			pars_thumb(thumb_url)
+		end
 		retAdr = rezkaDeSex(retAdr)
 			if not retAdr or retAdr == '' then
+--[[				if voidboost then
+					return
+					m_simpleTV.Control.SetNewAddress(voidboost)
+				end--]]
 				m_simpleTV.Http.Close(session)
 				showError('7.01')
 				m_simpleTV.Control.CurrentAddress = 'http://wonky.lostcut.net/vids/error_getlink.avi'
@@ -776,7 +895,7 @@ local zerkalo = getConfigVal('zerkalo/rezka') or ''
 
 			t.ExtButton0 = {ButtonEnable = true, ButtonName = '⚙', ButtonScript = 'Qlty_rezka()'}
 			if is_translate == 'Yes' then
-			t.ExtButton1 = {ButtonEnable = true, ButtonName = '🔊', ButtonScript = 'GetTranslate(\'' .. inAdr1 .. '\')'}
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = '🔊', ButtonScript = 'GetTranslate()'}
 			end
 			if is_translate == 'No' then
 			if kp_id and kp_id ~= '' then

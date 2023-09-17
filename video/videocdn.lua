@@ -108,7 +108,7 @@ local function title_translate(translate)
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
 		if not session then return end
 		m_simpleTV.Http.SetTimeout(session, 60000)
-		for page = 1,20 do
+		for page = 1,22 do
 			rc, answer = m_simpleTV.Http.Request(session, {url = decode64(url) .. '&page=' .. page .. '&limit=100'})
 			require('json')
 			if not answer then return end
@@ -143,13 +143,13 @@ local function title_translate(translate)
 		for w in answer:gmatch('/.-/\n') do
 			t[i]={}
 			t[i].Id = i
-			t[i].Name = w:match('/.-/(.-)/')
-			t[i].Action = w:match('/(.-)/')
-			t[i].InfoPanelTitle = w:match('/.-/.-/(.-)/')
+			t[i].Name = w:match('^/.-/(.-)/')
+			t[i].Action = w:match('^/(.-)/')
+			t[i].InfoPanelTitle = w:match('^/.-/.-/(.-)/')
 			if tonumber(t[i].Action) == tonumber(translate) then return unescape3(t[i].InfoPanelTitle) end
 			i = i + 1
 		end
-		return 'Озвучка'
+		return 'Озвучка - ' .. translate
 	end
 end
 	local psevdotv
@@ -377,11 +377,15 @@ end
 			if not t then return end
 		local index = m_simpleTV.User.Videocdn.Index
 		if not m_simpleTV.User.Videocdn.isVideo then
-			t.ExtButton0 = {ButtonEnable = true, ButtonName = '💾', ButtonScript = 'SaveVideocdnPlaylist()'}
+			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' 💾 ', ButtonScript = 'SaveVideocdnPlaylist()'}
 		end
-			t.ExtButton1 = {ButtonEnable = true, ButtonName = '✕', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
+		if m_simpleTV.User.Videocdn.TranslateTable then
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 Озвучка VideoCDN ', ButtonScript = 'Tr_all()'}
+		else
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' ✕ ', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
+		end
 		if #t > 0 then
-			local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('⚙ Качество', index - 1, t, 10000, 1 + 4 + 2)
+			local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('⚙ Качество VideoCDN', index - 1, t, 10000, 1 + 4 + 2)
 			if ret == 1 then
 				m_simpleTV.User.Videocdn.Index = id
 				m_simpleTV.Control.SetNewAddress(t[id].Address, m_simpleTV.Control.GetPosition())
@@ -390,6 +394,13 @@ end
 			end
 			if ret == 2 then
 				SaveVideocdnPlaylist()
+			end
+			if ret == 3 then
+				if m_simpleTV.User.Videocdn.TranslateTable then
+					Tr_all()
+				else
+					m_simpleTV.Control.ExecuteAction(37)
+				end
 			end
 		end
 	end
@@ -409,7 +420,10 @@ end
 	t[i].Name = t1[i].Name
 	end
 	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ Качество ', ButtonScript = 'Qlty_Videocdn()'}
-		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('Озвучка', tonumber(current_id)-1, t, 5000, 1 + 4 + 2)
+	if m_simpleTV.User.Videocdn.translate then
+		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 VideoCDN озвучки ', ButtonScript = 'type_cdntr(\'&translation=' .. m_simpleTV.User.Videocdn.translate .. '\')'}
+	end
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('🔊 Озвучка VideoCDN', tonumber(current_id)-1, t, 5000, 1 + 4 + 2)
 		if ret == -1 or not id then
 			return
 		end
@@ -418,6 +432,9 @@ end
 		end
 		if ret == 2 then
 			Qlty_Videocdn()
+		end
+		if ret == 3 then
+			type_cdntr('&translation=' .. m_simpleTV.User.Videocdn.translate)
 		end
 	end
 	m_simpleTV.User.Videocdn.isVideo = false
@@ -448,6 +465,7 @@ end
 	local tv_series = answer:match('value="tv_series"') or answer:match('value="show_tv_series"') or answer:match('value="anime_tv_series"')
 	local transl
 	local tr = answer:match('<div class="translations".-</div>')
+	debug_in_file((tr or 'NOT') .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answertr.txt')
 	if tr then
 		tr = tr:gsub('<template class="__cf_email__" data%-cfemail="%x+">%[email.-%]</template>', 'MUZOBOZ@')
 				local t = {}
@@ -490,6 +508,11 @@ end
 	translate = transl
 	m_simpleTV.User.Videocdn.translate = translate
 	m_simpleTV.User.Videocdn.title_translate = title_translate(translate):gsub('%) %(',', '):gsub('%)',''):gsub('%(',''):gsub('Профессиональный','Проф.'):gsub('Любительский','Люб.'):gsub('Авторский','Авт.'):gsub(' закадровый','')
+	if m_simpleTV.User.Videocdn.title_translate:match('Озвучка %-') then
+		m_simpleTV.User.Videocdn.title_translate = answer:match('<option value="' .. m_simpleTV.User.Videocdn.translate .. '" >(.-)</option>')
+		or 'Озвучка'
+	end
+	m_simpleTV.User.Videocdn.title_translate = m_simpleTV.User.Videocdn.title_translate:gsub('<template.-template>', 'неизвестно'):gsub('&amp;', '&'):gsub('\n		               	','')
 	local answer = answer:match('id="files" value=\'(.-)\'')
 		if not answer then return end
 --	debug_in_file(answer .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer.txt')
@@ -530,6 +553,9 @@ end
 					season_title = ' ' .. s[1].Name
 				end
 			end
+			if not tab[1].folder[1].file then
+			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="https://www.videocdn.tv/favicon.png"', text = 'VideoCDN: озвучка недоступна', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
+			return Tr_all() end
 				while true do
 						if not tab[seson].folder[i] then break end
 					t[i] = {}
@@ -579,10 +605,12 @@ end
 		m_simpleTV.User.Videocdn.Tabletitle = t
 			if m_simpleTV.User.Videocdn.TranslateTable and translate then
 				t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'Tr_all()'}
-				else
+			elseif m_simpleTV.User.Videocdn.translate then
+				t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 VideoCDN озвучки ', ButtonScript = 'type_cdntr(\'&translation=' .. m_simpleTV.User.Videocdn.translate .. '\')'}
+			else
 				t.ExtButton1 = {ButtonEnable = true, ButtonName = ' ✕ ', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
-				end
-			t.ExtButton0 = {ButtonEnable = true, ButtonName = '⚙', ButtonScript = 'Qlty_Videocdn()'}
+			end
+			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_Videocdn()'}
 			t.ExtParams = {FilterType = 2, StopOnError = 1, StopAfterPlay = 1, PlayMode = 0}
 		local p = 0
 		if i == 2 then
@@ -619,9 +647,11 @@ end
 		end
 		if not psevdotv then
 				if m_simpleTV.User.Videocdn.TranslateTable and translate then
-				t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'Tr_all()'}
+					t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'Tr_all()'}
+				elseif m_simpleTV.User.Videocdn.translate then
+					t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 VideoCDN озвучки ', ButtonScript = 'type_cdntr(\'&translation=' .. m_simpleTV.User.Videocdn.translate .. '\')'}
 				else
-				t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' ✕ ', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
+					t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' ✕ ', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
 				end
 				t1.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_Videocdn()'}
 				m_simpleTV.OSD.ShowSelect_UTF8('Videocdn', 0, t1, 5000, 32 + 64 + 128)

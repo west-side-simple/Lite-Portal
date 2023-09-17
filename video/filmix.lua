@@ -1,6 +1,6 @@
--- видеоскрипт для сайта https://filmix.ac (23/07/22)
+-- видеоскрипт для сайта https://filmix.ac (14/08/23)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- west_side mod for lite (21/04/23)
+-- west_side mod for lite (14/08/23)
 -- ## авторизация ##
 -- логин, пароль установить в 'Password Manager', для id - filmix
 -- ## необходим ##
@@ -22,6 +22,7 @@ local zer = m_simpleTV.Config.GetValue('zerkalo/filmix', 'LiteConf.ini') or ''
 		then
 		 return
 		end
+m_simpleTV.Control.ExecuteAction(37)
 local tooltip_body
 if m_simpleTV.Config.GetValue('mainOsd/showEpgInfoAsWindow', 'simpleTVConfig') then tooltip_body = ''
 else tooltip_body = 'bgcolor="#182633"'
@@ -33,22 +34,32 @@ end
 local function setConfigVal(key,val)
 	m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
 end
+
 	require 'playerjs'
 	require 'lfs'
 	require 'json'
 	local inAdr = m_simpleTV.Control.CurrentAddress
 	m_simpleTV.OSD.ShowMessageT({text = '', showTime = 1000, id = 'channelName'})
-	local logo = 'http://m24.do.am/images/logoport.png'
+--[[	local logo = 'http://m24.do.am/images/logoport.png'
 
 	if inAdr:match('^%$filmixnet') then
 		m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = '', TypeBackColor = 0, UseLogo = 0, Once = 1})
 	elseif not inAdr:match('&kinopoisk') then
 		m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = logo, TypeBackColor = 0, UseLogo = 1, Once = 1})
-	end
+	end--]]
 	if zer ~= '' then
 		inAdr = inAdr:gsub('https?://filmix%..-/', zer .. '/')
 	end
-
+	if not m_simpleTV.User then
+		m_simpleTV.User = {}
+	end
+	if not m_simpleTV.User.filmix then
+		m_simpleTV.User.filmix = {}
+	end
+	if not inAdr:match('^%$filmixnet') then
+		m_simpleTV.User.filmix.CurAddress = inAdr
+	end
+	m_simpleTV.User.westSide.PortalTable = true
 	local function showError(str)
 		m_simpleTV.OSD.ShowMessageT({text = 'filmix ошибка: ' .. str, showTime = 1000 * 5, color = 0xffff6600, id = 'channelName'})
 	end
@@ -85,7 +96,7 @@ end
 			local title, year = answer:match('<h1>Скачать бесплатно (.-)%, (%d+)<')
 			title = title:gsub('<span class="title">','')
 			if not year then year = 0 end
-			local videodesc, background = info_fox(title,year,'')
+--			local videodesc, background = info_fox(title,year,'')
 
 			if m_simpleTV.Control.MainMode == 0 then
 				m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = background or logo, TypeBackColor = 0, UseLogo = 3, Once = 1})
@@ -137,13 +148,7 @@ end
 			m_simpleTV.Control.SetTitle(title)
 		 return
 		end
-	if not m_simpleTV.User then
-		m_simpleTV.User = {}
-	end
-	if not m_simpleTV.User.filmix then
-		m_simpleTV.User.filmix = {}
-	end
-	m_simpleTV.User.filmix.CurAddress = inAdr
+
 	local current_np = getConfigVal('perevod/filmix') or ''
 	local title
 	if m_simpleTV.User.filmix.Tabletitle then
@@ -278,7 +283,9 @@ end
 		if Adr:match('/download/') then
 			m_simpleTV.Control.PlayAddress(Adr)
 		end
-		local retAdr = GetQualityFromAddress(Adr:gsub('^%$filmixnet', ''))
+		local adr_serial = Adr:match('&filmix=(.-)&')
+		if m_simpleTV.User.filmix.CurAddress == nil and adr_serial then  m_simpleTV.User.filmix.CurAddress = adr_serial m_simpleTV.User.westSide.PortalTable = true end
+		local retAdr = GetQualityFromAddress(Adr:gsub('^%$filmixnet', ''):gsub('&filmix=.-$', ''))
 			if not retAdr then
 				showError('4, не доступно')
 				m_simpleTV.Control.CurrentAddress = 'http://wonky.lostcut.net/vids/error_getlink.avi'
@@ -300,7 +307,7 @@ end
 		else
 			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Filmix ', ButtonScript = 'run_lite_qt_filmix()'}
 		end
-		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🧾 Теги ', ButtonScript = 'similar_filmix()'}
+		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_filmix()'}
 		if #t > 0 then
 			local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('⚙ Качество', index - 1, t, 5000, 1 + 4 + 2)
 			if ret == 1 then
@@ -318,33 +325,7 @@ end
 			end
 			end
 			if ret == 3 then
-				similar_filmix()
-			end
-		end
-	end
-	function similar_filmix()
-	local t = m_simpleTV.User.filmix.TabSimilar
-		if not t then return end
-		if #t > 0 then
-			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_filmix()'}
-			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Quality_filmix()'}
-			local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('🧾 Теги', 0, t, 5000, 1 + 4 + 8 + 2)
-			if ret == 1 then
-				if t[id].Name:match('Жанр: ') then
-				ganres_content_filmix(t[id].Address)
-				elseif t[id].Name:match('В ролях: ') or t[id].Name:match('Режиссер: ') then
-				person_content_filmix(t[id].Address)
-				elseif t[id].Name:match('Подборка: ') then
-				collection_filmix_url(t[id].Address)
-				else
-				m_simpleTV.Control.PlayAddress(t[id].Address)
-				end
-			end
-			if ret == 2 then
 				perevod_filmix()
-			end
-			if ret == 3 then
-				Quality_filmix()
 			end
 		end
 	end
@@ -358,10 +339,22 @@ end
 		i = i + 1
 		end
 			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Quality_filmix()'}
+		if not m_simpleTV.User.filmix.isVideo then
+			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' 💾 Выгрузка ', ButtonScript = 'SavefilmixPlaylist()'}
+		else
+			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Filmix ', ButtonScript = 'run_lite_qt_filmix()'}
+		end
 			local ret, id = m_simpleTV.OSD.ShowSelect_UTF8(' 🔊 Перевод ', current_p - 1, t, 5000, 1 + 4 + 8 + 2)
 			if ret == 1 then
 			setConfigVal('perevod/filmix', t[id].Name)
 			m_simpleTV.Control.SetNewAddress(m_simpleTV.User.filmix.CurAddress, m_simpleTV.Control.GetPosition())
+			end
+			if ret == 2 then
+			if not m_simpleTV.User.filmix.isVideo then
+				SavefilmixPlaylist()
+			else
+				run_lite_qt_filmix()
+			end
 			end
 			if ret == 3 then
 				Quality_filmix()
@@ -389,25 +382,14 @@ end
 		end
 
 			local rc, answer = m_simpleTV.Http.Request(session, {body = 'login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login=submit', url = host, method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. host})
-
+			if not m_simpleTV.User.filmix.cookies then
+				m_simpleTV.User.filmix.cookies = m_simpleTV.Http.GetCookies(session,host)
+			end
+--			debug_in_file(m_simpleTV.User.filmix.cookies .. '\n','c://1/filmix.txt')
 ---------------
 		rc,answer = m_simpleTV.Http.Request(session,{url=inAdr})
 		if rc ~= 200 then
-		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/0.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/1.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/2.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/3.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/4.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/5.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		m_simpleTV.Common.Sleep(5000)
-		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/icons/time/6.png"', text = ' ... one moment please', color = ARGB(255, 255, 255, 255), showTime = 1000 * 5})
-		rc, answer = m_simpleTV.Http.Request(session, {body = 'login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login=submit', url = url1, method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. host})
-		rc,answer = m_simpleTV.Http.Request(session,{url=inAdr})
+			return
 		end
 
 	answer = m_simpleTV.Common.multiByteToUTF8(answer)
@@ -419,7 +401,7 @@ end
 	overview = overview:gsub('<.->','')
 	local year = answer:match('<a itemprop="copyrightYear".->(.-)</a>') or 0
 	local poster = answer:match('"og:image" content="([^"]+)') or logo
-	local videodesc = info_fox(title, year, poster)
+--	local videodesc = info_fox(title, year, poster)
 	local background = answer:match('<ul class="frames%-list">(.-)</ul>')
 	if background then background = background:match('"(.-)"') end
 	if background then background = host .. background:gsub('^/','') end
@@ -430,76 +412,6 @@ end
 	title = title .. ' (' .. year .. ')'
 	m_simpleTV.User.filmix.title = title
 	m_simpleTV.Control.SetTitle(title)
---------------
-	local j,ts = 1,{}
---------------TabGanres
-	local answer_g = answer:match('<span class="label">Жанр:.-</div>') or ''
-	for ws in answer_g:gmatch('<a.-</a>') do
-	local adr,name = ws:match('href="(.-)">(.-)</a>')
-	if not adr or not name then break end
-	ts[j] = {}
-	ts[j].Id = j
-	ts[j].Name = 'Жанр: ' .. name
-	ts[j].Address = adr
-	j=j+1
-	end
---------------TabPerson
-	local answer_g = answer:match('<span class="label">Режиссер:.-</div>') or ''
-	for ws in answer_g:gmatch('<a.-</a>') do
-	local adr,name = ws:match('href ="(.-)".-"name">(.-)<')
-	if not adr or not name then break end
-	ts[j] = {}
-	ts[j].Id = j
-	ts[j].Name = 'Режиссер: ' .. name:gsub('^.+%s%s','')
-	ts[j].Address = adr
-	j=j+1
-	end
-	local answer_g = answer:match('<span class="label">В ролях:.-</div>') or ''
-	for ws in answer_g:gmatch('<a.-</a>') do
-	local adr,name = ws:match('href ="(.-)".-"name">(.-)<')
-	if not adr or not name then break end
-	ts[j] = {}
-	ts[j].Id = j
-	ts[j].Name = 'В ролях: ' .. name
-	ts[j].Address = adr
-	j=j+1
-	end
---------------TabCollection
-	local answer_g = answer:match('<span class="label">В подборках:.-</div>') or ''
-	for ws in answer_g:gmatch('<a.-</a>') do
-	local adr,name = ws:match('href="(.-)".-title="(.-)"')
-	if not adr or not name then break end
-	ts[j] = {}
-	ts[j].Id = j
-	ts[j].Name = 'Подборка: ' .. name
-	ts[j].Address = adr
-	j=j+1
-	end
--------------TabSimilar
-	for ws in answer:gmatch('<li class="slider%-item">.-</li>') do
-	local adr,logo,name = ws:match('href="(.-)".-src="(.-)".-title="(.-)"')
-	if not adr or not name then break end
-	local year = adr:match('(%d%d%d%d)%.html$')
-	if year then year = ', ' .. year else year = '' end
-	ts[j] = {}
-	ts[j].Id = j
-	ts[j].Name = 'Похожий контент: ' .. name:gsub('%&nbsp%;',' ') .. year
-	ts[j].Address = adr
-	ts[j].InfoPanelLogo = logo
-	ts[j].InfoPanelName = 'Filmix медиаконтент: ' .. name:gsub('%&nbsp%;',' ') .. year
-	j=j+1
-	end
--------------TabTorrent
-	local tor = answer:match('href="(' .. host .. 'download/%d+)">')
-	if tor then
-	ts[j] = {}
-	ts[j].Id = j
-	ts[j].Name = 'Filmix torrent'
-	ts[j].Address = tor .. '&' .. inAdr
-	end
-	m_simpleTV.User.filmix.TabSimilar = ts
-	m_simpleTV.User.westSide.PortalTable = m_simpleTV.User.filmix.TabSimilar
---------------
 
 	local playerjs_url = answer:match('(modules/playerjs/[^\'"]+)')
 		if not playerjs_url then
@@ -531,9 +443,9 @@ end
 		t1[1].InfoPanelShowTime = 20000
 		t1[1].InfoPanelLogo = poster
 		t1[1].InfoPanelTitle = overview
-		t1[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc:gsub('<a.-trailer%.png.->','') .. '</body></html>'
+--		t1[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc:gsub('<a.-trailer%.png.->','') .. '</body></html>'
 		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'Видео недоступно', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
-		similar_filmix()
+		similar_filmix(m_simpleTV.User.filmix.CurAddress)
 		else
 	local t, i, current_p = {}, 1
 	local name, Adr, current_p
@@ -640,14 +552,14 @@ end
 					if t[i].Name == ' ' then
 						t[i].Name = '0 серия'
 					end
-					t[i].Address = '$filmixnet' .. tab[sesnom].folder[i].file
+					t[i].Address = '$filmixnet' .. tab[sesnom].folder[i].file .. '&filmix=' .. m_simpleTV.User.filmix.CurAddress .. '&s' .. sesnom .. '&e' .. i
 					t[i].InfoPanelName = title
 					t[i].InfoPanelShowTime = 20000
 					t[i].InfoPanelLogo = poster
 					t[i].InfoPanelTitle = overview
-					if videodesc ~= '' then
+--[[					if videodesc ~= '' then
 					t[i].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc:gsub('<a.-trailer%.png.->','') .. '</body></html>'
-					end
+					end--]]
 					i = i + 1
 				end
 				if i == 1 then
@@ -660,14 +572,14 @@ end
 					t[i] = {}
 					t[i].Id = i
 					t[i].Name = tab[i].title
-					t[i].Address = '$filmixnet' .. tab[i].file
+					t[i].Address = '$filmixnet' .. tab[i].file .. '&filmix=' .. m_simpleTV.User.filmix.CurAddress .. '&e' .. i
 					t[i].InfoPanelName = title
 					t[i].InfoPanelShowTime = 20000
 					t[i].InfoPanelLogo = poster
 					t[i].InfoPanelTitle = overview
-					if videodesc ~= '' then
+--[[					if videodesc ~= '' then
 					t[i].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc:gsub('<a.-trailer%.png.->','') .. '</body></html>'
-					end
+					end--]]
 					i = i + 1
 				end
 				if i == 1 then
@@ -677,7 +589,7 @@ end
 		end
 		m_simpleTV.User.filmix.Tabletitle = t
 		t.ExtButton0 = {ButtonEnable = true, ButtonName = '⚙', ButtonScript = 'Quality_filmix()'}
-		t.ExtButton1 = {ButtonEnable = true, ButtonName = '✕', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
+		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_filmix()'}
 		local pl = 0
 		if i == 2 then
 			pl = 32
@@ -707,13 +619,15 @@ end
 		t1[1].InfoPanelShowTime = 20000
 		t1[1].InfoPanelLogo = poster
 		t1[1].InfoPanelTitle = overview
-		if videodesc ~= '' then
+--[[		if videodesc ~= '' then
 		t1[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc:gsub('<a.-trailer%.png.->','') .. '</body></html>'
-		end
+		end--]]
 		t1.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Quality_filmix()'}
-		t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🧾 Теги ', ButtonScript = 'similar_filmix()'}
+		t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_filmix()'}
 		m_simpleTV.OSD.ShowSelect_UTF8('Filmix', 0, t1, 5000, 32 + 64 + 128)
 		m_simpleTV.User.filmix.isVideo = true
 	end
 	end
+	rc, answer = m_simpleTV.Http.Request(session, {body = url, url = 'https://filmix.ac/api/notifications/get', method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. url .. '\nCookie:' .. m_simpleTV.User.filmix.cookies })
+	m_simpleTV.Http.Close(session)
 	play(inAdr, title)

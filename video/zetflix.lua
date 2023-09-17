@@ -189,6 +189,14 @@
 				t[i].qlty = tonumber(qlty:match('%d+'))
 				i = i + 1
 			end
+			for qlty, adr in urls:gmatch('%[(.-)%](http.-%.m3u8)') do
+			if not qlty:match('%d+') then break end
+				t[i] = {}
+				t[i].Address = adr
+				t[i].Name = qlty
+				t[i].qlty = tonumber(qlty:match('%d+'))
+				i = i + 1
+			end
 			if i == 1 then return end
 		table.sort(t, function(a, b) return a.qlty < b.qlty end)
 			for i = 1, #t do
@@ -225,9 +233,11 @@
 		local t = m_simpleTV.User.ZF.Tab
 			if not t then return end
 		local index = ZFIndex(t)
-			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Кинопоиск ', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
-			t.ExtButton1 = {ButtonEnable = true, ButtonName = '✕', ButtonScript = 'm_simpleTV.Control.ExecuteAction(37)'}
-		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('⚙ Качество', index - 1, t, 5000, 1 + 4 + 2)
+			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Кинопоиск ', ButtonScript = ''}
+			if getConfigVal('perevod/zf') ~= '' then
+				t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_ZF()'}
+			end
+		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('⚙ Качество', index - 1, t, 5000, 1 + 4 + 8 + 2)
 		if m_simpleTV.User.ZF.isVideo == false then
 			if m_simpleTV.User.ZF.DelayedAddress then
 				m_simpleTV.Control.ExecuteAction(108)
@@ -244,6 +254,9 @@
 		if ret == 2 then
 			m_simpleTV.Control.SetNewAddress('**' .. m_simpleTV.User.ZF.kpid, m_simpleTV.Control.GetPosition())
 		end
+		if ret == 3 then
+			perevod_ZF()
+		end		
 	end
 	m_simpleTV.User.ZF.titleTab = nil
 	m_simpleTV.User.ZF.isVideo = nil
