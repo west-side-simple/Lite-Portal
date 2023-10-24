@@ -1,5 +1,5 @@
--- Плагин поиска для lite portal - west_side 14.08.23
--- необходимы скрипты Lite_qt_exfs.lua, ex-fs.lua, Lite_qt_tmdb.lua, Lite_qt_kinopub.lua, Lite_qt_filmix.lua - автор west_side
+-- Плагин поиска для lite portal - west_side 23.10.23
+-- необходимы скрипты Lite_qt_exfs.lua, Lite_qt_tmdb.lua, Lite_qt_kinopub.lua, Lite_qt_filmix.lua, Lite_qt_trackers.lua, tv_start.lua - автор west_side
 
 function search()
 
@@ -119,6 +119,7 @@ m_simpleTV.Control.ExecuteAction(37)
 	{'KinoKong',''},
 	{'UA',''},
 	{'Kinopub',''},
+	{'PortalTV',''},
 	{'YouTube',''},
 --	{'VideoCDN',''},
 	}
@@ -147,6 +148,13 @@ m_simpleTV.Control.ExecuteAction(37)
   elseif t1[id].Name == 'UA' then search_ua()
   elseif t1[id].Name == 'Kinopub' then show_select('https://kino.pub/item/search?query=' .. search_ini:gsub('%%28.-%%29',''))
   elseif t1[id].Name == 'YouTube' then search_youtube()
+  elseif t1[id].Name == 'PortalTV' then
+  if m_simpleTV.User.TVPortal.Use == 0 then
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1" src="' .. m_simpleTV.MainScriptDir .. 'user/portaltvWS/img/portaltv.png"', text = ' Аддон отключен.\n Включить можно в настройках.', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
+		return search_all()
+	else
+		SelectTVPortal_search()
+	end
 --  elseif t1[id].Name == 'VideoCDN' then m_simpleTV.Control.PlayAddress('*' .. m_simpleTV.Common.UTF8ToMultiByte(m_simpleTV.Common.fromPercentEncoding(search_ini)))
   end
   end
@@ -192,7 +200,7 @@ function search_media()
 	end
 
 	for w in answerd3:gmatch('<div class="SeaRchresultPost">.-<div class="clear"></div>') do
-	local group
+	local group = ''
 	local logo, adr, name, title, infodesc_exfs = w:match('<img src="(.-)".-href="(.-)" >(.-)</a>.-<div class="SeaRchresultPostInfo">(.-)</div>.-<div class="SeaRchresultPostOpisanie">(.-)</div>')
 	logo = logo:gsub('/thumbs%.php%?src=',''):gsub('%&.-$','')
 	infodesc_exfs = infodesc_exfs:gsub('<div.->',''):gsub('&nbsp;',' ')
@@ -200,10 +208,10 @@ function search_media()
 	title = ' (' .. title .. ')'
 	if not logo or not adr or not name then break end
 
-	if adr:match('/films/') then group = ' - Фильм' end
-	if adr:match('/series/') then group = ' - Сериал' end
-	if adr:match('/cartoon/') then group = ' - Мультфильм' end
-	if adr:match('/show/') then group = ' - Передачи и шоу' end
+	if adr:match('/film/') then group = ' - Фильм' end
+	if adr:match('/serial/') then group = ' - Сериал' end
+	if adr:match('/multfilm/') then group = ' - Мультфильм' end
+	if adr:match('/tv%-show/') then group = ' - Передачи и шоу' end
 	if adr:match('/actors/') then group = ' - Актёр' title = '' end
 	t[i] = {}
 	t[i].Id = i
@@ -563,7 +571,7 @@ function search_filmix_media()
 							t[i].InfoPanelShowTime = 30000
 					i = i + 1
 					end
-	rc, answer = m_simpleTV.Http.Request(session, {body = filmixurl, url = 'https://filmix.ac/api/notifications/get', method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. filmixurl .. '\nCookie:' .. m_simpleTV.User.filmix.cookies })					
+	rc, answer = m_simpleTV.Http.Request(session, {body = filmixurl, url = 'https://filmix.ac/api/notifications/get', method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. filmixurl .. '\nCookie:' .. m_simpleTV.User.filmix.cookies })
 ------------------------
 	local AutoNumberFormat, FilterType
 			if #t > 4 then

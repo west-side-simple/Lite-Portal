@@ -1,4 +1,4 @@
---EX-FS portal - lite version west_side 23.02.22
+--EX-FS portal - lite version west_side 23.10.22
 
 function run_lite_qt_exfs()
 
@@ -16,10 +16,10 @@ end
 		{"",". . ."},
 		{"https://ex-fs.net/actors/","Актёры"},
 		{"",". . ."},
-		{"/films/","Фильмы"},
-		{"/series/","Сериалы"},
-		{"/cartoon/","Мультфильмы"},
-		{"/show/","Передачи и шоу"},
+		{"/film/","Фильмы"},
+		{"/serial/","Сериалы"},
+		{"/multfilm/","Мультфильмы"},
+		{"/tv-show/","Передачи и шоу"},
 		{"",". . . По странам"},
 		{"/country/" .. m_simpleTV.Common.toPercentEncoding('Россия') .. "/","Российские"},
 		{"/country/" .. m_simpleTV.Common.toPercentEncoding('Индия') .. "/","Индийские"},
@@ -172,10 +172,10 @@ end
 --				t[i].Name = name:gsub(' /.+', '') .. title1
 				t[i].Address = adr
 				if not inAdr:match('/films/') and not inAdr:match('/series/') and not inAdr:match('/cartoon/') and not inAdr:match('/show/') then
-				if adr:match('/films/') then group = ' - Фильм' end
-				if adr:match('/series/') then group = ' - Сериал' end
-				if adr:match('/cartoon/') then group = ' - Мультфильм' end
-				if adr:match('/show/') then group = ' - Передачи и шоу' end
+				if adr:match('/film/') then group = ' - Фильм' end
+				if adr:match('/serial/') then group = ' - Сериал' end
+				if adr:match('/multfilm/') then group = ' - Мультфильм' end
+				if adr:match('/tv%-show/') then group = ' - Передачи и шоу' end
 				end
 				t[i].Name = name:gsub(' /.+', '') .. title1 .. group
 				t[i].InfoPanelLogo = logo:gsub('/thumbs%.php%?src=',''):gsub('%&.-$','')
@@ -289,7 +289,7 @@ end
 	answer = answer:gsub('\n', ' ')
 	local desc = answer:match('<meta name="description" content="(.-)"') or ''
 	local poster = answer:match('<div class="FullstoryForm">.-<img src="(.-)"') or ''
-	poster = 'https://ex-fs.net' .. poster:gsub('https://ex%-fs%.net','')	
+	poster = 'https://ex-fs.net' .. poster:gsub('https://ex%-fs%.net','')
 	local title_rus = answer:match('<h1 class="view%-caption">(.-)</h1>') or ''
 	local title_eng = answer:match('<h2 class="view%-caption2">(.-)</h2>') or ''
 	local kpr = answer:match('<div class="in_name_kp">(.-)</div>') or ''
