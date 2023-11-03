@@ -1,4 +1,4 @@
--- видеоскрипт для сайта https://ex-fs.net (04/08/22) - автор west_side
+-- видеоскрипт для сайта https://ex-fs.net (01/09/23) - автор west_side
 -- открывает подобные ссылки:
 -- https://ex-fs.net/cartoon/105216-boss-molokosos-2.html
 -- необходимы скрипты poisk_kinopoisk.lua, kinopoisk.lua - автор nexterr
@@ -47,7 +47,7 @@ end
 	local rc, answer = m_simpleTV.Http.Request(session, {url = inAdr, headers = 'Cookie: ' .. cookies})
 	m_simpleTV.Http.Close(session)
 		if rc ~= 200 then return end
-	local retAdr = answer:match('data%-kinopoisk="(%d+)"')
+	local retAdr = answer:match('data%-kinopoisk="(%d+)"') or answer:match('/kp/(%d+)') or answer:match('kp_id=(%d+)')
 	local title = answer:match('<title>(.-)</title>') or 'ex-fs'
 	local logo = answer:match('<img src="(/uploads/.-)">') or '/templates/ex-fs/images/favicon.ico'
 	logo = 'https://ex-fs.net' .. logo
