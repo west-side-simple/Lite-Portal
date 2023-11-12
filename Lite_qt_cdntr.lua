@@ -1,4 +1,4 @@
---videocdn translations portal - lite version west_side 17.05.2023
+--videocdn translations portal - lite version west_side 14.10.2023
 --author west_side
 
 local function title_translate(translate)
@@ -13,7 +13,7 @@ local function title_translate(translate)
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
 		if not session then return end
 		m_simpleTV.Http.SetTimeout(session, 60000)
-		for page = 1,22 do
+		for page = 1,23 do
 			rc, answer = m_simpleTV.Http.Request(session, {url = decode64(url) .. '&page=' .. page .. '&limit=100'})
 			require('json')
 			if not answer then return end

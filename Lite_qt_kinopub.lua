@@ -1,4 +1,4 @@
---Kinopub portal - lite version west_side 21.06.23
+--Kinopub portal - lite version west_side 14.10.23
 function run_lite_qt_kinopub()
 
 	local tt = {

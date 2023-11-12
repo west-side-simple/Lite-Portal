@@ -1,4 +1,4 @@
---TMDb portal - lite version west_side 31.01.23
+--TMDb portal - lite version west_side 14.10.23
 
 local function findrutor(name, id)
 	local session2 = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.89 Safari/537.36', proxy, true)

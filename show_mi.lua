@@ -1,4 +1,4 @@
--- show mediainfo westSide (07.05.22)
+-- show mediainfo westSide (11.11.23)
 function show_mediainfo(channelId)
  if channelId==-1 then return end
 
@@ -138,11 +138,12 @@ function show_mediainfo(channelId)
   str1 = str1 .. '</td></tr></table></body></html>'
 
  -- парсер названия
- t[1].Name = t[1].Name:gsub('BTV X%-Files HD', 'The X-Files 1993'):gsub('BTV  Ивановы%-Ивановы HD', 'Ивановы-Ивановы 2017'):gsub('BTV Игра престолов HD', 'Игра престолов 2011'):gsub('BTV Мистер Бин HD', 'Мистер Бин 1990'):gsub(' %- Украинский', ''):gsub(' %(Color%)', '')
+ t[1].Name = t[1].Name:gsub('BTV X%-Files HD', 'The X-Files 1993'):gsub('BTV  Ивановы%-Ивановы HD', 'Ивановы-Ивановы 2017'):gsub('BTV Игра престолов HD', 'Игра престолов 2011'):gsub('BTV Мистер Бин HD', 'Мистер Бин 1990'):gsub(' %- Украинский', ''):gsub(' %(Color%)', ''):gsub('пьесса','пьеса')
  local title_rus = t[1].Name:gsub(' /.-$', ''):gsub('%(4K%)', ''):gsub(' %(мини%-сериал%)', ''):gsub('%(%+18%)', ''):gsub('%(Special%)', ''):gsub(' %- ', ' – '):gsub(' %(.-%d+%)$', ''):gsub(' %d+$', ''):gsub('%(color%)', '')
- local year = t[1].Name:match('%(.-(%d+)%)$') or t[1].Name:match(' (%d+)$')
+ local year = t[1].Name:match('%(.-(%d+)%)$') or t[1].Name:match(' (%d+)$') or 0
+ t[1].Name = t[1].Name:gsub(' %(.-$', '')
  local title_orig = t[1].Name:gsub('^.-/ ', ''):gsub('%(4K%)', ''):gsub('%(4%)', ''):gsub(' %(мини%-сериал%)', ''):gsub('%(%+18%)', ''):gsub('%(Special%)', ''):gsub(' %- ', ' – '):gsub('%(.-%d+%)$', ''):gsub(' %d+$', ''):gsub('%(color%)', '') or title_rus
- if title_orig and year then
+ if title_orig and year and not epgTitle then
  if title_orig:match('The Witcher') then title_orig = 'Ведьмак' year = 2019 end
  if title_orig == 'Bob Dylan at the Newport Folk Festival' then title_orig = 'Bob Dylan: The Other Side of the Mirror - Live at the Newport Folk Festival' year = 2007 end
  if title_orig:match('Холодное лето') then year = 1988 end
@@ -189,10 +190,11 @@ function show_mediainfo(channelId)
  if title_orig:match('Бриллиантовая рука') then year = 1969 end
  if title_orig:match('Федорино горе') then year = 1973 end
  if title_rus:match('Майами') and title_orig == 'New in Town' then year = 2009 end
+ if title_orig:match('Неоконченная пьеса') then	year = 1977 end
  title_orig = title_orig:gsub('%: %d+ серия$', ''):gsub(' %d+ серия$', ''):gsub(' chapter %d+$', ''):gsub('Сокровища Агри', 'Сокровища Агры'):gsub('20%-й Век начинается', 'Двадцатый век начинается')
  str2,background = info_fox(title_orig,year,logo)
 
-    if m_simpleTV.Control.MainMode == 0 then
+    if m_simpleTV.Control.MainMode == 0 and not backgroundepg then
 		m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = background or logo, TypeBackColor = 0, UseLogo = 3, Once = 1})
 	end
 
@@ -200,7 +202,7 @@ function show_mediainfo(channelId)
  if not str2 or str2 == '' then
  str = str1
  else
- str2 = '<html><body bgcolor="#182633">' .. info_fox(title_orig:gsub(' $', ''),year,logo) .. '</body></html>'
+ str2 = '<html><body bgcolor="#182633">' .. str2 .. '</body></html>'
  str = str2
  end
 --  debug_in_file(str)

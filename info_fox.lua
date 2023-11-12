@@ -1,4 +1,4 @@
--- видеоскрипт для получения информации медиа по названию и году (17/02/23) - автор west_side
+-- видеоскрипт для получения информации медиа по названию и году (06/11/23) - автор west_side
 function info_fox(title,year,logo)
 local userAgent = "Mozilla/5.0 (Windows NT 10.0; rv:85.0) Gecko/20100101 Firefox/85.0"
 local session =  m_simpleTV.Http.New(userAgent)
@@ -102,7 +102,7 @@ answerd2 = answerd2:gsub('(%[%])', '"nil"')
 local tab = json.decode(answerd2)
 	if not tab or not tab.results[1]
 	then
-	background, poster, overview, rating, count, ru_name, orig_name, promo, genre, country, slogan, tmid = '', '', '', '', '', '', '', '', '', '', '', ''
+	background, poster, overview, rating, count, ru_name, orig_name, promo, genre, country, slogan, tmid, year_tmdb = '', '', '', '', '', '', '', '', '', '', '', '', ''
 	else
 	if tab.results[1].poster_path and tab.results[1].poster_path ~= 'null' then
 	poster = tab.results[1].poster_path
@@ -113,7 +113,7 @@ local tab = json.decode(answerd2)
 	then
 	background = tab.results[1].backdrop_path
 	background = 'http://image.tmdb.org/t/p/original' .. background
-	else background = logo
+	else background = poster
 	end
 
 	overview = tab.results[1].overview
@@ -121,7 +121,11 @@ local tab = json.decode(answerd2)
 	count = tab.results[1].vote_count
 	ru_name = tab.results[1].name
 	orig_name = tab.results[1].original_name
-	tmid = tab.results[1].id
+	tmid = tab.results[1].id	
+	year_tmdb = tab.results[1].first_air_date or ''
+	if year_tmdb and year_tmdb ~= '' then
+	year_tmdb = year_tmdb:match('%d%d%d%d')
+	else year_tmdb = 0 end
 	promo, genre, country, slogan = '', 'сериал', '', ''
 
 end
@@ -135,7 +139,7 @@ end
 	then
 	background = tab.results[1].backdrop_path
 	background = 'http://image.tmdb.org/t/p/original' .. background
-	else background = logo
+	else background = poster
 	end
 
 	overview = tab.results[1].overview
@@ -144,8 +148,19 @@ end
 	ru_name = tab.results[1].title
 	orig_name = tab.results[1].original_title
 	tmid = tab.results[1].id
+	year_tmdb = tab.results[1].release_date or ''
+	if year_tmdb and year_tmdb ~= '' then
+	year_tmdb = year_tmdb:match('%d%d%d%d')
+	else year_tmdb = 0 end
 	promo, genre, country, slogan = promo_tm(tmid)
 end
+m_simpleTV.User.TVPortal.logo = poster
+m_simpleTV.User.TVPortal.title = ru_name
+m_simpleTV.User.TVPortal.title_en = orig_name
+m_simpleTV.User.TVPortal.genre = genre or ''
+m_simpleTV.User.TVPortal.country = country or ''
+m_simpleTV.User.TVPortal.year = year_tmdb
+m_simpleTV.User.TVPortal.slogan = slogan
 	return background, poster, overview, rating, count, ru_name, orig_name, promo, genre, country, slogan, tmid
 end
 
@@ -207,13 +222,13 @@ if background and poster and genre and tmid ~= '' and country and slogan then
 		else
 		str_poisk = ''
 		end
-		videodesc= '<table width="100%"><tr><td style="padding: 15px 15px 5px;"><img src="' .. poster .. '" height="300"></td><td style="padding: 0px 5px 5px; color: #EBEBEB; vertical-align: middle;"><h3><font color=#00FA9A>' .. ru_name .. '</font></h3><h5><i><font color=#CCCCCC>' .. slogan .. '</font></i></h5><h4>' .. str_poisk .. '</h4><h5><font color=#BBBBBB>' .. orig_name .. '</font></h5><h5><font color=#E0FFFF>' .. country .. ' ' .. year .. '</font></h5><h5><font color=#EBEBEB>' .. genre .. '</font></h5><h5><img src="simpleTVImage:./luaScr/user/show_mi/menuTM.png" height="24" align="top"> <img src="simpleTVImage:./luaScr/user/show_mi/stars/' .. (tonumber(rating)*10 - tonumber(rating)*10%1)/10 .. '.png" height="24" align="top"> ' .. rating .. ' (' .. count .. ')</h5><h5>' .. overview .. '</h5></td></tr></table>'
+		videodesc= '<table width="100%"><tr><td style="padding: 15px 15px 5px;"><img src="' .. poster .. '" height="450"></td><td style="padding: 0px 5px 5px; color: #EBEBEB; vertical-align: middle;"><h3><font color=#00FA9A>' .. ru_name .. '</font></h3><h5><i><font color=#CCCCCC>' .. slogan .. '</font></i></h5><h4>' .. str_poisk .. '</h4><h5><font color=#BBBBBB>' .. orig_name .. '</font></h5><h5><font color=#E0FFFF>' .. country .. ' ' .. year_tmdb .. '</font></h5><h5><font color=#EBEBEB>' .. genre .. '</font></h5><h5><img src="simpleTVImage:./luaScr/user/show_mi/menuTM.png" height="36" align="top"> <img src="simpleTVImage:./luaScr/user/show_mi/stars/' .. (tonumber(rating)*10 - tonumber(rating)*10%1)/10 .. '.png" height="36" align="top"> ' .. rating .. ' (' .. count .. ')</h5><h5>' .. overview .. '</h5></td></tr></table>'
 		videodesc = videodesc:gsub('"', '\"')
-	m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.5" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/show_mi/menuTM1.png"', text = ru_name .. '\n' .. orig_name .. '\n' .. year .. '\n' .. country .. '\n' .. genre , showTime = 5000,0xFF00,3})
+	m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.5" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/show_mi/menuTM1.png"', text = ru_name .. '\n' .. orig_name .. '\n' .. year_tmdb .. '\n' .. country .. '\n' .. genre , showTime = 5000,0xFF00,3})
 
-return videodesc, background
+return videodesc, background, overview
  else
- return '', ''
+ return '', '', ''
 end
 else
 		local background, poster, overview, rating, count, ru_name, orig_name, promo = '', '', '', '', '', '', '', ''
@@ -268,7 +283,7 @@ else
 
 	local function get_country_flags(country_ID)
     country_flag = '<img src="simpleTVImage:./luaScr/user/show_mi/country/' .. country_ID .. '.png" height="36" align="top">'
-    return country_flag:gsub('"', "'")
+    return country_flag
 	end
 
 	local tmp_country_ID = ''
@@ -313,7 +328,7 @@ else
 		if country and country:match('США') then tmp_country_ID = 'us' country_ID = get_country_flags(tmp_country_ID) .. country_ID end
 		t[i].country = country
 
-					t[i].videodesc = '<table width="100%" border="0"><tr><td style="padding: 15px 15px 5px;"><img src="' .. (poster or logo) .. '" height="300"></td><td style="padding: 0px 5px 5px; color: #EBEBEB; vertical-align: middle;"><h4><font color=#00FA9A>' .. t[i].rus .. '</font></h4><h5><i><font color=#CCCCCC>' .. slogan .. '</font></i></h5><h4>' .. str_poisk .. '</h4><h5><font color=#BBBBBB>' .. t[i].orig .. '<h5><font color=#EBEBEB>' .. country_ID .. ' ' .. t[i].country .. ' </font><font color=#E0FFFF>' .. yearb .. '</font></h5><h5><font color=#EBEBEB>' .. t[i].genres .. '</font> • ' .. age .. '+</h5>' .. reting .. '<h5><font color=#E0FFFF>' .. tonumber(time_all)/60 .. ' мин.</font></h5><h5>Режиссер: <font color=#EBEBEB>' .. director .. '</font><br>В ролях: <font color=#EBEBEB>' .. actors .. '</font></h5></td></tr></table><table width="100%"><tr><td style="padding: 5px 5px 5px;"><h5><font color=#EBEBEB>' .. description .. '</font></h5></td></tr></table>'
+					t[i].videodesc = '<table width="100%" border="0"><tr><td style="padding: 15px 15px 5px;"><img src="' .. (poster or logo) .. '" height="450"></td><td style="padding: 0px 5px 5px; color: #EBEBEB; vertical-align: middle;"><h4><font color=#00FA9A>' .. t[i].rus .. '</font></h4><h5><i><font color=#CCCCCC>' .. slogan .. '</font></i></h5><h4>' .. str_poisk .. '</h4><h5><font color=#BBBBBB>' .. t[i].orig .. '<h5><font color=#EBEBEB>' .. country_ID .. ' ' .. t[i].country .. ' </font><font color=#E0FFFF>' .. yearb .. '</font></h5><h5><font color=#EBEBEB>' .. t[i].genres .. '</font> • ' .. age .. '+</h5>' .. reting .. '<h5><font color=#E0FFFF>' .. tonumber(time_all)/60 .. ' мин.</font></h5><h5>Режиссер: <font color=#EBEBEB>' .. director .. '</font><br>В ролях: <font color=#EBEBEB>' .. actors .. '</font></h5></td></tr></table><table width="100%"><tr><td style="padding: 5px 5px 5px;"><h5><font color=#EBEBEB>' .. description .. '</font></h5></td></tr></table>'
 					t[i].videodesc = t[i].videodesc:gsub('"', '\"')
 					t[i].background = background
 					i = i + 1
@@ -325,7 +340,7 @@ if t[1] and t[1].videodesc and t[1].background
 then
 m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.5" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/show_mi/menuKP1.png"', text = t[1].rus .. '\n' .. t[1].orig .. '\n' .. year .. '\n' .. t[1].country .. '\n' .. t[1].genres , showTime = 5000,0xFF00,3})
 
-return t[1].videodesc, t[1].background
+return t[1].videodesc, t[1].background, description
 else
 local background, poster, overview, rating, count, ru_name, orig_name, promo, genre, country, slogan, tmid = bg_poster_title(title, year)
 if background and poster and poster ~= '' and genre and tmid ~= '' and country then
@@ -334,13 +349,13 @@ if background and poster and poster ~= '' and genre and tmid ~= '' and country t
 		else
 		str_poisk = ''
 		end
-		videodesc= '<table width="100%"><tr><td style="padding: 15px 15px 5px;"><img src="' .. poster .. '" height="300"></td><td style="padding: 0px 5px 5px; color: #EBEBEB; vertical-align: middle;"><h3><font color=#00FA9A>' .. ru_name .. '</font></h3><h5><i><font color=#CCCCCC>' .. slogan .. '</font></i></h5><h4>' .. str_poisk .. '</h4><h5><font color=#BBBBBB>' .. orig_name .. '</font></h5><h5><font color=#E0FFFF>' .. country .. ' ' .. year .. '</font></h5><h5><font color=#EBEBEB>' .. genre .. '</font></h5><h5><img src="simpleTVImage:./luaScr/user/show_mi/menuTM.png" height="24" align="top"> <img src="simpleTVImage:./luaScr/user/show_mi/stars/' .. (tonumber(rating)*10 - tonumber(rating)*10%1)/10 .. '.png" height="24" align="top"> ' .. rating .. ' (' .. count .. ')</h5><h5>' .. overview .. '</h5></td></tr></table>'
+		videodesc= '<table width="100%"><tr><td style="padding: 15px 15px 5px;"><img src="' .. poster .. '" height="450"></td><td style="padding: 0px 5px 5px; color: #EBEBEB; vertical-align: middle;"><h3><font color=#00FA9A>' .. ru_name .. '</font></h3><h5><i><font color=#CCCCCC>' .. slogan .. '</font></i></h5><h4>' .. str_poisk .. '</h4><h5><font color=#BBBBBB>' .. orig_name .. '</font></h5><h5><font color=#E0FFFF>' .. country .. ' ' .. year_tmdb .. '</font></h5><h5><font color=#EBEBEB>' .. genre .. '</font></h5><h5><img src="simpleTVImage:./luaScr/user/show_mi/menuTM.png" height="36" align="top"> <img src="simpleTVImage:./luaScr/user/show_mi/stars/' .. (tonumber(rating)*10 - tonumber(rating)*10%1)/10 .. '.png" height="36" align="top"> ' .. rating .. ' (' .. count .. ')</h5><h5>' .. overview .. '</h5></td></tr></table>'
 		videodesc = videodesc:gsub('"', '\"')
-m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.5" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/show_mi/menuTM1.png"', text = ru_name .. '\n' .. orig_name .. '\n' .. year .. '\n' .. country .. '\n' .. genre , showTime = 5000,0xFF00,3})
+m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.5" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/show_mi/menuTM1.png"', text = ru_name .. '\n' .. orig_name .. '\n' .. year_tmdb .. '\n' .. country .. '\n' .. genre , showTime = 5000,0xFF00,3})
 
-return videodesc, background
+return videodesc:gsub('\\"','"'), background, overview:gsub('\\"','"')
  else
- return '', '' end
+ return '', '', '' end
 end
 end
 end
