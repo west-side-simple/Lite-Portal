@@ -1,4 +1,4 @@
--- видеоскрипт для балансера ZF (18.03.23)
+-- видеоскрипт для балансера ZF (12.11.23)
 -- author west_side
 	if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 	if not m_simpleTV.Control.CurrentAddress:match('^https?://hdi%.zetflix%.online') then return end
@@ -88,6 +88,7 @@
 	m_simpleTV.User.TMDB.Id = tmdb_id
 	m_simpleTV.User.TMDB.tv = tv
 	m_simpleTV.User.westSide.PortalTable = m_simpleTV.User.TMDB.Id .. ',' .. m_simpleTV.User.TMDB.tv
+	info_fox(name_tmdb,year_tmdb,background)
 	return background, name_tmdb, year_tmdb, overview_tmdb, tmdb_id, tv
 	end
 	local function tmdb_tv(tmdbid,inAdr)
@@ -256,7 +257,7 @@
 		end
 		if ret == 3 then
 			perevod_ZF()
-		end		
+		end
 	end
 	m_simpleTV.User.ZF.titleTab = nil
 	m_simpleTV.User.ZF.isVideo = nil

@@ -1,6 +1,6 @@
 -- видеоскрипт для видеобалансера "Collaps" https://collaps.org (15/06/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod west_side (23/04/23)
+-- mod west_side (02/11/23)
 -- ## открывает подобные ссылки ##
 -- https://api1603044906.kinogram.best/embed/movie/7059
 -- https://api1603044906.kinogram.best/embed/kp/5928
@@ -108,6 +108,7 @@
 			for i = 1, #t do
 				t[i].Id = i
 				t[i].Address = t[i].Address:gsub('%.m3u8', '-a' .. transl ..'.m3u8') .. subt
+--				debug_in_file(t[i].Id .. '. ' .. t[i].Address, 'c://1/collaps.txt')
 			end
 		m_simpleTV.User.collaps.Tab = t
 		local index = collapsIndex(t)
@@ -250,7 +251,7 @@
 		title = answer:match('title:%s*"(.-)",') or 'Collaps'
 		logo = answer:match('poster:%s*"(.-)",')
 		subt = answer:match('cc:%s*%[(.-)%]')
-		if subt then
+		if subt and subt ~= '' then
 			local s = {}
 			for w in subt:gmatch('http.-%.vtt') do
 				s[#s + 1] = w:gsub('://', '/webvtt://')

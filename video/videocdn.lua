@@ -1,6 +1,6 @@
 -- видеоскрипт для видеобалансера "videocdn" https://videocdn.tv (01/07/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod - west_side (30/04/23)
+-- mod - west_side (12/11/23)
 -- ## открывает подобные ссылки ##
 -- https://32.svetacdn.in/fnXOUDB9nNSO?kp_id=5928
 -- https://32.tvmovies.in/fnXOUDB9nNSO/tv-series/92
@@ -25,6 +25,7 @@ local proxy = ''
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/fz41ePu9lzFL')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/SZLMKH3vCY0W')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/ra5OAHwotvWa')
+			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/96wagtY5sXIm')
 --			and not m_simpleTV.Control.CurrentAddress:match('^https?://[%w%.]*svetacdn%.')
 			and not m_simpleTV.Control.CurrentAddress:match('^$videocdn')
 		then
@@ -44,6 +45,19 @@ local proxy = ''
 			m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = '', TypeBackColor = 0, UseLogo = 0, Once = 1})
 		end
 	end
+
+	local function check_address(adr)--проверка отклика потока
+		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36', proxy, false)
+		if not session then return end
+		m_simpleTV.Http.SetTimeout(session, 500)
+		local rc, answer = m_simpleTV.Http.Request(session, {url = adr, method = 'get'})
+--		debug_in_file(adr .. ' - ' .. rc .. '\n' .. (answer or 'NOT') .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer_files.txt')
+		if rc ~= 404 then
+			return true
+		end
+		return false
+	end
+
 local function imdbid(kpid)
 	if kpid == '77264' then return 'tt0086333','Шерлок Холмс и доктор Ватсон: Сокровища Агры','1983' end
 	local url_vn = decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvc2hvcnQ/YXBpX3Rva2VuPW9TN1d6dk5meGU0SzhPY3NQanBBSVU2WHUwMVNpMGZtJmtpbm9wb2lza19pZD0=') .. kpid
@@ -51,6 +65,7 @@ local function imdbid(kpid)
 		if rc5~=200 then
 		return '','',''
 		end
+		answer_vn = unescape3(answer_vn)
 		require('json')
 		answer_vn = answer_vn:gsub('(%[%])', '"nil"')
 		local tab_vn = json.decode(answer_vn)
@@ -80,6 +95,14 @@ local function bg_imdb_id(imdb_id)
 	overview_tmdb = tab.movie_results[1].overview or ''
 	tv = 0
 	id = tab.movie_results[1].id
+	if tab.movie_results[1].backdrop_path and tab.movie_results[1].backdrop_path ~= 'null' then
+	background = tab.movie_results[1].backdrop_path
+	background = 'http://image.tmdb.org/t/p/w533_and_h300_bestv2' .. background
+	elseif tab.movie_results[1].poster_path and tab.movie_results[1].poster_path ~= 'null' then
+	background = tab.movie_results[1].poster_path
+	background = 'http://image.tmdb.org/t/p/w220_and_h330_face' .. background
+	else background = './luaScr/user/show_mi/no-img.png'
+	end
 	elseif tab.tv_results[1] then
 	background = tab.tv_results[1].backdrop_path or ''
 	name_tmdb = tab.tv_results[1].name or ''
@@ -87,13 +110,20 @@ local function bg_imdb_id(imdb_id)
 	overview_tmdb = tab.tv_results[1].overview or ''
 	tv = 1
 	id = tab.tv_results[1].id
+	if tab.tv_results[1].backdrop_path and tab.tv_results[1].backdrop_path ~= 'null' then
+	background = tab.tv_results[1].backdrop_path
+	background = 'http://image.tmdb.org/t/p/w533_and_h300_bestv2' .. background
+	elseif tab.tv_results[1].poster_path and tab.tv_results[1].poster_path ~= 'null' then
+	background = tab.tv_results[1].poster_path
+	background = 'http://image.tmdb.org/t/p/w220_and_h330_face' .. background
+	else background = './luaScr/user/show_mi/no-img.png'
+	end
 	end
 	end
 	if year_tmdb and year_tmdb ~= '' then
 	year_tmdb = year_tmdb:match('%d%d%d%d')
 	else year_tmdb = 0 end
-	if background and background ~= nil and background ~= '' then background = 'http://image.tmdb.org/t/p/original' .. background end
-	if background == nil then background = '' end
+	info_fox(name_tmdb,year_tmdb,background)
 	return background, name_tmdb, year_tmdb, overview_tmdb, tv, id
 end
 local function title_translate(translate)
@@ -108,7 +138,7 @@ local function title_translate(translate)
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
 		if not session then return end
 		m_simpleTV.Http.SetTimeout(session, 60000)
-		for page = 1,22 do
+		for page = 1,23 do
 			rc, answer = m_simpleTV.Http.Request(session, {url = decode64(url) .. '&page=' .. page .. '&limit=100'})
 			require('json')
 			if not answer then return end
@@ -206,7 +236,7 @@ end
 	m_simpleTV.User.Videocdn.background, m_simpleTV.User.Videocdn.title, m_simpleTV.User.Videocdn.year, m_simpleTV.User.Videocdn.overview, m_simpleTV.User.TMDB.tv, m_simpleTV.User.TMDB.Id = bg_imdb_id(imdb_id)
 	m_simpleTV.User.westSide.PortalTable = m_simpleTV.User.TMDB.Id .. ',' .. m_simpleTV.User.TMDB.tv
 	m_simpleTV.Control.ChangeChannelLogo(m_simpleTV.User.Videocdn.background, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
-	m_simpleTV.Interface.SetBackground({BackColor = 0, BackColorEnd = 255, PictFileName = m_simpleTV.User.Videocdn.background, TypeBackColor = 0, UseLogo = 3, Once = 1})
+	m_simpleTV.Interface.SetBackground({BackColor = 0, BackColorEnd = 255, PictFileName = m_simpleTV.User.Videocdn.background:gsub('w533_and_h300_bestv2','original'):gsub('w220_and_h330_face','original'), TypeBackColor = 0, UseLogo = 3, Once = 1})
 	end
 	if not m_simpleTV.User.Videocdn.title and not m_simpleTV.User.Videocdn.year then
 		m_simpleTV.User.Videocdn.title = title_v
@@ -452,6 +482,7 @@ end
 	answer = answer:gsub('\\"', '"')
 	answer = unescape3(answer)
 	answer = answer:gsub('\\', '')
+
 --	debug_in_file(answer .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer.txt')
 	title = answer:match('<title>([^<]+)') or answer:match('id="title" value="([^"]+)')
 	if not title or title == '' then
@@ -463,9 +494,10 @@ end
 	end
 	m_simpleTV.Control.SetTitle(title)
 	local tv_series = answer:match('value="tv_series"') or answer:match('value="show_tv_series"') or answer:match('value="anime_tv_series"')
-	local transl
+
+	local transl = answer:match('id="translation_id" value="(%d+)"')
 	local tr = answer:match('<div class="translations".-</div>')
-	debug_in_file((tr or 'NOT') .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answertr.txt')
+--	debug_in_file((tr or 'NOT') .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answertr.txt')
 	if tr then
 		tr = tr:gsub('<template class="__cf_email__" data%-cfemail="%x+">%[email.-%]</template>', 'MUZOBOZ@')
 				local t = {}
@@ -489,19 +521,42 @@ end
 		if tv_series and #t > 1 then
 			table.remove(t, 1)
 		end
-			for i = 1, #t do
-				t[i].Id = i
+		local hash, t0 = {}, {}
+		for i = 1, #t do
+			if not hash[t[i].Address]
+			then
+				t0[#t0 + 1] = t[i]
+				hash[t[i].Address] = true
 			end
-		m_simpleTV.User.Videocdn.TranslateTable = t
-		if #t > 1 then
+		end
+		local files = answer:match('id="files" value=\'(.-)\'')
+--		debug_in_file(files .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer_files.txt')
+		local tt, j = {}, 1
+			for i = 1, #t0 do
+				local test_address = files:match('"' .. t0[i].Address .. '":.-"%[.-%](.-)%,')
+--				debug_in_file(test_address .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer_files.txt')
+				test_address = test_address:gsub('.-//','https://')
+				if check_address(test_address) then
+					tt[j] = {}
+					tt[j].Id = j
+					tt[j].Address = t0[i].Address
+					tt[j].Name = t0[i].Name
+--					debug_in_file(tt[j].Id .. ' ' .. tt[j].Name .. '\n' .. tt[j].Address .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer_files.txt')
+					j = j + 1
+				end
+--				t[i].Id = i
+			end
+--			debug_in_file(#tt .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer_files.txt')
+		m_simpleTV.User.Videocdn.TranslateTable = tt
+		if #tt > 1 then
 			local _, id
 			if not psevdotv and not translate then
-				_, id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите озвучку - ' .. title, selected, t, 10000, 1 + 2 + 4 + 8)
+				_, id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите озвучку - ' .. title, selected, tt, 10000, 1 + 2 + 4 + 8)
 			end
 			id = id or selected + 1
-			transl = translate or t[id].Address
+			transl = translate or tt[id].Address
 		else
-			transl = t[1].Address
+			transl = tt[1].Address
 		end
 	end
 	transl = translate or transl or '%d+'
@@ -515,7 +570,6 @@ end
 	m_simpleTV.User.Videocdn.title_translate = m_simpleTV.User.Videocdn.title_translate:gsub('<template.-template>', 'неизвестно'):gsub('&amp;', '&'):gsub('\n		               	','')
 	local answer = answer:match('id="files" value=\'(.-)\'')
 		if not answer then return end
---	debug_in_file(answer .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer.txt')
 	if tv_series then
 		answer = answer:match('"' .. transl .. '":(%[.-%}%]%}%])')
 --	debug_in_file(answer .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer.txt')
