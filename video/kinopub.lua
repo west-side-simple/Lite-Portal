@@ -1,4 +1,4 @@
--- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (11/07/23) - автор west_side
+-- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (05/07/24) - автор west_side
 -- необходим действующий аккаунт на сайте https://kino.pub
 -- работает в связке со скриптом Lite_qt_kinopub.lua - автор west_side
 -- дополнительная информация обеспечивается скриптом info_fox.lua - автор west_side
@@ -20,6 +20,7 @@
 	end
 	m_simpleTV.User.kinopub.address = inAdr
 	m_simpleTV.User.kinopub.tr = inAdr:match('%&tr=(%d+)$') or 1
+	m_simpleTV.User.TVPortal.balanser = 'Kinopub'
 	inAdr = inAdr:gsub('%&tr=%d+$','')
 -- '' - нет
 -- 'http://proxy-nossl.antizapret.prostovpn.org:29976' (пример)
@@ -156,7 +157,7 @@ end
 	local title1 = answer:match('<title>(.-)</title>') or 'Кинопаб'
 	if m_simpleTV.Control.MainMode == 0 then
 		m_simpleTV.Interface.SetBackground({BackColor = 0, BackColorEnd = 255, PictFileName = 'https://cdn.service-kp.com/logo.png', TypeBackColor = 0, UseLogo = 1, Once = 1})
-		m_simpleTV.Control.ChangeChannelName(title1:gsub('&#039;',"'"):gsub('&amp;',"&"), m_simpleTV.Control.ChannelID, false)
+		m_simpleTV.Control.ChangeChannelName(title1:gsub('&#039;',"´"):gsub('&amp;',"&"), m_simpleTV.Control.ChannelID, false)
 	end
 	m_simpleTV.Control.SetTitle(title1)
 	retAdr = answer:match('<source src=\'(.-)\'')
@@ -170,7 +171,7 @@ end
 	if m_simpleTV.Control.MainMode == 0 then
 		m_simpleTV.Interface.SetBackground({BackColor = 0, BackColorEnd = 255, PictFileName = 'https://cdn.service-kp.com/logo.png', TypeBackColor = 0, UseLogo = 1, Once = 1})
 		m_simpleTV.Control.ChangeChannelLogo('https://cdn.service-kp.com/logo.png', m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
-		m_simpleTV.Control.ChangeChannelName(title1:gsub('&#039;',"'"):gsub('&amp;',"&"), m_simpleTV.Control.ChannelID, false)
+		m_simpleTV.Control.ChangeChannelName(title1:gsub('&#039;',"´"):gsub('&amp;',"&"), m_simpleTV.Control.ChannelID, false)
 	end
 	m_simpleTV.Control.SetTitle(title1)
 	local all,query,current = 1,kinopub_search,1
@@ -185,9 +186,9 @@ end
 					if not logo1 or not adr1 or not name1 then break end
 							t[i].Id = i
 							t[i].Address = 'https://kino.pub' .. adr1
-							t[i].Name = name1:gsub('&#039;',"'"):gsub('&amp;',"&")
+							t[i].Name = name1:gsub('&#039;',"´"):gsub('&amp;',"&")
 							t[i].InfoPanelLogo = logo1
-							t[i].InfoPanelName = name1:gsub('&#039;',"'"):gsub('&amp;',"&")
+							t[i].InfoPanelName = name1:gsub('&#039;',"´"):gsub('&amp;',"&")
 							t[i].InfoPanelShowTime = 30000
 					i = i + 1
 					end
@@ -203,9 +204,9 @@ end
 					if not logo1 or not adr1 or not name1 then break end
 							t[i].Id = i
 							t[i].Address = 'https://kino.pub' .. adr1
-							t[i].Name = name1:gsub('&#039;',"'"):gsub('&amp;',"&")
+							t[i].Name = name1:gsub('&#039;',"´"):gsub('&amp;',"&")
 							t[i].InfoPanelLogo = logo1
-							t[i].InfoPanelName = name1:gsub('&#039;',"'"):gsub('&amp;',"&")
+							t[i].InfoPanelName = name1:gsub('&#039;',"´"):gsub('&amp;',"&")
 							t[i].InfoPanelShowTime = 30000
 					i = i + 1
 					end
@@ -218,9 +219,9 @@ end
 					if not logo1 or not adr1 or not name1 then break end
 							t[i].Id = i
 							t[i].Address = 'https://kino.pub' .. adr1
-							t[i].Name = name1:gsub('&#039;',"'"):gsub('&amp;',"&")
+							t[i].Name = name1:gsub('&#039;',"´"):gsub('&amp;',"&")
 							t[i].InfoPanelLogo = logo1
-							t[i].InfoPanelName = name1:gsub('&#039;',"'"):gsub('&amp;',"&")
+							t[i].InfoPanelName = name1:gsub('&#039;',"´"):gsub('&amp;',"&")
 							t[i].InfoPanelShowTime = 30000
 					i = i + 1
 					end
@@ -240,9 +241,9 @@ end
 					if not logo1 or not adr1 or not name1 then break end
 							t[i].Id = i
 							t[i].Address = 'https://kino.pub' .. adr1
-							t[i].Name = name1:gsub('&#039;',"'"):gsub('&amp;',"&")
+							t[i].Name = name1:gsub('&#039;',"´"):gsub('&amp;',"&")
 							t[i].InfoPanelLogo = logo1
-							t[i].InfoPanelName = name1:gsub('&#039;',"'"):gsub('&amp;',"&")
+							t[i].InfoPanelName = name1:gsub('&#039;',"´"):gsub('&amp;',"&")
 							t[i].InfoPanelShowTime = 30000
 					i = i + 1
 					end
@@ -351,7 +352,7 @@ else
 
 	local function GetStream(retAdr, media)
 		require('json')
-		local tab = json.decode(unescape3(retAdr))
+		local tab = json.decode(unescape3(retAdr:gsub('%&%#039%;',"´"):gsub('%&amp;',"&")))
 		local file0
 		local t, i = {}, 1
 		if not tab or not tab[1] or not tab[1].file or not tab[1].media_id
@@ -393,7 +394,7 @@ else
 	local function GetAdr(url)
 		local transl = m_simpleTV.User.kinopub.tr
 		transl = tonumber(transl)
-		local domen = url:match('^(http.-)/hls4/')
+--		local domen = url:match('^(http.-)/hls4/')
 		local rc, answer = m_simpleTV.Http.Request(session, {url = url})
 		if rc ~= 200 then return false end
 
@@ -556,7 +557,7 @@ else
 		t1[j] = {}
 		t1[j].Id = j
 		t1[j].Address = 'https://kino.pub' .. adr
-		t1[j].Name = m_simpleTV.Common.multiByteToUTF8(name:gsub('&#039;',"'"):gsub('&amp;',"&"),1251)
+		t1[j].Name = m_simpleTV.Common.multiByteToUTF8(name:gsub('&#039;',"´"):gsub('&amp;',"&"),1251)
 		j=j+1
 		end
 
@@ -566,7 +567,7 @@ else
 		t1[j] = {}
 		t1[j].Id = j
 		t1[j].Address = 'https://kino.pub' .. adr
-		t1[j].Name = m_simpleTV.Common.multiByteToUTF8(name:gsub('&#039;',"'"):gsub('&amp;',"&"),1251)
+		t1[j].Name = m_simpleTV.Common.multiByteToUTF8(name:gsub('&#039;',"´"):gsub('&amp;',"&"),1251)
 		j=j+1
 		end
 
@@ -576,7 +577,7 @@ else
 		t1[j] = {}
 		t1[j].Id = j
 		t1[j].Address = 'https://kino.pub/item/search?query=' .. m_simpleTV.Common.toPercentEncoding(m_simpleTV.Common.multiByteToUTF8(name,1251))
-		t1[j].Name = m_simpleTV.Common.multiByteToUTF8(name:gsub('&#039;',"'"):gsub('&amp;',"&"),1251)
+		t1[j].Name = m_simpleTV.Common.multiByteToUTF8(name:gsub('&#039;',"´"):gsub('&amp;',"&"),1251)
 		j=j+1
 		end
 
@@ -586,7 +587,7 @@ else
 		t1[j] = {}
 		t1[j].Id = j
 		t1[j].Address = 'https://kino.pub' .. adr
-		t1[j].Name = 'Подборка - ' .. m_simpleTV.Common.multiByteToUTF8(name:gsub('&#039;',"'"):gsub('&amp;',"&"),1251)
+		t1[j].Name = 'Подборка - ' .. m_simpleTV.Common.multiByteToUTF8(name:gsub('&#039;',"´"):gsub('&amp;',"&"),1251)
 		j=j+1
 		end
 
@@ -596,7 +597,7 @@ else
 		t1[j] = {}
 		t1[j].Id = j
 		t1[j].Address = 'https://kino.pub' .. adr
-		t1[j].Name = 'Похожее - ' .. m_simpleTV.Common.multiByteToUTF8(name:gsub('&#039;',"'"):gsub('&amp;',"&"),1251)
+		t1[j].Name = 'Похожее - ' .. m_simpleTV.Common.multiByteToUTF8(name:gsub('&#039;',"´"):gsub('&amp;',"&"),1251)
 		j=j+1
 		end
 
@@ -652,10 +653,10 @@ else
 	local title = answer:match('<title>(.-)</title>') or 'KinoPub'
 	local year = answer:match('?years=(%d+)')
 	if year then year = tonumber(year) title = title .. ' (' .. year .. ')' end
-	m_simpleTV.User.kinopub.title = title:gsub('&#039;',"'"):gsub('&amp;',"&")
+	m_simpleTV.User.kinopub.title = title:gsub('&#039;',"´"):gsub('&amp;',"&")
 	local logo = answer:match('<hr>.-<img src="(.-)"') or 'https://cdn.service-kp.com/logo.png'
 	local desc_text = answer:match('id="plot">(.-)<') or ''
-	local videodesc = info_fox(title:gsub('&#039;',"'"):gsub('&amp;',"&"):gsub(' %(.-$',''):gsub(' /.-$',''),year,logo)
+	local videodesc = info_fox(title:gsub('&#039;',"´"):gsub('&amp;',"&"):gsub(' %(.-$',''):gsub(' /.-$',''),year,logo)
 	local imdb_id = answer:match('href="http://www%.imdb%.com/title/(.-)"')
 	local logo1
 	if imdb_id then
@@ -668,13 +669,13 @@ else
 	if m_simpleTV.Control.MainMode == 0 and logo then
 		m_simpleTV.Interface.SetBackground({BackColor = 0, BackColorEnd = 255, PictFileName = logo, TypeBackColor = 0, UseLogo = 3, Once = 1})
 		m_simpleTV.Control.ChangeChannelLogo(logo, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
-		m_simpleTV.Control.ChangeChannelName(title:gsub('&#039;',"'"):gsub('&amp;',"&"), m_simpleTV.Control.ChannelID, false)
+		m_simpleTV.Control.ChangeChannelName(title:gsub('&#039;',"´"):gsub('&amp;',"&"), m_simpleTV.Control.ChannelID, false)
 	end
 --------------serial
 	if answer:match('<div class="row m%-b">') then
 		local t, t1, i, j = {}, {}, 1, 1
 		local e = 1
-		local se, se_name = 1, title:gsub(' %(.-$',''):gsub(' %/.-$',''):gsub('&#039;',"'"):gsub('&amp;',"&")
+		local se, se_name = 1, title:gsub(' %(.-$',''):gsub(' %/.-$',''):gsub('&#039;',"´"):gsub('&amp;',"&")
 		if answer:match('<span class="season%-title m%-l%-sm p%-r%-sm">.-</span>') then
 		for w1 in answer:gmatch('<span class="p%-r%-sm p%-t%-sm">.-</a>') do
 		local types, adr, name = w1:match('<a class="(.-)".-href="(.-)".-role="button">(.-)</a>')
@@ -685,9 +686,9 @@ else
 		if not types:match('outline')
 		then
 		se = j
-		se_name = title:gsub(' %(.-$',''):gsub(' %/.-$',''):gsub('&#039;',"'"):gsub('&amp;',"&") .. ' (Сезон ' .. name .. ')'
+		se_name = title:gsub(' %(.-$',''):gsub(' %/.-$',''):gsub('&#039;',"´"):gsub('&amp;',"&") .. ' (Сезон ' .. name .. ')'
 		end
-		t1[j].Name = name:gsub('&#039;',"'"):gsub('&amp;',"&")
+		t1[j].Name = name:gsub('&#039;',"´"):gsub('&amp;',"&")
 		j=j+1
 		end
 		end
@@ -695,16 +696,16 @@ else
 		for w in answer:gmatch('<div class="item episode%-thumbnail".-</div> </div> </div>') do
 		local adr, logo, name2 = w:match('<a href="(.-)".-<img src="(.-)".-episode%-number">(.-)</span>')
 		local name1 = w:match('<a href=".-".-<img src=".-".-episode%-number">.-</span>.-<a href=".-">(.-)<') or ''
-		if name1 ~= '' then name1 = ', ' .. name1:gsub('&#039;',"'"):gsub('&amp;',"&") end
+		if name1 ~= '' then name1 = ', ' .. name1:gsub('&#039;',"´"):gsub('&amp;',"&") end
 		if not adr then break end
 		t[i] = {}
 		t[i].Id = i
 		t[i].Address = 'https://kino.pub' .. adr .. '&tr=' .. m_simpleTV.User.kinopub.tr
 		if m_simpleTV.User.kinopub.address == t[i].Address then e = i end
-		t[i].Name = name2 .. name1:gsub('&#039;',"'"):gsub('&amp;',"&")
+		t[i].Name = name2 .. name1:gsub('&#039;',"´"):gsub('&amp;',"&")
 		t[i].InfoPanelTitle = desc_text
 		if not se_name:match('Сезон') then se_name = '' end
-		t[i].InfoPanelName = title:gsub(' %(.-$',''):gsub(' %/.-$',''):gsub('&#039;',"'"):gsub('&amp;',"&") .. ' (' .. (se_name:gsub('%)',''):gsub('^.-%(','') .. ', ' .. name2 .. name1:gsub('&#039;',"'"):gsub('&amp;',"&") .. ')'):gsub('^%, ','')
+		t[i].InfoPanelName = title:gsub(' %(.-$',''):gsub(' %/.-$',''):gsub('&#039;',"´"):gsub('&amp;',"&") .. ' (' .. (se_name:gsub('%)',''):gsub('^.-%(','') .. ', ' .. name2 .. name1:gsub('&#039;',"´"):gsub('&amp;',"&") .. ')'):gsub('^%, ','')
 		t[i].InfoPanelShowTime = 8000
 		t[i].InfoPanelLogo = logo
 		t[i].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
@@ -726,9 +727,9 @@ else
 		local t = {}
 		t[1] = {}
 		t[1].Id = 1
-		t[1].Name = title:gsub('&#039;',"'"):gsub('&amp;',"&")
+		t[1].Name = title:gsub('&#039;',"´"):gsub('&amp;',"&")
 		t[1].InfoPanelTitle = desc_text
-		t[1].InfoPanelName = title:gsub('&#039;',"'"):gsub('&amp;',"&")
+		t[1].InfoPanelName = title:gsub('&#039;',"´"):gsub('&amp;',"&")
 		t[1].InfoPanelShowTime = 8000
 		t[1].InfoPanelLogo = logo
 		t[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. videodesc .. '</body></html>'
@@ -737,14 +738,14 @@ else
 
 		m_simpleTV.OSD.ShowSelect_UTF8('Kinopub', 0, t, 8000, 32 + 64 + 128)
 	end
-	local retAdr = answer:match('var playlist = (.-);')
+	local retAdr = answer:match('var playlist = (.-%]);')
 	local media_id = answer:match('data%-selected%-id="(.-)"')
-	retAdr = GetStream(retAdr, media_id)
+	retAdr = GetStream(retAdr:gsub('%&%#039%;',"´"):gsub('%&amp;',"&"), media_id)
 	retAdr = GetAdr(retAdr)
 	local episode_name = m_simpleTV.User.kinopub.address:match('s%d+e%d+')
 	if episode_name then episode_name = ' ' .. episode_name else episode_name = '' end
-	m_simpleTV.Control.CurrentTitle_UTF8 = title:gsub('&#039;',"'"):gsub('&amp;',"&") .. episode_name .. ' - ' .. m_simpleTV.User.kinopub.audio_name:gsub('^%d+%. ','')
-	m_simpleTV.Control.SetTitle(title:gsub('&#039;',"'"):gsub('&amp;',"&") .. ' - ' .. m_simpleTV.User.kinopub.audio_name:gsub('^%d+%. ',''))
+	m_simpleTV.Control.CurrentTitle_UTF8 = title:gsub('&#039;',"´"):gsub('&amp;',"&") .. episode_name .. ' - ' .. m_simpleTV.User.kinopub.audio_name:gsub('^%d+%. ','')
+	m_simpleTV.Control.SetTitle(title:gsub('&#039;',"´"):gsub('&amp;',"&") .. ' - ' .. m_simpleTV.User.kinopub.audio_name:gsub('^%d+%. ',''))
 	m_simpleTV.Control.ChangeAdress = 'Yes'
 	m_simpleTV.Control.CurrentAdress = retAdr
 	end
