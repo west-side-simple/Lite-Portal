@@ -1,4 +1,4 @@
--- Плагин поиска для lite portal - west_side 23.10.23
+-- Плагин поиска для lite portal - west_side 08.01.24
 -- необходимы скрипты Lite_qt_exfs.lua, Lite_qt_tmdb.lua, Lite_qt_kinopub.lua, Lite_qt_filmix.lua, Lite_qt_trackers.lua, tv_start.lua - автор west_side
 
 function search()
@@ -98,7 +98,7 @@ require 'lfs'
 end
 
 function search_all()
-m_simpleTV.Control.ExecuteAction(37)
+--m_simpleTV.Control.ExecuteAction(37)
 	local function getConfigVal(key)
 		return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
 	end
@@ -110,18 +110,18 @@ m_simpleTV.Control.ExecuteAction(37)
 	local search_ini = getConfigVal('search/media') or ''
 	local tt1={
 	{'Трекеры',''},
-	{'RipsClub (HEVC)',''},
 	{'TMDb',''},
-	{'EX-FS',''},
-	{'Rezka',''},
 	{'Filmix',''},
+	{'Rezka',''},
+	{'YouTube',''},
+	{'EX-FS',''},
 	{'KinoGo',''},
 	{'KinoKong',''},
+	{'RipsClub (HEVC)',''},
 	{'UA',''},
 	{'Kinopub',''},
 	{'PortalTV',''},
-	{'YouTube',''},
---	{'VideoCDN',''},
+	{'VideoCDN',''},
 	}
 
   local t1={}
@@ -149,13 +149,13 @@ m_simpleTV.Control.ExecuteAction(37)
   elseif t1[id].Name == 'Kinopub' then show_select('https://kino.pub/item/search?query=' .. search_ini:gsub('%%28.-%%29',''))
   elseif t1[id].Name == 'YouTube' then search_youtube()
   elseif t1[id].Name == 'PortalTV' then
-  if m_simpleTV.User.TVPortal.Use == 0 then
+    if m_simpleTV.User.TVPortal.Use == 0 then
 		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1" src="' .. m_simpleTV.MainScriptDir .. 'user/portaltvWS/img/portaltv.png"', text = ' Аддон отключен.\n Включить можно в настройках.', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
 		return search_all()
 	else
 		SelectTVPortal_search()
 	end
---  elseif t1[id].Name == 'VideoCDN' then m_simpleTV.Control.PlayAddress('*' .. m_simpleTV.Common.UTF8ToMultiByte(m_simpleTV.Common.fromPercentEncoding(search_ini)))
+  elseif t1[id].Name == 'VideoCDN' then search_videocdn()
   end
   end
   if ret == 3 then
@@ -281,7 +281,7 @@ function search_rezka()
 	end
 	local zerkalo = m_simpleTV.Config.GetValue('zerkalo/rezka',"LiteConf.ini") or ''
 	if zerkalo == '' then
-	zerkalo = 'https://rezka.ag/'
+	zerkalo = 'https://hdrezka.ag/'
 	end
 		local function infodesc_rezka(adr1)
 		local rc3,answeradr = m_simpleTV.Http.Request(session,{url=adr1})
@@ -376,7 +376,7 @@ function search_youtube()
 	{'playlist','playlist?list=','','плейлист'},
 	{'channel','channel/','','канал'},
 	{'video','watch?v=','&eventType=live','прямой эфир'},
-	{'video&videoDimension=2d','watch?v=','','2D видео'},
+--	{'video&videoDimension=2d','watch?v=','','2D видео'},
 	}
 	local t = {}
 	for i = 1,#tt do
@@ -388,13 +388,16 @@ function search_youtube()
 	t[i].eventType = tt[i][3]
 	t[i].Action = ''
   end
+
+  if stena_search_youtube_content then return search_youtube_item('video','watch?v=','','видео',1) end
+
   t.ExtButton1 = {ButtonEnable = true, ButtonName = ' Portal '}
   t.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🔎 Меню '}
   local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Поиск YouTube: ' .. m_simpleTV.Common.fromPercentEncoding(search_ini),0,t,9000,1+4+8)
   if id==nil then return end
 
   if ret==1 then
-	search_youtube_item(t[id].types, t[id].urlyoutube, t[id].eventType, t[id].Name)
+	search_youtube_item(t[id].types, t[id].urlyoutube, t[id].eventType, t[id].Name, 1)
   end
   if ret==2 then
 	search_all()
@@ -404,7 +407,7 @@ function search_youtube()
   end
 end
 
-function search_youtube_item(types, urlyoutube, eventType, header)
+function search_youtube_item(types, urlyoutube, eventType, header, page)
 -- west_side code
 	local function getConfigVal(key)
 		return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
@@ -422,7 +425,7 @@ function search_youtube_item(types, urlyoutube, eventType, header)
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML,like Gecko) Chrome/71.0.2785.143 Safari/537.36')
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 8000)
-	if not m_simpleTV.User then
+--[[	if not m_simpleTV.User then
 		m_simpleTV.User = {}
 	end
 	if not m_simpleTV.User.Ytube then
@@ -451,11 +454,12 @@ function search_youtube_item(types, urlyoutube, eventType, header)
 			m_simpleTV.User.Ytube.ApiKey = decode64('QUl6YVN5Q05DZVgwbUpYWHZDSVNuaHBCS3pkc1hKSWVVc19KQmxJ')
 			m_simpleTV.User.Ytube.ApiKeyHeader = decode64('UmVmZXJlcjpodHRwczovL25leHRlcnItc2ltcGxldHYucnU=')
 		end
-	end
-	local url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q=' .. search_ini .. '&type=' .. types .. '&fields=items/id,items/snippet/title,items/snippet/thumbnails/default/url,items/snippet/description,items/snippet/liveBroadcastContent,items/snippet/channelTitle&maxResults=50' .. eventType .. '&key='
-	local rc, answer = m_simpleTV.Http.Request(session, {url = url .. m_simpleTV.User.Ytube.ApiKey, headers = m_simpleTV.User.Ytube.ApiKeyHeader})
+	end--]]
+	local url = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q=' .. search_ini .. '&type=' .. types .. '&maxResults=50' .. eventType .. '&key='
+	local rc, answer = m_simpleTV.Http.Request(session, {url = url .. m_simpleTV.User.YT.apiKey, headers = 'Referer: https://www.youtube.com/tv'})
 	m_simpleTV.Http.Close(session)
 		if rc ~= 200 then return end
+--	debug_in_file(types .. '\n' .. answer .. '\n','c://1/testyoutubesearch.txt')
 	local tab = json.decode(answer:gsub('(%[%])', '"nil"'):gsub(string.char(239, 187, 191), ''))
 		if not tab then return end
 	local t, i = {}, 1
@@ -464,14 +468,42 @@ function search_youtube_item(types, urlyoutube, eventType, header)
 			t[i] = {}
 			t[i].Id = i
 			t[i].Name = tab.items[i].snippet.title:gsub('%&quot%;','"'):gsub('%&amp%;','&')
-			t[i].Adress = 'https://www.youtube.com/' .. urlyoutube .. (tab.items[i].id.videoId or tab.items[i].id.playlistId or tab.items[i].id.channelId)
-			t[i].InfoPanelLogo = tab.items[i].snippet.thumbnails.default.url:gsub('/default','/hqdefault')
+			t[i].Address = 'https://www.youtube.com/' .. urlyoutube .. (tab.items[i].id.videoId or tab.items[i].id.playlistId or tab.items[i].id.channelId)
+			t[i].InfoPanelLogo = tab.items[i].snippet.thumbnails.medium.url
 			t[i].InfoPanelName = tab.items[i].snippet.channelTitle .. ' | ' .. tab.items[i].snippet.title:gsub('%&quot%;','"')
+			t[i].Channel = tab.items[i].snippet.channelId
 			t[i].InfoPanelTitle = tab.items[i].snippet.description
 			t[i].InfoPanelShowTime = 10000
 			i = i + 1
 		end
 -- west_side code
+		local t1 = {}
+		for i = 1,28 do
+			if not t[i + (page-1)*28] then break end
+			t1[i] = t[i + (page-1)*28]
+			i=i+1
+		end
+	m_simpleTV.User.TVPortal.stena_search_youtube = t1
+	local is_type = types
+	if eventType ~= '' then is_type = 'online' end
+	m_simpleTV.User.TVPortal.stena_search_youtube_type = 'search youtube ' .. is_type
+		local all = 1
+		if #t > 28 then all = 2 end
+		local prev_pg = tonumber(page) - 1
+		local next_pg = tonumber(page) + 1
+		local title = 'Youtube ' .. header .. ': ' .. m_simpleTV.Common.fromPercentEncoding(search_ini) .. ' (стр. ' .. page .. ' из ' .. all .. ')'
+		m_simpleTV.User.TVPortal.stena_search_youtube_title = 'Поиск ● ' .. title
+		if next_pg <= tonumber(all) then
+		m_simpleTV.User.TVPortal.stena_youtube_next = {types, urlyoutube, eventType, header, tonumber(page)+1}
+		else
+		m_simpleTV.User.TVPortal.stena_youtube_next = nil
+		end
+		if prev_pg > 0 then
+		m_simpleTV.User.TVPortal.stena_youtube_prev = {types, urlyoutube, eventType, header, tonumber(page)-1}
+		else
+		m_simpleTV.User.TVPortal.stena_youtube_prev = nil
+		end
+	if stena_search_youtube_content then return stena_search_youtube_content() end
 	local AutoNumberFormat, FilterType
 			if #t > 4 then
 				AutoNumberFormat = '%1. %2'
@@ -489,7 +521,7 @@ function search_youtube_item(types, urlyoutube, eventType, header)
 			return
 		end
 		if ret == 1 then
-			m_simpleTV.Control.PlayAddress(t[id].Adress)
+			m_simpleTV.Control.PlayAddress(t[id].Address)
 		end
 		if ret == 3 then
 			search_youtube()
@@ -500,113 +532,6 @@ function search_youtube_item(types, urlyoutube, eventType, header)
 		else
 			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'Youtube ' .. header .. ': Медиаконтент не найден', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
 			search_youtube()
-		end
-end
-
-function search_filmix_media()
-	local function getConfigVal(key)
-		return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
-	end
-
-	local function setConfigVal(key,val)
-		m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
-	end
-	local filmixsite = m_simpleTV.Config.GetValue('zerkalo/filmix', 'LiteConf.ini') or 'https://filmix.ac'
-	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
-		if not session then return end
-	m_simpleTV.Http.SetTimeout(session, 8000)
-
-	local search_ini = getConfigVal('search/media') or ''
-	local year = m_simpleTV.Common.fromPercentEncoding(search_ini):match(' %((%d%d%d%d)%)$')
-	local title = m_simpleTV.Common.fromPercentEncoding(search_ini):gsub(' %(%d%d%d%d%)$',''):gsub(' %(%)$','')
-	local title1 = 'Поиск медиа: ' .. m_simpleTV.Common.fromPercentEncoding(search_ini)
-	if not m_simpleTV.Control.CurrentAdress then
-		m_simpleTV.Control.SetTitle(title1)
-	end
-
-			local filmixurl = filmixsite .. '/search'
-			local headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. filmixurl
-			local body
-			if year then
-			body = 'scf=fx&story=' .. m_simpleTV.Common.toPercentEncoding(title) .. '&search_start=0&do=search&subaction=search&years_ot=' .. tonumber(year) .. '&years_do=' .. tonumber(year) .. '&kpi_ot=1&kpi_do=10&imdb_ot=1&imdb_do=10&sort_name=asc&undefined=asc&sort_date=&sort_favorite='
-			else
-			body = 'scf=fx&story=' .. m_simpleTV.Common.toPercentEncoding(title) .. '&search_start=0&do=search&subaction=search&years_ot=&years_do=&kpi_ot=&kpi_do=&imdb_ot=&imdb_do=&sort_name=asc&undefined=asc&sort_date=&sort_favorite='
-			end
-			local rc, answer = m_simpleTV.Http.Request(session, {body = body, url = filmixsite .. '/engine/ajax/sphinx_search.php', method = 'post', headers = headers})
---			m_simpleTV.Http.Close(session)
-
-					local otvet = answer:match('<article.-<script>') or ''
-					local i, t = 1, {}
-					for w in otvet:gmatch('<article.-</article>') do
-					local logo, name, adr = w:match('<a class="fancybox" href="(.-)".-alt="(.-)".-<a class="watch icon%-play" itemprop="url" href="(.-)"')
-					if not logo or not adr or not name then break end
-							t[i] = {}
-							t[i].Id = i
-							t[i].Address = adr
-							if adr:match('filmi/') then name = name .. ' - Кино'
-							elseif adr:match('seria/') then name = name .. ' - Сериал'
-							elseif adr:match('multserialy/') then name = name .. ' - Мультсериал'
-							elseif adr:match('mults/') then name = name .. ' - Мультфильм'
-							end
-							t[i].Name = name:gsub('%&nbsp%;',' ')
-							t[i].InfoPanelLogo = logo:gsub('/orig/','/thumbs/w220/')
-							t[i].InfoPanelName = name:gsub('%&nbsp%;',' ')
-							t[i].InfoPanelShowTime = 30000
-					i = i + 1
-					end
-------------------------
-			rc, answer = m_simpleTV.Http.Request(session, {url = filmixsite .. '/persons/search/' .. search_ini})
-					answer = m_simpleTV.Common.multiByteToUTF8(answer)
-					answer = answer:gsub('\n', ' ')
-
-					for w in answer:gmatch('<div class="short">.-</a></h2>') do
-					local sim_adr, sim_img, sim_name = w:match('href="(.-)".-img src="(.-)".-<h2 class="name" itemprop="name"><a href=".-">(.-)</a></h2>')
-					if not sim_adr or not sim_name then break end
-							t[i] = {}
-							t[i].Id = i
-							t[i].Address = sim_adr
-							t[i].Name = sim_name .. ' - Персона'
-							t[i].InfoPanelLogo = sim_img
-							t[i].InfoPanelName = sim_name
-							t[i].InfoPanelShowTime = 30000
-					i = i + 1
-					end
-	rc, answer = m_simpleTV.Http.Request(session, {body = filmixurl, url = 'https://filmix.ac/api/notifications/get', method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. filmixurl .. '\nCookie:' .. m_simpleTV.User.filmix.cookies })
-------------------------
-	local AutoNumberFormat, FilterType
-			if #t > 4 then
-				AutoNumberFormat = '%1. %2'
-				FilterType = 1
-			else
-				AutoNumberFormat = ''
-				FilterType = 2
-			end
-
-		t.ExtParams = {FilterType = FilterType, AutoNumberFormat = AutoNumberFormat}
-		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🔎 Меню '}
-		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔎 Поиск '}
-		if #t > 0 then
-		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('Найдено Filmix: ' .. m_simpleTV.Common.fromPercentEncoding(search_ini) .. ' (' .. #t .. ')', 0, t, 30000, 1+4+8+2)
-		if ret == -1 or not id then
-			return
-		end
-		if ret == 1 then
-			if t[id].Name:match(' %- Персона') then
-				person_content_filmix(t[id].Address)
-			else
-				m_simpleTV.Control.ExecuteAction(37)
-				m_simpleTV.Control.PlayAddress(t[id].Address)
-			end
-		end
-		if ret == 3 then
-			search()
-		end
-		if ret == 2 then
-			search_all()
-		end
-		else
-			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'Filmix: Медиаконтент не найден', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
-			search_all()
 		end
 end
 

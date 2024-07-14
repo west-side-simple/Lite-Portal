@@ -13,8 +13,8 @@ function run_lite_qt_kinokong()
 		local pll={
 		{"","Подборки KinoKong"},
 		{"","Актёры"},
-		{"/filmes/","Фильмы - последние поступления"},
-		{"/filmes/boeviky/","Боевик"},
+		{"/kinofilmi/","Фильмы - последние поступления"},
+		{"/kinofilmi/boeviky/","Боевик"},
 		{"/filmes/vestern/","Вестерн"},
 		{"/filmes/voennyy/","Военный"},
 		{"/filmes/detektiv/","Детектив"},

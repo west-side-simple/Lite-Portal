@@ -1,6 +1,35 @@
---kinogo portal - lite version west_side 21.06.22
+--kinogo portal - lite version west_side 23.03.24
 
-function run_lite_qt_kinogo()
+local function get_hdvb(title, year)
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
+	if not session then return end
+	m_simpleTV.Http.SetTimeout(session, 10000)
+	local url = decode64('aHR0cHM6Ly9hcGl2Yi5pbmZvL2FwaS92aWRlb3MuanNvbj90b2tlbj01ZTJmZTRjNzBiYWZkOWE3NDE0YzRmMTcwZWUxYjE5MiZ0aXRsZT0=') .. m_simpleTV.Common.toPercentEncoding(title)
+	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
+	if rc~=200 then
+		m_simpleTV.Http.Close(session)
+		return false
+	end
+	answer = unescape1(answer)
+--	debug_in_file(title .. ' ' .. year .. '\n' .. answer .. '\n','c://1/content.txt')
+	local t = {}
+		for ru_title, en_title, in_year, kp_id, tr, url in answer:gmatch('"title_ru":"(.-)".-"title_en":"(.-)".-"year":(%d%d%d%d).-"kinopoisk_id":(%d+).-"translator":"(.-)".-"iframe_url":"(.-)"') do
+			if (ru_title and ru_title == title or en_title and en_title == title) and tonumber(in_year) == tonumber(year) then
+				t[#t + 1] = {}
+				t[#t].Id = #t
+				t[#t].Address = url:gsub('\\','')
+				t[#t].Name = tr
+				t[#t].kp_id = kp_id
+--	debug_in_file(tr .. ' ' .. url:gsub('\\','') .. '\n','c://1/content.txt')
+			end
+		end
+	if #t ~= 0 then
+--	debug_in_file( 'kp_id=' .. t[1].kp_id .. '\n', 'c://1/content.txt', setnew )
+	return t, t[1].kp_id
+	end
+	return false
+end
+
 	local function getConfigVal(key)
 	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
 	end
@@ -8,6 +37,8 @@ function run_lite_qt_kinogo()
 	local function setConfigVal(key,val)
 	m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
 	end
+
+function run_lite_qt_kinogo()
 
 	local last_adr = getConfigVal('info/kinogo') or ''
 			local pll={
@@ -34,6 +65,8 @@ function run_lite_qt_kinogo()
 		{"/filmy/genre-filmy-fantastika/","Фантастика"},
 		{"/filmy/genre-filmy-fentezi/","Фэнтези"},
 		{"/filmy/genre-filmy-erotika/","Эротика"},
+		{"/filmy/years-filmy-2024/","2024 года"},
+		{"/filmy/years-filmy-2023/","2023 года"},
 		{"/filmy/years-filmy-2022/","2022 года"},
 		{"/filmy/years-filmy-2021/","2021 года"},
 		{"/filmy/years-filmy-2020/","2020 года"},
@@ -259,7 +292,12 @@ function kinogo_info(url)
 		j=j+1
 		end
 		t1.ExtButton0 = {ButtonEnable = true, ButtonName = ' 🢀 '}
+		local name_title = title:gsub(' %(.-$','')
+		local year_title = title:match('%((%d%d%d%d)%)')
+		local hdvb, kp_id = get_hdvb(name_title, year_title)
+		if hdvb~=false then
 		t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' Play '}
+		end
 		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('KinoGo: ' .. title, 0, t1, 30000, 1 + 4 + 8 + 2)
 		if ret == 1 then
 			if id == 1 then
@@ -274,10 +312,25 @@ function kinogo_info(url)
 			run_lite_qt_kinogo()
 		end
 		if ret == 3 then
-			retAdr = url
-			m_simpleTV.Control.ChangeAddress = 'No'
-			m_simpleTV.Control.ExecuteAction(37)
-			m_simpleTV.Control.CurrentAddress = retAdr
-			m_simpleTV.Control.PlayAddress(retAdr)
+			setConfigVal('info/kinogo',url)
+			if not m_simpleTV.User.hdvb then
+				m_simpleTV.User.hdvb = {}
+			end
+			if m_simpleTV.Control.MainMode == 0 then
+				m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = poster, TypeBackColor = 0, UseLogo = 3, Once = 1})
+				m_simpleTV.User.hdvb.poster = poster
+			end
+			if #hdvb > 1 then
+			local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('🔊 Озвучка', 0, hdvb, 10000, 1 + 4 + 8 + 2)
+			id = id or 1
+			if ret == 1 then
+
+				m_simpleTV.User.hdvb.transl_selected = true
+				m_simpleTV.User.hdvb.transl_name = hdvb[id].Name
+				m_simpleTV.Control.PlayAddressT({address=hdvb[id].Address .. '&kinogo=' .. url, title=title})
+			end
+			else
+				m_simpleTV.Control.PlayAddressT({address=hdvb[1].Address .. '&kinogo=' .. url, title=title})
+			end
 		end
 end

@@ -1,14 +1,28 @@
---EX-FS portal - lite version west_side 23.10.22
+--EX-FS portal - lite version west_side 20.06.24
+
+local function GetBalanser_new(kp_id)
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36')
+	if not session then return false end
+	m_simpleTV.Http.SetTimeout(session, 4000)
+	local url = decode64('aHR0cHM6Ly9id2EtY2xvdWQuYXBuLm1vbnN0ZXIvbGl0ZS96ZXRmbGl4P2tpbm9wb2lza19pZD0=') .. kp_id
+	local rc,answer = m_simpleTV.Http.Request(session,{url = url})
+	m_simpleTV.Http.Close(session)
+--	debug_in_file(url .. '\n' .. answer,'c://1/deb_zf.txt')
+	if rc==200 and answer:match('data%-json') then
+		return url
+	end
+	return false
+end
 
 function run_lite_qt_exfs()
+	stena_clear()
+	local function getConfigVal(key)
+		return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
+	end
 
-local function getConfigVal(key)
-	return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
-end
-
-local function setConfigVal(key,val)
-	m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
-end
+	local function setConfigVal(key,val)
+		m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
+	end
 
 	local last_adr = getConfigVal('info/media') or ''
 	local tt = {
@@ -17,7 +31,7 @@ end
 		{"https://ex-fs.net/actors/","Актёры"},
 		{"",". . ."},
 		{"/film/","Фильмы"},
-		{"/serial/","Сериалы"},
+		{"/serials/","Сериалы"},
 		{"/multfilm/","Мультфильмы"},
 		{"/tv-show/","Передачи и шоу"},
 		{"",". . . По странам"},
@@ -247,17 +261,28 @@ end
 
 function media_info(inAdr)
 	local tooltip_body
-	if m_simpleTV.Config.GetValue('mainOsd/showEpgInfoAsWindow', 'simpleTVConfig') then tooltip_body = ''
-	else tooltip_body = 'bgcolor="#434750"'
+	if m_simpleTV.Config.GetValue('mainOsd/showEpgInfoAsWindow', 'simpleTVConfig') then
+		tooltip_body = ''
+	else
+		tooltip_body = 'bgcolor="#434750"'
 	end
-local function cookiesFromFile()
-	local path = m_simpleTV.Common.GetMainPath(1) .. '/cookies.txt'
-	local file = io.open(path, 'r')
+
+	local function getConfigVal(key)
+		return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
+	end
+
+	local function setConfigVal(key,val)
+		m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
+	end
+
+	local function cookiesFromFile()
+		local path = m_simpleTV.Common.GetMainPath(1) .. '/cookies.txt'
+		local file = io.open(path, 'r')
 		if not file then
 			return ''
 			else
-		local answer = file:read('*a')
-		file:close()
+			local answer = file:read('*a')
+			file:close()
 
 			local name2,data2 = answer:match('ex%-fs%.net.+%s(_ym_uid)%s+(%S+)')
 			local name3,data3 = answer:match('ex%-fs%.net.+%s(_ym_d)%s+(%S+)')
@@ -267,14 +292,14 @@ local function cookiesFromFile()
 			local name7,data7 = answer:match('ex%-fs%.net.+%s(dle_password)%s+(%S+)')
 			local name8,data8 = answer:match('ex%-fs%.net.+%s(dle_newpm)%s+(%S+)')
 
-			if name2 and data2 and name3 and data3 and name4 and data4 and name5 and data5 and name6 and data6 and name7 and data7 and name8 and data8
-			then str = name2 .. '=' .. data2 .. ';' .. name3 .. '=' .. data3 .. ';' .. name4 .. '=' .. data4 .. ';' .. name5 .. '=' .. data5 .. ';' .. name6 .. '=' .. data6 .. ';' .. name7 .. '=' .. data7 .. ';' .. name8 .. '=' .. data8
+			if name2 and data2 and name3 and data3 and name4 and data4 and name5 and data5 and name6 and data6 and name7 and data7 and name8 and data8 then
+				str = name2 .. '=' .. data2 .. ';' .. name3 .. '=' .. data3 .. ';' .. name4 .. '=' .. data4 .. ';' .. name5 .. '=' .. data5 .. ';' .. name6 .. '=' .. data6 .. ';' .. name7 .. '=' .. data7 .. ';' .. name8 .. '=' .. data8
 			else
-			return ''
+				return ''
 			end
-			end
-return str
-end
+		end
+		return str
+	end
 
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 		if not session then return end
@@ -287,10 +312,12 @@ end
 		if rc ~= 200 then return end
 --	m_simpleTV.Http.Close(session)
 	answer = answer:gsub('\n', ' ')
+	local kp_id = answer:match('data%-kinopoisk="(%d+)"') or answer:match('/kp/(%d+)') or answer:match('kp_id=(%d+)')
 	local desc = answer:match('<meta name="description" content="(.-)"') or ''
 	local poster = answer:match('<div class="FullstoryForm">.-<img src="(.-)"') or ''
 	poster = 'https://ex-fs.net' .. poster:gsub('https://ex%-fs%.net','')
 	local title_rus = answer:match('<h1 class="view%-caption">(.-)</h1>') or ''
+	title_rus = title_rus:gsub(' смотреть онлайн','')
 	local title_eng = answer:match('<h2 class="view%-caption2">(.-)</h2>') or ''
 	local kpr = answer:match('<div class="in_name_kp">(.-)</div>') or ''
 	local imdbr = answer:match('<div class="in_name_imdb">(.-)</div>') or ''
@@ -303,7 +330,7 @@ end
 	local answer2 = answer:match('<div class="FullstoryKadrFormImgAc">(.-)</div>') or ''
 	local answer3 = answer:match('<div class="RelatedFormTitle">(.-)<script') or ''
 	local title = title_rus .. ' (' .. year .. ')'
-	local t1,j={},2
+	local t1,j,balanser={},2
 		t1[1] = {}
 		t1[1].Id = 1
 		t1[1].Address = ''
@@ -313,6 +340,18 @@ end
 		t1[1].InfoPanelDesc = '<html><body ' .. tooltip_body .. '>' .. desc1 .. '</body></html>'
 		t1[1].InfoPanelTitle = desc
 		t1[1].InfoPanelShowTime = 10000
+
+		if kp_id and kp_id~=0 then
+			balanser = GetBalanser_new(kp_id)
+			if balanser then
+			t1[2] = {}
+			t1[2].Id = 2
+			t1[2].Address = balanser
+			t1[2].Name = 'Online: ZF'
+			j = 3
+			end
+		end
+
 		for w1 in answer1:gmatch('<a href=".-</a>') do
 		local adr,name = w1:match('<a href="(.-)" title="(.-)"')
 		if not adr or not name then break end
@@ -347,15 +386,19 @@ end
 		j=j+1
 		end
 		t1.ExtButton0 = {ButtonEnable = true, ButtonName = '🢀 '}
-		t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' Play'}
+		t1.ExtButton1 = {ButtonEnable = true, ButtonName = ' Кинопоиск'}
 		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('EX-FS: ' .. title, 0, t1, 30000, 1 + 4 + 8 + 2)
 		if ret == 1 then
 			if id == 1 then
-			media_info(inAdr)
+				media_info(inAdr)
 			elseif t1[id].Name:match('Похожий контент') then
-			media_info(t1[id].Address)
+				media_info(t1[id].Address)
+			elseif t1[id].Name:match('ZF') then
+				setConfigVal('info/media',inAdr)
+				setConfigVal('info/scheme','EXFS')
+				m_simpleTV.Control.PlayAddressT({address=t1[id].Address, title=title})
 			else
-			page_exfs(t1[id].Address .. '/')
+				page_exfs(t1[id].Address .. '/')
 			end
 		end
 		if ret == 2 then
@@ -371,16 +414,15 @@ end
 end
 
 function UpdatePersonEXFS()
-if package.loaded['tvs_core'] and package.loaded['tvs_func'] then
-    local tmp_sources = tvs_core.tvs_GetSourceParam() or {}
-    for SID, v in pairs(tmp_sources) do
-         if v.name:find('PERSONS')
-		 then
-		    tvs_core.UpdateSource(SID, false)
-            tvs_func.OSD_mess('', -2)
-         end
-    end
-end
+	if package.loaded['tvs_core'] and package.loaded['tvs_func'] then
+		local tmp_sources = tvs_core.tvs_GetSourceParam() or {}
+		for SID, v in pairs(tmp_sources) do
+			 if v.name:find('PERSONS') then
+				tvs_core.UpdateSource(SID, false)
+				tvs_func.OSD_mess('', -2)
+			 end
+		end
+	end
 end
 
 -------------------------------------------------------------------

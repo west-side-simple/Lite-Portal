@@ -1,4 +1,4 @@
--- Плагин для трекеров lite portal 20.06.23
+-- Плагин для трекеров lite portal 08.01.23
 -- author west_side
 
 function start_page()
@@ -316,18 +316,15 @@ local function get_cdnmovies(kp_id)
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 10000)
-	local url = decode64('aHR0cHM6Ly9jZG5tb3ZpZXMubmV0L2FwaT90b2tlbj0wYWVmZDdjMWQ2ZjY0YzAzNzRjYmE4ZmRiZTZmOTE2MyZraW5vcG9pc2tfaWQ9') .. kp_id
-	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
-	if rc~=200 then
+	local url = decode64('aHR0cHM6Ly9jZG5tb3ZpZXMtc3RyZWFtLm9ubGluZS9raW5vcG9pc2sv') .. kp_id .. '/iframe'
+	local rc,answer = m_simpleTV.Http.Request(session,{url=url, headers = 'Referer: https://cdnmovies.net/'})
+	if rc ~= 200 or (rc == 200 and not answer:match('#2')) then
 		m_simpleTV.Http.Close(session)
 		return false
 	end
 	answer = answer:gsub('\\','')
 --	debug_in_file( answer .. '\n', 'c://1/cdnmovies.txt', setnew )
-	if answer:match('iframe src="(.-)"') then
-		return 'http:' .. answer:match('iframe src="(.-)"')
-	end
-	return false
+	return url
 end
 
 local function get_kodik(kp_id)
@@ -403,7 +400,7 @@ end
 
 local function check(url)
 
-	local token = decode64('d2luZG93c18yZmRkYTQyMWNkZGI2OTExNmUwNzY4ZjNiZmY0ZGUwNV81OTIwMjE=')
+	local token = decode64('d2luZG93c18zZWZlMGUyZDg5ZTQ3NzVhYWFjMTBiMGMxYjU0YTU3MF81OTIwMjE=')
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 10000)
@@ -440,7 +437,7 @@ local function check(url)
 end
 
 function content_compilation_page(page)
-	local token = decode64('d2luZG93c18yZmRkYTQyMWNkZGI2OTExNmUwNzY4ZjNiZmY0ZGUwNV81OTIwMjE=')
+	local token = decode64('d2luZG93c18zZWZlMGUyZDg5ZTQ3NzVhYWFjMTBiMGMxYjU0YTU3MF81OTIwMjE=')
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 10000)
@@ -478,7 +475,7 @@ function content_compilation_page(page)
 	end
 		local prev_pg = tonumber(page) - 1
 		local next_pg = tonumber(page) + 1
-		local title = title .. ' (страница ' .. page .. ')'
+		local title = title .. ' (стр. ' .. page .. ')'
 		if next_pg <= 36 then
 		t.ExtButton1 = {ButtonEnable = true, ButtonName = ''}
 		end
@@ -518,7 +515,7 @@ function content_compilation_page(page)
 end
 
 function content_compilation(list_id)
-	local token = decode64('d2luZG93c18yZmRkYTQyMWNkZGI2OTExNmUwNzY4ZjNiZmY0ZGUwNV81OTIwMjE=')
+	local token = decode64('d2luZG93c18zZWZlMGUyZDg5ZTQ3NzVhYWFjMTBiMGMxYjU0YTU3MF81OTIwMjE=')
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 10000)
@@ -583,11 +580,11 @@ function content_compilation(list_id)
 end
 
 function content(content_id)
-	local token = decode64('d2luZG93c18yZmRkYTQyMWNkZGI2OTExNmUwNzY4ZjNiZmY0ZGUwNV81OTIwMjE=')
+	local token = decode64('d2luZG93c18zZWZlMGUyZDg5ZTQ3NzVhYWFjMTBiMGMxYjU0YTU3MF81OTIwMjE=')
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 10000)
-	local url = 'http://api.vokino.tv/v2/view?id='	.. content_id .. '&token=' .. token
+	local url = 'http://api.vokino.tv/v2/view/'	.. content_id .. '?token=' .. token
 	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
 --	debug_in_file(rc .. ' - ' .. url .. '\n' .. answer .. '\n','c://1/deb.txt')
 	if rc~=200 or answer and answer:match('"success":false') then
@@ -655,7 +652,7 @@ function content(content_id)
 		t[1].InfoPanelTitle = about
 		t[1].InfoPanelShowTime = 10000
 
-		local hdvb, kp_id = get_hdvb(name, released)
+--[[		local hdvb, kp_id = get_hdvb(name, released)
 		if hdvb~=false then
 		t[j] = {}
 		t[j].Id = j
@@ -771,7 +768,7 @@ function content(content_id)
 		t[j].Address = check
 		j=j+1
 		end
-		end
+		end--]]
 
 		t[j] = {}
 		t[j].Id = j
@@ -852,16 +849,16 @@ function content(content_id)
 		if tab.casts and tab.casts[1] then
 		local n = 1
 		while true do
-		if not tab.casts[n]
+		if not tab.casts[n] or not tab.casts[n].title
 		then
 		break
 		end
 		t[j] = {}
 		t[j].Id = j
 		t[j].Address = tab.casts[n].playlist_url
-		t[j].Name = 'Casts: ' .. tab.casts[n].title
+		t[j].Name = 'Casts: ' .. tab.casts[n].title or ''
 		t[j].InfoPanelLogo = tab.casts[n].poster or ''
-		t[j].InfoPanelLogo = t[j].InfoPanelLogo:gsub('w600_and_h900_bestv2','w500_and_h282_face')
+		t[j].InfoPanelLogo = t[j].InfoPanelLogo:gsub('w600_and_h900_bestv2','w250_and_h141_face')
 		t[j].InfoPanelName =  tab.casts[n].title .. ' (' ..  (tab.casts[n].birthday or 'not info') .. ') ' .. (tab.casts[n].place_of_birth or '')
 		t[j].InfoPanelTitle = tab.casts[n].biography:gsub('\n',' ')
 		t[j].InfoPanelShowTime = 10000
@@ -870,7 +867,7 @@ function content(content_id)
 		end
 		end
 
-		if tab.similars and tab.similars[1] and tab.similars[1].details and tab.similars[1].details.id then
+--[[		if tab.similars and tab.similars[1] and tab.similars[1].details and tab.similars[1].details.id then
 		local o = 1
 		while true do
 		if not tab.similars[o]
@@ -892,7 +889,7 @@ function content(content_id)
 		o=o+1
 		j=j+1
 		end
-		end
+		end--]]
 
 		t.ExtButton0 = {ButtonEnable = true, ButtonName = 'Главная 🎦'}
 		t.ExtButton1 = {ButtonEnable = true, ButtonName = '🧲 Трекеры'}
@@ -989,12 +986,13 @@ function content(content_id)
 		if is_tv == false and m_simpleTV.User.torrent.content and m_simpleTV.User.torrent.content == content_id then
 			m_simpleTV.User.torrent.is_set_position = true
 		end
-		torrents(tab.torrents .. 'seed_desc')
+--		debug_in_file(rc .. ' - ' .. url .. '\n' .. answer .. '\n','c://1/deb.txt')
+		torrents(tab.torrents)
 		end
 end
 
 function content_adr_page(adr)
-	local token = decode64('d2luZG93c18yZmRkYTQyMWNkZGI2OTExNmUwNzY4ZjNiZmY0ZGUwNV81OTIwMjE=')
+	local token = decode64('d2luZG93c18zZWZlMGUyZDg5ZTQ3NzVhYWFjMTBiMGMxYjU0YTU3MF81OTIwMjE=')
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 10000)
@@ -1047,7 +1045,7 @@ function content_adr_page(adr)
 	end
 		local prev_pg = tonumber(page) - 1
 		local next_pg = tonumber(page) + 1
-		title = title .. ' (страница ' .. page .. ')'
+		title = title .. ' (стр. ' .. page .. ')'
 		if next_pg <= 36 then
 		t.ExtButton1 = {ButtonEnable = true, ButtonName = ''}
 		end
@@ -1089,11 +1087,13 @@ function content_adr_page(adr)
 end
 
 function torrents(adr)
-	local token = decode64('d2luZG93c18yZmRkYTQyMWNkZGI2OTExNmUwNzY4ZjNiZmY0ZGUwNV81OTIwMjE=')
+	local token = decode64('d2luZG93c18zZWZlMGUyZDg5ZTQ3NzVhYWFjMTBiMGMxYjU0YTU3MF81OTIwMjE=')
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 10000)
-	local url = adr:gsub('sorting=','sortings=') .. '&token=' .. token
+	local url
+	if adr:match('?') then url = adr:gsub('sorting=','sortings=') .. '&token=' .. token else url = adr .. '?token=' .. token end
+--	local url = adr:gsub('sorting=','sortings=') .. '?token=' .. token
 	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
 	if rc~=200 then
 		m_simpleTV.Http.Close(session)
@@ -1103,7 +1103,7 @@ function torrents(adr)
 	require('json')
 	answer = answer:gsub('(%[%])', '"nil"')
 	local tab = json.decode(answer)
-	local content_id = adr:match('id=(.-)%&')
+	local content_id = adr:match('/torrents/(.-)$')
 	if not tab or not tab.menu or not tab.menu[1] or not tab.menu[1].title or not tab.menu[1].submenu or not tab.menu[1].submenu[1] or not tab.menu[1].submenu[1].playlist_url
 	then
 	return end
@@ -1147,11 +1147,13 @@ function torrents_tracker(adr)
 	if not m_simpleTV.User.torrent then
 		m_simpleTV.User.torrent = {}
 	end
-	local token = decode64('d2luZG93c18yZmRkYTQyMWNkZGI2OTExNmUwNzY4ZjNiZmY0ZGUwNV81OTIwMjE=')
+	local token = decode64('d2luZG93c18zZWZlMGUyZDg5ZTQ3NzVhYWFjMTBiMGMxYjU0YTU3MF81OTIwMjE=')
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 10000)
-	local url = adr:gsub('sorting=','sortings=') .. '&token=' .. token
+	local url
+	if adr:match('?') then url = adr .. '&token=' .. token else url = adr .. '?token=' .. token end
+--	local url = adr:gsub('sorting=','sortings=') .. 'token=' .. token
 	local rc,answer = m_simpleTV.Http.Request(session,{url=url})
 	if rc~=200 then
 		m_simpleTV.Http.Close(session)
@@ -1161,10 +1163,10 @@ function torrents_tracker(adr)
 	require('json')
 	answer = answer:gsub('(%[%])', '"nil"')
 	local tab = json.decode(answer)
-	local content_id = url:match('id=(.-)%&')
+	local content_id = url:match('/torrents/(.-)?')
 	local title = url:match('tracker=(.-)%&') or 'Все трекеры'
 	if title == '' then title = 'Все трекеры' end
-	local poster = 'http://proxy.vokino.tv/image/t/p/w600_and_h900_bestv2' .. tab.details.poster
+	local poster = 'http://image.tmdb.org/t/p/w600_and_h900_bestv2' .. tab.details.poster
 	if not tab or not tab.channels or not tab.channels[1] or not tab.channels[1].trackerName or not tab.channels[1].magnet
 	then
 	return end

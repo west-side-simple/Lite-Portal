@@ -33,7 +33,7 @@ function run_lite_qt_kinopub()
 		end
 		if ret == 1 then
 			if t0[id].Name == 'ПОИСК' then
-				search()
+				search_all()
 			elseif t0[id].Name == 'Подборки' then
 				show_selection(t0[id].Action)
 			else

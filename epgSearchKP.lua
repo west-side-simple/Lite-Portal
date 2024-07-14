@@ -1,7 +1,10 @@
 -- поиск медиа в схемах из телепрограмы (07/08/22)
 -- необходим скрипт: Lite_qt_search.lua
 	function findEPGInKP(epgId)
-			if not epgId then return end
+		m_simpleTV.Control.ExecuteAction(38, 0) -- SHOW_OSD_EPG
+		m_simpleTV.Control.ExecuteAction(6, 0)
+	
+		if not epgId then return end
 		local t = m_simpleTV.Database.GetTable('SELECT * FROM ChProg WHERE (ChProg.Id=' .. epgId .. ');')
 			if not t
 				or not t[1]
@@ -9,8 +12,7 @@
 			then
 			 return
 			end
-		m_simpleTV.Control.ExecuteAction(38, 0) -- SHOW_OSD_EPG
-		m_simpleTV.Control.ExecuteAction(6, 0)
+		
 
 		local function clean_title(s)
 			s = s:gsub('%(.-%)', ' ')
@@ -35,6 +37,7 @@
 		local w = clean_title(t[1].Title)
 
 		m_simpleTV.Config.SetValue('search/media',escape (w),"LiteConf.ini")
+		
 		search_all()
 
 	end

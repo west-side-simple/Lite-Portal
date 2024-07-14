@@ -1,4 +1,4 @@
---HDRezka portal - lite version west_side 28.08.23
+--HDRezka portal - lite version west_side 28.05.24
 
 	local host = 'https://hdrezka.ag'
 	local sessionHDRezka = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36', prx, false)
@@ -15,18 +15,21 @@
 		m_simpleTV.User.rezka.cookies = ''
 	else
 		local rc, answer = m_simpleTV.Http.Request(sessionHDRezka, {body = 'login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login_not_save=0', url = 'https://hdrezka.ag/ajax/login/', method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. host})
-		debug_in_file('login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login_not_save=0\n' .. answer .. '\n','c://1/avt_rezka.txt')
+--		debug_in_file('login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login_not_save=0\n' .. answer .. '\n','c://1/avt_rezka.txt')
 		if answer and answer:match('"success":true') then
 			m_simpleTV.User.rezka.cookies = m_simpleTV.Http.GetCookies(sessionHDRezka,host)
 			local url = 'https://hdrezka.ag/ajax/favorites/'
 			local headers = 'X-Requested-With: XMLHttpRequest\nCookie: ' .. m_simpleTV.User.rezka.cookies
 			local name_cat = {'Мои фильмы','Мои сериалы','Мои мультфильмы','Мои аниме'}
+			local my_cat = nil
+			if my_cat then
 			for i = 1,#name_cat do
 				local body = 'name=' .. name_cat[i] .. '&action=add_cat'
 				rc, answer = m_simpleTV.Http.Request(sessionHDRezka, {url = url, method = 'post', body = body, headers = headers})
 				i = i + 1
 			end
-			debug_in_file(m_simpleTV.User.rezka.cookies .. '\n','c://1/avt_rezka.txt')
+			end
+--			debug_in_file(m_simpleTV.User.rezka.cookies .. '\n','c://1/avt_rezka.txt')
 		else
 			m_simpleTV.User.rezka.cookies = ''
 		end
@@ -41,14 +44,21 @@ local function setConfigVal(key,val)
 	m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
 end
 
+local function update_phpsesid()
+	local cookie = m_simpleTV.Interface.CopyFromClipboard()
+	if cookie:match('PHPSESSID') then
+		m_simpleTV.User.ZF.cookies = cookie
+	end
+end
+
 local function GetFavCat()
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.3809.87 Safari/537.36', proxy, false)
 	if not session then
 		return
 	end
-	m_simpleTV.Http.SetTimeout(session, 12000)
+	m_simpleTV.Http.SetTimeout(session, 10000)
 	rc, answer = m_simpleTV.Http.Request(session, {url = 'https://hdrezka.ag/favorites/', method = 'get', headers = 'X-Requested-With: XMLHttpRequest\nCookie: ' .. m_simpleTV.User.rezka.cookies})
-	debug_in_file(answer .. '\n','c://1/avt_rezka.txt')
+--	debug_in_file(answer .. '\n','c://1/avt_rezka.txt')
 	local tf,i = {},1
 	for w in answer:gmatch('<a class="b%-favorites_content__cats_list_link.-</a>') do
 		local adr,name,num = w:match('href="(.-)".-<span class="name">(.-)</span>.-<span class="num%-holder">(.-)</span>')
@@ -64,13 +74,29 @@ local function GetFavCat()
 end
 
 local function GetBalanser(kp_id)
-	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:97.0) Gecko/20100101 Firefox/97.0')
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36')
 	if not session then return false end
 	m_simpleTV.Http.SetTimeout(session, 8000)
-	local url = decode64('aHR0cHM6Ly9oZGkuemV0ZmxpeC5vbmxpbmUvaXBsYXllci92aWRlb2RiLnBocD9rcD0=') .. kp_id
-	local rc,answer = m_simpleTV.Http.Request(session,{url = url, method = 'get', headers = 'User-agent: Mozilla/5.0 (Windows NT 10.0; rv:97.0) Gecko/20100101 Firefox/97.0\nReferer: https://hdi.zetflix.online/iplayer/player.php'})
+	local url = decode64('aHR0cHM6Ly9nby56ZWZsaXgub25saW5lL2lwbGF5ZXIvdmlkZW9kYi5waHA/a3A9') .. kp_id
+	local rc,answer = m_simpleTV.Http.Request(session,{url = url, method = 'get', headers = 'User-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36\nReferer: ' .. 'https://go.zeflix.online/iplayer/player.php\nCookie: ' .. m_simpleTV.User.ZF.cookies})
+	if rc==200 and answer:match('^<script>') then return '' end
 	if rc ~= 200 or answer:match('video_not_found') or (not answer:match('%.mp4') and not answer:match('%.m3u8')) then return false end
+--	debug_in_file(answer .. '\n','c://1/zf.txt')
 	return url
+end
+
+local function GetBalanser_new(kp_id)
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36')
+	if not session then return false end
+	m_simpleTV.Http.SetTimeout(session, 4000)
+	local url = decode64('aHR0cHM6Ly9id2EtY2xvdWQuYXBuLm1vbnN0ZXIvbGl0ZS96ZXRmbGl4P2tpbm9wb2lza19pZD0=') .. kp_id
+	local rc,answer = m_simpleTV.Http.Request(session,{url = url})
+	m_simpleTV.Http.Close(session)
+--	debug_in_file(url .. '\n' .. answer,'c://1/deb_zf.txt')
+	if rc==200 and answer:match('data%-json') then
+		return url
+	end
+	return false
 end
 
 function favorites_cat_rezka(cat_adr,cat_name)
@@ -80,7 +106,7 @@ function favorites_cat_rezka(cat_adr,cat_name)
 		end
 		m_simpleTV.Http.SetTimeout(session, 6000)
 		local rc, answer = m_simpleTV.Http.Request(session, {url = cat_adr, method = 'get', headers = 'X-Requested-With: XMLHttpRequest\nCookie: ' .. m_simpleTV.User.rezka.cookies})
-		debug_in_file(answer .. '\n','c://1/avt_rezka.txt')
+--		debug_in_file(answer .. '\n','c://1/avt_rezka.txt')
 		local t,i = {},1
 		for w in answer:gmatch('<div class="b%-content__inline_item".-</div></div>') do
 			local adr,logo,type_media,name,desc = w:match('url="(.-)".-src="(.-)".-"entity">(.-)<.-href=".-">(.-)<.-<div>(.-)</div>')
@@ -156,6 +182,7 @@ function run_lite_qt_rezka()
 	if io.open(m_simpleTV.MainScriptDir .. 'user/TVSources/m3u/out_Franchises.m3u', 'r') and ExaminFranchisesRezka() == true
 	then
 	    tt = {
+		{"/","HDRezka: Горячие новинки"},
 		{"/films/?filter=last","HDRezka: Фильмы, последние поступления"},
 		{"/films/?filter=popular","HDRezka: Фильмы, популярные"},
 		{"/films/?filter=watching","HDRezka: Фильмы, сейчас смотрят"},
@@ -180,6 +207,7 @@ function run_lite_qt_rezka()
 	elseif ExaminFranchisesRezka() == true
 	then
 		tt = {
+		{"/","HDRezka: Горячие новинки"},
 		{"/films/?filter=last","HDRezka: Фильмы, последние поступления"},
 		{"/films/?filter=popular","HDRezka: Фильмы, популярные"},
 		{"/films/?filter=watching","HDRezka: Фильмы, сейчас смотрят"},
@@ -200,6 +228,7 @@ function run_lite_qt_rezka()
 		}
     else
 		tt = {
+		{"/","HDRezka: Горячие новинки"},
 		{"/films/?filter=last","HDRezka: Фильмы, последние поступления"},
 		{"/films/?filter=popular","HDRezka: Фильмы, популярные"},
 		{"/films/?filter=watching","HDRezka: Фильмы, сейчас смотрят"},
@@ -342,38 +371,42 @@ function last_rezka(filter,filter_name)
 	url = 'https://hdrezka.ag'
 	end
 	m_simpleTV.Http.SetTimeout(session, 8000)
-	local rc,answer = m_simpleTV.Http.Request(session,{url= url .. filter:gsub('^https://.-/','/')})
+	local rc,answer = m_simpleTV.Http.Request(session,{url= url .. filter:gsub('^https://.-/','/'), method = 'get', headers = 'X-Requested-With: XMLHttpRequest\nCookie: ' .. m_simpleTV.User.rezka.cookies})
 		if rc ~= 200 then return end
+--	debug_in_file(url .. filter:gsub('^https://.-/','/') .. '\nrc:' .. rc .. '\n' .. answer .. '\n','c://1/test_rezka.txt')
+	local max = 45
+	if filter == '/' then max = 32 end
 	local t,i = {},1
-		for w in answer:gmatch('<div class="b%-content__inline_item".-</div> </div></div>') do
-			local logo, adr, name, title = w:match('<img src="(.-)".-<a href="(.-)">(.-)</a> <div>(.-)<')
+		for w in answer:gmatch('<div class="b%-content__inline_item".-</div> %-%-> </div></div>') do
+			local logo, adr, name, title = w:match('<img src="(.-)".-<a href="(.-)">(.-)</a> <div.->(.-)<')
 			local info = w:match('<span class="info">(.-)</span>')
-			if not adr and not name then break end
-				t[i] = {}
-				t[i].Id = i
-				t[i].Name = name .. ' (' .. (title:match('%d%d%d%d') or 0) .. ')'
-				t[i].InfoPanelLogo = logo
-				t[i].Address =  adr
-				t[i].InfoPanelName = name .. ' / ' .. title
-				if info then
-					t[i].InfoPanelTitle = info
-				end
-				t[i].InfoPanelShowTime = 10000
-				i = i + 1
+			if not adr and not name or i>max then break end
+			t[i] = {}
+			t[i].Id = i
+			t[i].Name = name .. ' (' .. (title:match('%d%d%d%d') or 0) .. ')'
+			t[i].InfoPanelLogo = logo
+			t[i].Address =  adr:gsub('^/', url .. '/')
+			t[i].InfoPanelName = name .. ' / ' .. title
+			if info then
+				t[i].InfoPanelTitle = info:gsub('<.->',' ')
 			end
-		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Back '}
-		t.ExtParams = {FilterType = 0, AutoNumberFormat = '%1. %2'}
-		if filter_name == '' then filter_name = 'Rezka New' end
-		local ret,id = m_simpleTV.OSD.ShowSelect_UTF8(filter_name,0,t,10000,1+4+8+2)
-		if ret == -1 or not id then
-			return
+			t[i].InfoPanelShowTime = 10000
+			i = i + 1
 		end
-		if ret == 1 then
-			media_info_rezka(t[id].Address)
-		end
-		if ret == 2 then
-			run_lite_qt_rezka()
-		end
+
+	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Back '}
+	t.ExtParams = {FilterType = 0, AutoNumberFormat = '%1. %2'}
+	if filter_name == '' then filter_name = 'Rezka New' end
+	local ret,id = m_simpleTV.OSD.ShowSelect_UTF8(filter_name,0,t,10000,1+4+8+2)
+	if ret == -1 or not id then
+		return
+	end
+	if ret == 1 then
+		media_info_rezka(t[id].Address)
+	end
+	if ret == 2 then
+		run_lite_qt_rezka()
+	end
 end
 
 function collection_rezka()
@@ -729,7 +762,7 @@ function person_rezka_work(url)
 	desc = desc:gsub('<span class="t2" itemprop="alternativeHeadline">','\n'):gsub('<h2>','\n'):gsub('<.->',''):gsub('Смотреть все.-$','')
 	m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="4.0" src="' .. logo_person .. '"', text = desc, color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
 	local t,i = {},1
-	for w in answer:gmatch('<div class="b%-content__inline_item.-</div> </div></div>') do
+	for w in answer:gmatch('<div class="b%-content__inline_item.-</div> %-%-> </div></div>') do
 	local logo, group, adr, name, title = w:match('<img src="(.-)".-<span class="(.-)".-<a href="(.-)">(.-)</a> <div class="misc">(.-)<')
 	if not adr or not name then break end
 	t[i] = {}
@@ -828,13 +861,23 @@ function media_info_rezka(url)
 	local answer4 = answer:match('<h2>Жанр</h2>:(.-)</tr>') or ''
 
 	local title = name_rus .. ' (' .. year .. ')'
-	local kp_id, balanser
+	local kp_id, imdb_id, balanser
 	if answer:match('<span class="b%-post__info_rates kp"><a href="/help/.-" target="_blank" rel="nofollow">Кинопоиск</a>') then
 	kp_id = answer:match('<span class="b%-post__info_rates kp"><a href="/help/(.-)"')
 	kp_id = decode64(kp_id)
 	kp_id = kp_id:gsub('%%3A', ':'):gsub('%%2F', '/')
 	kp_id = kp_id:match('kinopoisk%.ru/.-/(%d+)/.-$')
-	balanser = GetBalanser(kp_id)
+	end
+	if answer:match('<span class="b%-post__info_rates imdb"><a href="/help/.-" target="_blank" rel="nofollow">IMDb</a>') then
+	imdb_id = answer:match('<span class="b%-post__info_rates imdb"><a href="/help/(.-)/"')
+	imdb_id = decode64(imdb_id)
+	imdb_id = imdb_id:gsub('%%3A', ':'):gsub('%%2F', '/')
+	imdb_id = imdb_id:match('imdb%.com/title/(tt.-)/.-$')
+	end
+--	local add_id = kp_id or imdb_id
+	local add_id = kp_id
+	if add_id then
+		balanser = GetBalanser_new(add_id)
 	end
 	local t1,j={},2
 		t1[1] = {}
@@ -850,7 +893,11 @@ function media_info_rezka(url)
 		t1[2] = {}
 		t1[2].Id = 2
 		t1[2].Address = balanser
+		if balanser ~= '' then
 		t1[2].Name = 'Online: ZF'
+		elseif balanser == '' then
+		t1[2].Name = '🔄 Online: ZF'
+		end
 		j = 3
 		end
 		for w in answer4:gmatch('<a.-</a>') do
@@ -891,8 +938,8 @@ function media_info_rezka(url)
 		t1[j].InfoPanelShowTime = 10000
 		j=j+1
 		end
-		for w3 in answer3:gmatch('<a href=".-</div> </div>') do
-		local logo, item, adr, name, desc = w3:match('<img src="(.-)".-<i class="entity">(.-)</i>.-<a href="(.-)">(.-)</a> <div class="misc">(.-)</div> </div>')
+		for w3 in answer3:gmatch('<a href=".-</div> <!%-%- </div>') do
+		local logo, item, adr, name, desc = w3:match('<img src="(.-)".-<i class="entity">(.-)</i>.-<a href="(.-)">(.-)</a> <div class="misc">(.-)</div>')
 		if not logo or not item or not adr or not name or not desc then break end
 		t1[j] = {}
 		t1[j].Id = j
@@ -917,6 +964,9 @@ function media_info_rezka(url)
 				last_rezka(t1[id].Address,t1[id].Name)
 			elseif t1[id].Address:match('/person/') then
 				person_rezka_work(t1[id].Address)
+			elseif t1[id].Name:match('🔄') then
+				update_phpsesid()
+				media_info_rezka(url)
 			elseif t1[id].Name:match('ZF') then
 				m_simpleTV.User.filmix.CurAddress = nil
 				m_simpleTV.User.rezka.CurAddress = url
