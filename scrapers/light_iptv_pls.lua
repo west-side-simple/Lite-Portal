@@ -1,14 +1,14 @@
--- скрапер TVS для загрузки плейлиста "Filmax TV" (29/06/22)
--- автор westSide
--- логин, пароль установить в 'Password Manager', для ID - filmax
+-- скрапер TVS для загрузки плейлиста "LIGHT IPTV" (24/11/21)
+-- логин, пароль установить в 'Password Manager', для ID - lightiptv
+
 -- ## Переименовать каналы ##
 local filter = {
 	{'Наука', 'Наука UA'},
 	}
 -- ##
 
-	module('filmax_pls', package.seeall)
-	local my_src_name = 'FILMAX ($)'
+	module('light_iptv_pls', package.seeall)
+	local my_src_name = 'Light IPTV ($)'
 	local function ProcessFilterTableLocal(t)
 		if not type(t) == 'table' then return end
 		for i = 1, #t do
@@ -22,18 +22,18 @@ local filter = {
 	 return t
 	end
 	function GetSettings()
-	 return {name = my_src_name, sortname = '', scraper = '', m3u = 'out_' .. my_src_name .. '.m3u', logo = 'https://filmax-tv.ru/images/favicon.png', TypeSource = 1, TypeCoding = 1, DeleteM3U = 1, RefreshButton = 1, AutoBuild = 0, AutoBuildDay = {0, 0, 0, 0, 0, 0, 0}, LastStart = 0, TVS = {add = 0, FilterCH = 0, FilterGR = 0, GetGroup = 0, LogoTVG = 0}, STV = {add = 1, ExtFilter = 1, FilterCH = 0, FilterGR = 0, GetGroup = 1, HDGroup = 0, AutoSearch = 1, AutoSearchLogo =1, AutoNumber = 0, NumberM3U = 0, GetSettings = 1, NotDeleteCH = 0, TypeSkip = 1, TypeFind = 1, TypeMedia = 0, RemoveDupCH = 0}}
+	 return {name = my_src_name, sortname = '', scraper = '', m3u = 'out_' .. my_src_name .. '.m3u', logo = '../Channel/logo/extFiltersLogo/light_iptv.jpg', TypeSource = 1, TypeCoding = 1, DeleteM3U = 1, RefreshButton = 1, AutoBuild = 0, AutoBuildDay = {0, 0, 0, 0, 0, 0, 0}, LastStart = 0, TVS = {add = 0, FilterCH = 1, FilterGR = 1, GetGroup = 1, LogoTVG = 1}, STV = {add = 1, ExtFilter = 1, FilterCH = 1, FilterGR = 1, GetGroup = 1, HDGroup = 0, AutoSearch = 1, AutoNumber = 0, NumberM3U = 0, GetSettings = 1, NotDeleteCH = 0, TypeSkip = 1, TypeFind = 1, TypeMedia = 0, RemoveDupCH = 0}}
 	end
 	function GetVersion()
 	 return 2, 'UTF-8'
 	end
 	local function LoadFromSite()
 		local url
-			local res, login, password, header = xpcall(function() require('pm') return pm.GetPassword('filmax') end, err)
+			local res, login, password, header = xpcall(function() require('pm') return pm.GetPassword('lightiptv') end, err)
 		if not login or not password or login == '' or password == '' then return
-		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="https://filmax-tv.ru/images/favicon.png"', text = ' Внесите данные в менеджере паролей для ID filmax', color = ARGB(255, 255, 255, 255), showTime = 1000 * 60})
+		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="https://ottbill.cc/images/favicon.png"', text = ' Внесите данные в менеджере паролей для ID lightiptv', color = ARGB(255, 255, 255, 255), showTime = 1000 * 60})
 		else
-		url = 'https://lk.filmax-tv.ru/' .. login .. '/' .. password .. '/hls/p1/playlist.m3u8'
+		url = 'https://lightiptv.cc/playlist/hls/' .. password .. '.m3u'
 		end
 
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML,like Gecko) Chrome/81.0.3785.143 Safari/537.36')
@@ -45,18 +45,16 @@ local filter = {
 		answer = answer .. '\n'
 		local t, i = {}, 1
 
-			for w in answer:gmatch('%#EXTINF:.-\nhttp.-\n') do
-				local title = w:match('%,(.-)\n')
-				local adr = w:match('\n(http.-)\n')
+			for w in answer:gmatch('%#EXTINF:.-\n.-\n') do
+				local title = w:match(',(.-)\n')
+				local adr = w:match('\n(.-)\n')
 				local logo = w:match('tvg%-logo="(.-)"')
 					if not adr or not title then break end
 				t[i] = {}
 				t[i].name = title
 				t[i].address = adr
-				t[i].RawM3UString = w:match('(catchup.-)%,')
---[[				if t[i].RawM3UString then
+				t[i].RawM3UString = w:match('(catchup.-),')
 				t[i].RawM3UString = t[i].RawM3UString:gsub('duration','offset')
-				end--]]
 				t[i].group = w:match('group%-title="([^"]+)')
 				t[i].logo = logo
 				i = i + 1
@@ -78,7 +76,7 @@ local filter = {
 			 return
 			end
 			if t_pls == 0 then
-				m_simpleTV.OSD.ShowMessageT({text = 'логин/пароль установить\nв дополнении "Password Manager"\для id - filmax'
+				m_simpleTV.OSD.ShowMessageT({text = 'логин/пароль установить\nв дополнении "Password Manager"\для id - lightiptv'
 											, color = ARGB(255, 255, 100, 0)
 											, showTime = 1000 * 5
 											, id = 'channelName'})

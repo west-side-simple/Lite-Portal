@@ -1,5 +1,8 @@
--- скрапер TVS для загрузки плейлиста "RC" (Radio Caprice) (16.03.2023)
--- автор westSide
+-- Radio Caprice (488 каналов) - потоковый радиосервис: коллекция стилей, жанров, направлений.
+-- Загрузится плейлист в медиа-вкладку Радио
+
+-- автор westSide, скрапер TVS для загрузки плейлиста радио "Radio Caprice" (14.07.2024)
+
 
 	module('RC_pls', package.seeall)
 	local my_src_name = 'Radio Caprice'
@@ -69,7 +72,7 @@
 		adr,logo,name = w1:match('<a href="(.-)".-<img src="(.-)".->(.-)<')
 		if not adr or not name then break end
 		t[i] = {}
-		local adrs = 'http:' .. GetAdr(adr)
+		local adrs = 'http:' .. GetAdr(adr) .. '$OPT:NO-STIMESHIFT'
 			t[i].name = name:gsub('%&amp%;','&')
 			t[i].address = adrs
 			t[i].group = grp

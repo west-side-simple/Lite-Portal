@@ -1,4 +1,4 @@
--- скрапер TVS для загрузки плейлистов "CatCast" https://catcast.tv/ (19/06/2023)
+-- скрапер TVS для загрузки плейлистов "CatCast" https://catcast.tv/ (08/03/2024)
 -- необходим видоскрипт: catcast.lua
 
 
@@ -71,26 +71,21 @@ end
 			 return t, i
 			end
 
-			for c = 1, 340 do
-
+			for c = 1, 403 do
 				local tt = {}
 				tt.url = 'https://api.catcast.tv/api/channels?page=' .. c
 				tt.method = 'get'
 				tt.headers = 'X-Timezone-Offset: -180\nReferer: https://catcast.tv/tv/online'
 				local rc, answer = m_simpleTV.Http.Request(session, tt)
-				if rc ~= 200 then
-				return
-				end
-
+				if rc == 200 then
 					answer = unescape3(answer):gsub('(%[%])', '"nil"')
 --					debug_in_file( 'page=' .. c .. '\n----------------------\n', 'c://1/catcast.txt', setnew )
 					require 'json'
 					local tab = json.decode(answer)
 					if not tab.data.list.data then return end
-
-						t, i = getTbl(t, i, tab)
-
-				m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/progress1/p' .. math.floor(c/340*100+0.5) .. '.png"', text = ' - общий прогресс загрузки: ' .. c, color = ARGB(255, 255, 255, 255), showTime = 1000 * 30})
+					t, i = getTbl(t, i, tab)
+				end
+				m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/progress1/p' .. math.floor(c/403*100+0.5) .. '.png"', text = ' - общий прогресс загрузки: ' .. c, color = ARGB(255, 255, 255, 255), showTime = 1000 * 30})
 			end
 
 		m_simpleTV.Http.Close(session)

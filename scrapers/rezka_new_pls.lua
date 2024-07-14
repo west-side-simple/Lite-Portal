@@ -1,4 +1,4 @@
--- скрапер TVS для загрузки плейлиста "Rezka NEW" https://rezkery.com (02/08/22)
+-- скрапер TVS для загрузки плейлиста "Rezka NEW" https://rezkery.com (30/05/24)
 
 	module('rezka_new_pls', package.seeall)
 	local my_src_name = 'Rezka NEW'
@@ -11,7 +11,7 @@
 	end
 	local function LoadFromSite()
 
-		local url = 'https://rezkery.com'
+		local url = 'https://hdrezka.ag/'
 
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML,like Gecko) Chrome/81.0.3785.143 Safari/537.36')
 			if not session then return end
@@ -20,9 +20,9 @@
 		m_simpleTV.Http.Close(session)
 			if rc ~= 200 then return end
 		local t, i = {}, 1
-			for w in answer:gmatch('<div class="b%-content__inline_item".-</div> </div></div>') do
+			for w in answer:gmatch('<div class="b%-content__inline_item".-</div> %-%-> </div></div>') do
 			local logo, group, adr, name, title = w:match('<img src="(.-)".-<i class="entity">(.-)</i>.-<a href="(.-)">(.-)</a> <div class="misc">(.-)<')
---			year = title:match('%d%d%d%d') or 0	
+--			year = title:match('%d%d%d%d') or 0
 					if not adr or not name then break end
 				t[i] = {}
 				t[i].name = name .. ' (' .. (title:match('%d%d%d%d') or 0) .. ')'
@@ -53,7 +53,7 @@
 									, color = ARGB(255, 155, 255, 155)
 									, showTime = 1000 * 5
 									, id = 'channelName'})
-		
+
 		local m3ustr = tvs_core.ProcessFilterTable(UpdateID, Source, t_pls)
 		local handle = io.open(m3u_file, 'w+')
 			if not handle then return end

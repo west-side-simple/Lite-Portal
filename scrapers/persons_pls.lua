@@ -1,10 +1,10 @@
--- скрапер TVS для загрузки плейлистов фильмографий для SimpleTV (12/07/23)
+-- скрапер TVS для загрузки плейлистов фильмографий для SimpleTV (05/01/24)
 
 	module('persons_pls', package.seeall)
 	local my_src_name = 'PERSONS'
 
 	function GetSettings()
-	 return {name = my_src_name, sortname = '', scraper = '', m3u = 'out_' .. my_src_name .. '.m3u', logo = 'https://img1.freepng.ru/20180624/pwi/kisspng-persona-5-shin-megami-tensei-persona-4-video-game-persona-5-5b301f19757fd0.2713683415298803454813.jpg', TypeSource = 1, TypeCoding = 1, DeleteM3U = 1, RefreshButton = 0, AutoBuild = 0, AutoBuildDay = {0, 0, 0, 0, 0, 0, 0}, LastStart = 0, TVS = {add = 0, FilterCH = 0, FilterGR = 0, GetGroup = 0, LogoTVG = 0}, STV = {add = 1, ExtFilter = 1, FilterCH = 0, FilterGR = 0, GetGroup = 1, HDGroup = 0, AutoSearch = 0, AutoNumber = 0, NumberM3U = 0, GetSettings = 1, NotDeleteCH = 1, TypeSkip = 1, TypeFind = 1, TypeMedia = 3, RemoveDupCH = 1}}
+	 return {name = my_src_name, sortname = '', scraper = '', m3u = 'out_' .. my_src_name .. '.m3u', logo = 'https://img1.freepng.ru/20180624/pwi/kisspng-persona-5-shin-megami-tensei-persona-4-video-game-persona-5-5b301f19757fd0.2713683415298803454813.jpg', TypeSource = 1, TypeCoding = 1, DeleteM3U = 1, RefreshButton = 0, AutoBuild = 0, AutoBuildDay = {0, 0, 0, 0, 0, 0, 0}, LastStart = 0, TVS = {add = 0, FilterCH = 0, FilterGR = 0, GetGroup = 0, LogoTVG = 0}, STV = {add = 1, ExtFilter = 1, FilterCH = 0, FilterGR = 0, GetGroup = 1, HDGroup = 0, AutoSearch = 0, AutoSearchLogo =1, AutoNumber = 0, NumberM3U = 0, GetSettings = 1, NotDeleteCH = 1, TypeSkip = 1, TypeFind = 1, TypeMedia = 3, RemoveDupCH = 1}}
 	end
 	function GetVersion()
 	 return 2, 'UTF-8'
@@ -49,27 +49,26 @@ end
 	local function LoadFromSite()
 
 		--формирование адреса для сайтов пока Rezka, EX-FS
-		local url = getConfigVal('person/rezka')
+		local url = m_simpleTV.Config.GetValue("person/rezka","LiteConf.ini")
 --      '#https://rezka.ag/person/7066-keyt-bekinseyl/'
 --      'https://ex-fs.net/actors/15099-bill-skarsgard.html'
-
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML,like Gecko) Chrome/81.0.3785.143 Safari/537.36')
 			if not session then return end
 		m_simpleTV.Http.SetTimeout(session, 60000)
 		local t = {}
-	if url:match('rezkery%.com') or 
-	url:match('hdrezka') or 
-	url:match('kinopub%.me') or 
-	url:match('upivi%.com') or 
-	url:match('metaivi%.com') or 
-	url:match('rd8j1em1zxge%.org') or 
-	url:match('hdrezka19139%.org') or 
+	if url:match('rezkery%.com') or
+	url:match('hdrezka') or
+	url:match('kinopub%.me') or
+	url:match('upivi%.com') or
+	url:match('metaivi%.com') or
+	url:match('rd8j1em1zxge%.org') or
+	url:match('hdrezka19139%.org') or
 	url:match('hdrezkah42yfy%.org')
 	then
 		local rc, answer = m_simpleTV.Http.Request(session, {url = url:gsub('^#','')})
 		m_simpleTV.Http.Close(session)
 			if rc ~= 200 then return end
-
+debug_in_file(rc .. '\n' .. answer .. '\n','c://1/test_answer.txt')
 		answer = answer:gsub('<!%-%-.-%-%->', ''):gsub('/%*.-%*/', '')
 
 		local title = answer:match('<h1 itemprop="name">([^<]+)') or answer:match('<h1><span class="t1" itemprop="name">([^<]+)') or answer:match('<head><title>(.-)</title>') or 'Person'
@@ -77,14 +76,12 @@ end
 		if poster:match('/i/share%.jpg') then poster = 'https://hdrezka.by/themes/default/public/mobile/logo.png' end
 		local genres_str = answer:match('<td class="l"><h2>Карьера</h2>:(.-)<td class="l">') or ''
 		local name_eng = answer:match('alternativeHeadline">(.-)</div>') or ''
-
-
 ------------------
 		t[1] = {}
 		t[1].name = title
-		t[1].group = 'Rezka'
+		t[1].group = 'HDRezka'
 		t[1].logo = poster
-		t[1].address = '#' .. url
+		t[1].address = url
 		t[1].video_title = name_eng:gsub('<.->', '') .. genres_str:gsub('<.->', '')
 ------------------
 	elseif url:match('ex%-fs%.') then

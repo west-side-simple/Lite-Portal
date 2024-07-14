@@ -1,5 +1,7 @@
--- скрапер TVS для загрузки плейлиста "MMX Group" (Radio MMX Group) (17.04.2023)
--- автор westSide
+-- MMX Group (21 канал) Сборник станций: Rock FM, Наше радио, Jazz, Ultra.
+-- Загрузится плейлист в медиа-вкладку Радио
+-- автор westSide, скрапер TVS для загрузки плейлиста "Radio MMX Group" (14.07.2024)
+
 
 	module('MMX_Group_pls', package.seeall)
 	local my_src_name = 'MMX Group'
@@ -37,7 +39,7 @@
 --debug_in_file(unescape1(title) .. ' / ' .. adres:gsub('^https','http'):gsub('\\',''):gsub('18000','80') .. '\n',m_simpleTV.MainScriptDir .. 'user/audioWS/getmeta.txt')
 					t[i] = {}
 					t[i].name = unescape1(title)
-					t[i].address = adres:gsub('^https','http'):gsub('\\',''):gsub('18000','80')
+					t[i].address = adres:gsub('^https','http'):gsub('\\',''):gsub('18000','80') .. '$OPT:NO-STIMESHIFT'
 					t[i].group = unescape1(station)
 					if logo == '' then t[i].logo = tab[j][2] else t[i].logo = logo:gsub('\\','') end
 					t[i].group_is_unique = 1

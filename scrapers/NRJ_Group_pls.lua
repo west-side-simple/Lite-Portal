@@ -1,4 +1,4 @@
--- скрапер TVS для загрузки плейлиста "NRJ Group" (Radio NRJ Group) (25.03.2023)
+-- скрапер TVS для загрузки плейлиста "NRJ Group" (Radio NRJ Group) (14.07.2024)
 -- автор westSide
 
 	module('NRJ_Group_pls', package.seeall)
@@ -23,7 +23,7 @@
 		m_simpleTV.Http.SetTimeout(session, 30000)
 		local i,t=1,{}
 		for j=1,#tab do
-		local url = tab[j][3]
+		local url = tab[j][3] .. '.json'
 		local rc, answer = m_simpleTV.Http.Request(session, {url = url})
 		if rc ~= 200 then return end
 			require('json')
@@ -39,7 +39,7 @@
 			if adr == '' then adr = tt[k].url_64k_mp3 end
 			t[i] = {}
 			t[i].name = tt[k].name:gsub('\\u0026','&'):gsub('\\u0027',"'")
-			t[i].address = adr .. '?origine=playernostalgie&aw_0_req.userConsentV2=&aw_0_1st.station=' .. tt[k].awparams
+			t[i].address = adr .. '?origine=playernostalgie&aw_0_req.userConsentV2=&aw_0_1st.station=' .. tt[k].awparams .. '$OPT:NO-STIMESHIFT'
 			t[i].group = tab[j][1]
 			t[i].logo = tt[k].logo:gsub('\\u0026','&')
 			t[i].group_is_unique = 1

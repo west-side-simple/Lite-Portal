@@ -95,9 +95,7 @@ local filter = {
 			if not TVSources_var.tmp.source[UpdateID] then return end
 		local Source = TVSources_var.tmp.source[UpdateID]
 		local pll={
---		{"nsk","Ростелеком, Новосибирск"},
---		{"tsn-full","tsn, полная версия"},
---		{"tsn-1-18","tsn, без 18+"},
+
 		{"full","полная версия"},
 		{"minus 18","без 18+"},
 }
