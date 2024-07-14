@@ -1,9 +1,9 @@
--- видеоскрипт для балансера ashdi (26.05.24)
+-- видеоскрипт для балансера collaps (26.05.24)
 -- author west_side
 	if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 	if m_simpleTV.Control.CurrentAddress:match('^tmdb_id=')
 	then return end
-	if not m_simpleTV.Control.CurrentAddress:match('/lite/ashdi')
+	if not m_simpleTV.Control.CurrentAddress:match('/lite/collaps')
 	then return end
 	local inAdr = m_simpleTV.Control.CurrentAddress
 	m_simpleTV.Control.ChangeAddress = 'Yes'
@@ -11,8 +11,8 @@
 	if not m_simpleTV.User then
 		m_simpleTV.User = {}
 	end
-	if not m_simpleTV.User.ashdi then
-		m_simpleTV.User.ashdi = {}
+	if not m_simpleTV.User.collaps then
+		m_simpleTV.User.collaps = {}
 	end
 	if not m_simpleTV.User.TMDB then
 		m_simpleTV.User.TMDB = {}
@@ -22,16 +22,16 @@
 	end
 	m_simpleTV.User.TMDB.Id = nil
 	m_simpleTV.User.TMDB.tv = nil
-	m_simpleTV.User.ashdi.CurAddress = inAdr
-	m_simpleTV.User.ashdi.DelayedAddress = nil
-	m_simpleTV.User.TVPortal.balanser = 'ASHDI'
+	m_simpleTV.User.collaps.CurAddress = inAdr
+	m_simpleTV.User.collaps.DelayedAddress = nil
+	m_simpleTV.User.TVPortal.balanser = 'collaps'
 	local function getConfigVal(key)
 		return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
 	end
 	local function setConfigVal(key,val)
 		m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
 	end
-	local current_np = getConfigVal('perevod/ashdi') or ''
+	local current_np = getConfigVal('perevod/collaps') or ''
 
 	local function get_logo_yandex(kp_id)
 	if not kpid then return end
@@ -166,8 +166,8 @@
 	return background, name_tmdb, year_tmdb, overview_tmdb, tmdb_id, tv
 	end
 
-	local function ashdiIndex(t)
-		local lastQuality = tonumber(m_simpleTV.Config.GetValue('ashdi_qlty') or 5000)
+	local function collapsIndex(t)
+		local lastQuality = tonumber(m_simpleTV.Config.GetValue('collaps_qlty') or 5000)
 		local index = #t
 			for i = 1, #t do
 				if t[i].qlty >= lastQuality then
@@ -183,7 +183,7 @@
 	 return index
 	end
 
-	local function GetAshdiAdr(session,url,sub)
+	local function GetcollapsAdr(session,url,sub)
 		local subt = ''
 		if sub and sub:match('http') then
 			local s, j = {}, 1
@@ -199,7 +199,7 @@
 		local t = {}
 			for w, adr in answer:gmatch('EXT%-X%-STREAM%-INF(.-)\n(.-)\n') do
 				local qlty = w:match('RESOLUTION=%d+x(%d+)')
-				if adr and qlty then
+				if adr and adr:match('x%-bc') and qlty then
 					t[#t + 1] = {}
 					t[#t].Address = adr
 					t[#t].qlty = tonumber(qlty)
@@ -230,51 +230,58 @@
 				v.Name = v.qlty .. 'p'
 			end
 		table.sort(t, function(a, b) return a.qlty < b.qlty end)
-
+		local transl
+		local transl0 = m_simpleTV.User.collaps.transl or '1'
+		if answer:match('index%-a' .. transl0) then
+			transl = transl0
+		else
+			transl = answer:match('index%-a(%d+)') or '1'
+		end
 			for i = 1, #t do
 				t[i].Id = i
-				t[i].Address = t[i].Address .. '$OPT:NO-STIMESHIFT$OPT:demux=mp4,any' .. subt
+				t[i].Address = t[i].Address:gsub('%.m3u8', '-a' .. transl ..'.m3u8') .. subt
+--				debug_in_file(t[i].Id .. '. ' .. t[i].Address, 'c://1/collaps.txt')
 			end
-		m_simpleTV.User.ashdi.Tab = t
-		local index = ashdiIndex(t)
+		m_simpleTV.User.collaps.Tab = t
+		local index = collapsIndex(t)
 	 return t[index].Address
 	end
 
-	function perevod_ashdi()
-	local t = m_simpleTV.User.ashdi.TabPerevod
+	function perevod_collaps()
+	local t = m_simpleTV.User.collaps.TabPerevod
 		if not t then return end
 		if #t > 0 then
 		local current_p = 1
 		for i = 1,#t do
-		if t[i].Name == getConfigVal('perevod/ashdi') then current_p = i end
+		if t[i].Name == getConfigVal('perevod/collaps') then current_p = i end
 		i = i + 1
 		end
-			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_ashdi()'}
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_collaps()'}
 			local ret, id = m_simpleTV.OSD.ShowSelect_UTF8(' 🔊 Перевод ', current_p - 1, t, 5000, 1 + 4 + 8 + 2)
 			if ret == 1 then
-			setConfigVal('perevod/ashdi', t[id].Name)
-			local episode = m_simpleTV.User.ashdi.CurAddress:match('&e=(%d+)')
+			setConfigVal('perevod/collaps', t[id].Name)
+			local episode = m_simpleTV.User.collaps.CurAddress:match('&e=(%d+)')
 			if episode then episode = '&e=' .. episode else episode = '' end
 			m_simpleTV.Control.SetNewAddress(t[id].Address .. episode, m_simpleTV.Control.GetPosition())
 			end
 			if ret == 3 then
-				Qlty_ashdi()
+				Qlty_collaps()
 			end
 		end
 	end
 
-	function Qlty_ashdi()
+	function Qlty_collaps()
 		m_simpleTV.Control.ExecuteAction(36, 0)
-		local t = m_simpleTV.User.ashdi.Tab
+		local t = m_simpleTV.User.collaps.Tab
 			if not t then return end
-		local index = ashdiIndex(t)
+		local index = collapsIndex(t)
 			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Кинопоиск ', ButtonScript = ''}
-			if getConfigVal('perevod/ashdi') ~= '' then
-				t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_ashdi()'}
+			if getConfigVal('perevod/collaps') ~= '' then
+				t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_collaps()'}
 			end
 		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('⚙ Качество', index - 1, t, 5000, 1 + 4 + 8 + 2)
-		if m_simpleTV.User.ashdi.isVideo == false then
-			if m_simpleTV.User.ashdi.DelayedAddress then
+		if m_simpleTV.User.collaps.isVideo == false then
+			if m_simpleTV.User.collaps.DelayedAddress then
 				m_simpleTV.Control.ExecuteAction(108)
 			else
 				m_simpleTV.Control.ExecuteAction(37)
@@ -284,21 +291,21 @@
 		end
 		if ret == 1 then
 			m_simpleTV.Control.SetNewAddress(t[id].Address, m_simpleTV.Control.GetPosition())
-			m_simpleTV.Config.SetValue('ashdi_qlty', t[id].qlty)
+			m_simpleTV.Config.SetValue('collaps_qlty', t[id].qlty)
 		end
 		if ret == 2 then
-			m_simpleTV.Control.SetNewAddress('**' .. m_simpleTV.User.ashdi.kpid, m_simpleTV.Control.GetPosition())
+			m_simpleTV.Control.SetNewAddress('**' .. m_simpleTV.User.collaps.kpid, m_simpleTV.Control.GetPosition())
 		end
 		if ret == 3 then
-			perevod_ashdi()
+			perevod_collaps()
 		end
 	end
 
 	local kpid = inAdr:match('kinopoisk_id=(%d+)')
-	m_simpleTV.User.ashdi.kpid = kpid
+	m_simpleTV.User.collaps.kpid = kpid
 	local id_imdb,title_v,year_v,tv
 --	id_imdb = inAdr:match('kp%=(tt%d+)')
-	local season,episode=m_simpleTV.User.ashdi.CurAddress:match('&s=(%d+).-&e=(%d+)')
+	local season,episode=m_simpleTV.User.collaps.CurAddress:match('&s=(%d+).-&e=(%d+)')
 
 	local logo, title, year, overview, tmdbid, tv
 	if kpid then
@@ -329,12 +336,12 @@
 	if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 10000)
 	local rc,answer = m_simpleTV.Http.Request(session,{url = inAdr})
---	debug_in_file(answer .. '\n','c://1/ans_ashdi1.txt')
+--	debug_in_file(answer .. '\n','c://1/ans_collaps1.txt')
 
 -------------------------
 
-	m_simpleTV.User.ashdi.titleTab = nil
-	m_simpleTV.User.ashdi.isVideo = nil
+	m_simpleTV.User.collaps.titleTab = nil
+	m_simpleTV.User.collaps.isVideo = nil
 	m_simpleTV.Control.ChangeChannelLogo(logo or '', m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
 	m_simpleTV.Control.CurrentTitle_UTF8 = (title or '') .. ', ' .. (year or '')
 	m_simpleTV.Control.SetTitle((title or '') .. ', ' .. (year or ''))
@@ -343,12 +350,12 @@
 		m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = logo, TypeBackColor = 0, UseLogo = 3, Once = 1})
 	end
 	local retAdr,retAdr1,retAdr2
---	debug_in_file(answer .. '\n','c://1/ans_ashdi.txt')
+--	debug_in_file(answer .. '\n','c://1/ans_collaps.txt')
 	retAdr = answer
 
 		if not retAdr then
 			m_simpleTV.Control.ExecuteAction(37)
-			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'ashdi: Медиаконтент не доступен', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
+			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'collaps: Медиаконтент не доступен', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
 			m_simpleTV.Control.ExecuteAction(11)
 			return
 		end
@@ -362,26 +369,26 @@
 		local is_perevod = false
 		if tv==1 then
 			for w in retAdr:gmatch('"method":"link".-</div>') do
---				debug_in_file(w .. '\n','c://1/ans_ashdi1.txt')
+--				debug_in_file(w .. '\n','c://1/ans_collaps1.txt')
 				local file, name = w:match('"url":"(.-)".->(.-)</div>')
 				if not name or not file then break end
 				t1[i]={}
 				t1[i].Id = i
 				t1[i].Address = file
 				t1[i].Name = name
-				if t1[i].Name == getConfigVal('perevod/ashdi') then
+				if t1[i].Name == getConfigVal('perevod/collaps') then
 				current_p = i
 				is_perevod = true
 				end
 				i=i+1
 			end
 			local get_tr = retAdr:match('<div class="videos__button selector active".->(.-)</div>')
-			if get_tr ~= getConfigVal('perevod/ashdi') and is_perevod then
+			if get_tr ~= getConfigVal('perevod/collaps') and is_perevod then
 				m_simpleTV.Control.SetNewAddressT({address=t1[tonumber(current_p)].Address .. '&e=' .. episode, position = m_simpleTV.Control.GetPosition()})
 				return
 			end
 			for w in retAdr:gmatch('\'%{"method":"play".-%}\'') do
---				debug_in_file(w .. '\n','c://1/ans_ashdi1.txt')
+--				debug_in_file(w .. '\n','c://1/ans_collaps1.txt')
 				local file, name, sub = w:match('\'%{"method":"play".-"url":"(.-)".-"title":" %((.-)%)"')
 				if not name or not file then break end
 				sub = w:match('"subtitles": %[(.-)%]')
@@ -398,7 +405,7 @@
 			end
 		else
 			for w in retAdr:gmatch('\'%{"method":"play".-%}\'') do
---				debug_in_file(w .. '\n','c://1/ans_ashdi1.txt')
+--				debug_in_file(w .. '\n','c://1/ans_collaps1.txt')
 				local file, name, sub = w:match('\'%{"method":"play".-"url":"(.-)".-"title":" %((.-)%)"')
 				if not name or not file then break end
 				sub = w:match('"subtitles": %[(.-)%]')
@@ -407,12 +414,12 @@
 				t1[i].Address = file
 				t1[i].Name = name
 				t1[i].Sub = sub or ''
-				if t1[i].Name == getConfigVal('perevod/ashdi') then current_p = i end
---				debug_in_file(i .. ' ' .. name .. ' ' .. file .. ' ' .. sub .. '\n','c://1/ans_ashdi1.txt')
+				if t1[i].Name == getConfigVal('perevod/collaps') then current_p = i end
+--				debug_in_file(i .. ' ' .. name .. ' ' .. file .. ' ' .. sub .. '\n','c://1/ans_collaps1.txt')
 				i=i+1
 			end
 		end
-		m_simpleTV.User.ashdi.TabPerevod = t1
+		m_simpleTV.User.collaps.TabPerevod = t1
 	if i > 2 then
 		if current_p then
 		retAdr = t1[current_p].Address
@@ -425,14 +432,14 @@
 			retAdr = t1[1].Address
 			retAdr2 = t1[1].Sub
 			current_p = 1
-			setConfigVal('perevod/ashdi', t1[1].Name)
+			setConfigVal('perevod/collaps', t1[1].Name)
 			title = (title or '') .. ' - ' .. t1[1].Name
 		end
 	elseif i == 2 then
 		retAdr = t1[1].Address
 		retAdr2 = t1[1].Sub
 		current_p = 1
-		setConfigVal('perevod/ashdi', t1[1].Name)
+		setConfigVal('perevod/collaps', t1[1].Name)
 		title = (title or '') .. ' - ' .. t1[1].Name
 	else
 		return
@@ -445,20 +452,20 @@
 	end
 
 	if  tv == 0 then
-		retAdr = GetAshdiAdr(session,retAdr,retAdr2)
+		retAdr = GetcollapsAdr(session,retAdr,retAdr2)
 	end
 	if tv == 1	then
 
 		t,current_ep = get_serial(kpid,season,episode)
-		m_simpleTV.User.ashdi.titleTab = t
+		m_simpleTV.User.collaps.titleTab = t
 
-		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_ashdi()'}
-		if getConfigVal('perevod/ashdi') ~= '' then
-			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_ashdi()'}
+		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_collaps()'}
+		if getConfigVal('perevod/collaps') ~= '' then
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_collaps()'}
 		end
 		m_simpleTV.OSD.ShowSelect_UTF8((title or ''), current_ep - 1, t, 10000, 32)
 		retAdr = retAdr1
-		retAdr = GetAshdiAdr(session,retAdr,retAdr2)
+		retAdr = GetcollapsAdr(session,retAdr,retAdr2)
 		m_simpleTV.Control.ChangeAdress = 'Yes'
 		m_simpleTV.Control.CurrentAddress = retAdr
 		return
@@ -466,11 +473,11 @@
 		t[1] = {}
 		t[1].Id = 1
 		t[1].Name = title:gsub(' %- ' .. current_np,'')
-		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_ashdi()'}
-		if getConfigVal('perevod/ashdi') ~= '' then
-			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_ashdi()'}
+		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_collaps()'}
+		if getConfigVal('perevod/collaps') ~= '' then
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_collaps()'}
 		end
-		m_simpleTV.OSD.ShowSelect_UTF8('ASHDI: ' .. getConfigVal('perevod/ashdi'), 0, t, 8000, 32 + 64 + 128)
+		m_simpleTV.OSD.ShowSelect_UTF8('collaps: ' .. getConfigVal('perevod/collaps'), 0, t, 8000, 32 + 64 + 128)
 	end
 
 	m_simpleTV.Http.Close(session)

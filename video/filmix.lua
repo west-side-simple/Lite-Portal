@@ -1,18 +1,18 @@
--- видеоскрипт для сайта https://filmix.ac (14/08/23)
+-- видеоскрипт для сайта https://filmix.fm (31/12/23)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- west_side mod for lite (14/08/23)
+-- west_side mod for lite (01/07/24)
 -- ## авторизация ##
 -- логин, пароль установить в 'Password Manager', для id - filmix
 -- ## необходим ##
 -- модуль: /core/playerjs.lua
 -- AceStream
 -- ## открывает подобные ссылки ##
--- https://filmix.ac/semejnyj/103212-odin-doma-2-zateryannyy-v-nyu-yorke-1992.html
--- https://filmix.ac/play/112056
--- https://filmix.ac/fantastika/113095-puteshestvenniki-2016.html
--- https://filmix.ac/download-file/55308
--- https://filmix.ac/download/5409
--- https://filmix.ac/download/35895
+-- https://filmix.fm/semejnyj/103212-odin-doma-2-zateryannyy-v-nyu-yorke-1992.html
+-- https://filmix.fm/play/112056
+-- https://filmix.fm/fantastika/113095-puteshestvenniki-2016.html
+-- https://filmix.fm/download-file/55308
+-- https://filmix.fm/download/5409
+-- https://filmix.fm/download/35895
 -- ## зеркало ##
 local zer = m_simpleTV.Config.GetValue('zerkalo/filmix', 'LiteConf.ini') or ''
 -- ##
@@ -60,6 +60,7 @@ end
 		m_simpleTV.User.filmix.CurAddress = inAdr
 	end
 	m_simpleTV.User.westSide.PortalTable = true
+	m_simpleTV.User.TVPortal.balanser = 'Filmix'
 	local function showError(str)
 		m_simpleTV.OSD.ShowMessageT({text = 'filmix ошибка: ' .. str, showTime = 1000 * 5, color = 0xffff6600, id = 'channelName'})
 	end
@@ -82,8 +83,8 @@ end
 			inAdr = inAdr:gsub('&.-$','')
 		local res, login, password, header = xpcall(function() require('pm') return pm.GetPassword('filmix') end, err)
 		if not login or not password or login == '' or password == '' then
-			login = decode64('bWV2YWxpbA')
-			password = decode64('bTEyMzQ1Ng')
+		login = decode64('TWluaW9uc1RW')
+		password = decode64('cXdlcnZjeHo=')
 		end
 
 			local rc, answer = m_simpleTV.Http.Request(session, {body = 'login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login=submit', url = host, method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. host})
@@ -377,8 +378,8 @@ end
 		end
 	local res, login, password, header = xpcall(function() require('pm') return pm.GetPassword('filmix') end, err)
 		if not login or not password or login == '' or password == '' then
-			login = decode64('bWV2YWxpbA')
-			password = decode64('bTEyMzQ1Ng')
+		login = decode64('TWluaW9uc1RW')
+		password = decode64('cXdlcnZjeHo=')
 		end
 
 			local rc, answer = m_simpleTV.Http.Request(session, {body = 'login_name=' .. m_simpleTV.Common.toPercentEncoding(login) .. '&login_password=' .. m_simpleTV.Common.toPercentEncoding(password) .. '&login=submit', url = host, method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. host})
@@ -401,7 +402,7 @@ end
 	overview = overview:gsub('<.->','')
 	local year = answer:match('<a itemprop="copyrightYear".->(.-)</a>') or 0
 	local poster = answer:match('"og:image" content="([^"]+)') or logo
---	local videodesc = info_fox(title, year, poster)
+	local videodesc = info_fox(title, year, poster)
 	local background = answer:match('<ul class="frames%-list">(.-)</ul>')
 	if background then background = background:match('"(.-)"') end
 	if background then background = host .. background:gsub('^/','') end
@@ -628,6 +629,6 @@ end
 		m_simpleTV.User.filmix.isVideo = true
 	end
 	end
-	rc, answer = m_simpleTV.Http.Request(session, {body = url, url = 'https://filmix.ac/api/notifications/get', method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. url .. '\nCookie:' .. m_simpleTV.User.filmix.cookies })
+	rc, answer = m_simpleTV.Http.Request(session, {body = url, url = host ..'/api/notifications/get', method = 'post', headers = 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8\nX-Requested-With: XMLHttpRequest\nReferer: ' .. url .. '\nCookie:' .. m_simpleTV.User.filmix.cookies })
 	m_simpleTV.Http.Close(session)
 	play(inAdr, title)

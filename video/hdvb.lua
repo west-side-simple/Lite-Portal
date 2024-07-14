@@ -28,12 +28,18 @@
 	if not m_simpleTV.User.collaps then
 		m_simpleTV.User.collaps = {}
 	end
+	if not m_simpleTV.User.TVPortal then
+		m_simpleTV.User.TVPortal = {}
+	end
+	m_simpleTV.User.TVPortal.balanser = 'HDVB'
 	m_simpleTV.User.collaps.kinogo = nil
 	m_simpleTV.User.collaps.ua = nil
 	m_simpleTV.User.collaps.kinogo = inAdr:match('%&kinogo=(.-)$')
 	if m_simpleTV.User.collaps.kinogo then
+		m_simpleTV.Control.ChangeChannelLogo(m_simpleTV.User.hdvb.poster, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
 		m_simpleTV.User.westSide.PortalTable = m_simpleTV.User.collaps.kinogo
 	end
+
 	inAdr = inAdr:gsub('&kinopoisk', ''):gsub('&kinogo=.-$', '')
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; rv:99.0) Gecko/20100101 Firefox/99.0')
 		if not session then return end

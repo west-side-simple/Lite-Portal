@@ -1,4 +1,4 @@
--- видеоскрипт для запросов потоков Rezka по ID кинопоиска и IMDB (21.04.23)
+-- видеоскрипт для запросов потоков Rezka по ID кинопоиска и IMDB (29.02.24)
 -- nexterr, west_side
 -- ## открывает подобные ссылки ##
 -- https://voidboost.net/embed/280179
@@ -58,7 +58,7 @@
 	end
 
 	local function bg_imdb_id(imdb_id)
-	local urld = 'https://api.themoviedb.org/3/find/' .. imdb_id .. decode64('P2FwaV9rZXk9ZDU2ZTUxZmI3N2IwODFhOWNiNTE5MmVhYWE3ODIzYWQmbGFuZ3VhZ2U9cnUmZXh0ZXJuYWxfc291cmNlPWltZGJfaWQ')
+	local urld = 'https://api.themoviedb.org/3/find/' .. imdb_id .. decode64('P2FwaV9rZXk9ZDU2ZTUxZmI3N2IwODFhOWNiNTE5MmVhYWE3ODIzYWQmbGFuZ3VhZ2U9cnUtUlUmZXh0ZXJuYWxfc291cmNlPWltZGJfaWQ=')
 	local rc5,answerd = m_simpleTV.Http.Request(session,{url=urld})
 	if rc5~=200 then
 		m_simpleTV.Http.Close(session)
@@ -67,21 +67,39 @@
 	require('json')
 	answerd = answerd:gsub('(%[%])', '"nil"')
 	local tab = json.decode(answerd)
-	local background, name_tmdb, year_tmdb = '', '', ''
-	if not tab and (not tab.movie_results[1] or tab.movie_results[1]==nil) and not tab.movie_results[1].backdrop_path or not tab and not (tab.tv_results[1] or tab.tv_results[1]==nil) and not tab.tv_results[1].backdrop_path then background = '' else
+	local background, name_tmdb, tmdb_id, tv, year_tmdb, overview_tmdb = '', '', '', 0, '', ''
+	if not tab and (not tab.movie_results[1] or tab.movie_results[1]==nil) and not tab.movie_results[1].backdrop_path and not tab.movie_results[1].poster_path
+	and not (tab.tv_results[1] or tab.tv_results[1]==nil) and not tab.tv_results[1].backdrop_path and not tab.tv_results[1].poster_path
+	then return '', '', '', '', '', ''
+	else
 	if tab.movie_results[1] and imdb_id ~= 'tt0078655' and imdb_id ~= 'tt2317100' then
 	background = tab.movie_results[1].backdrop_path or ''
+	background1 = tab.movie_results[1].poster_path or ''
 	name_tmdb = tab.movie_results[1].title or ''
-	year_tmdb = tab.movie_results[1].release_date or 0
-	name_tmdb = name_tmdb .. ' (' .. year_tmdb:match('(%d+)') .. ')'
+	year_tmdb = tab.movie_results[1].release_date or ''
+	overview_tmdb = tab.movie_results[1].overview or ''
+	tmdb_id = tab.movie_results[1].id
 	elseif tab.tv_results[1] then
 	background = tab.tv_results[1].backdrop_path or ''
+	background1 = tab.tv_results[1].poster_path or ''
 	name_tmdb = tab.tv_results[1].name or ''
+	year_tmdb = tab.tv_results[1].first_air_date or ''
+	overview_tmdb = tab.tv_results[1].overview or ''
+	tmdb_id = tab.tv_results[1].id
+	tv = 1
 	end
 	end
-	if background and background ~= nil and background ~= '' then background = 'http://image.tmdb.org/t/p/original' .. background end
+	if year_tmdb and year_tmdb ~= '' then
+	year_tmdb = year_tmdb:match('%d%d%d%d')
+	else year_tmdb = 0 end
+	if background and background ~= nil and background ~= '' then background = 'http://proxy.vokino.tv/image/t/p/original' .. background
+	elseif background1 and background1 ~= nil and background1 ~= '' then background = 'http://proxy.vokino.tv/image/t/p/original' .. background1 end
 	if background == nil then background = '' end
-	return background, name_tmdb
+	m_simpleTV.User.TMDB.Id = tmdb_id
+	m_simpleTV.User.TMDB.tv = tv
+	m_simpleTV.User.westSide.PortalTable = m_simpleTV.User.TMDB.Id .. ',' .. m_simpleTV.User.TMDB.tv
+	info_fox(name_tmdb,year_tmdb,background)
+	return background, name_tmdb, year_tmdb, overview_tmdb, tmdb_id, tv
 	end
 
 	local function getConfigVal(key)
@@ -103,8 +121,18 @@
 	if not m_simpleTV.User.Rezka then
 		m_simpleTV.User.Rezka = {}
 	end
+	if not m_simpleTV.User.TVPortal then
+		m_simpleTV.User.TVPortal = {}
+	end
+	if not m_simpleTV.User.TMDB then
+		m_simpleTV.User.TMDB = {}
+	end
+	if not m_simpleTV.User.TVPortal.get then
+		m_simpleTV.User.TVPortal.get = {}
+	end
 	m_simpleTV.User.Rezka.title = nil
 	m_simpleTV.User.Rezka.year = nil
+	m_simpleTV.User.TVPortal.balanser = 'Voidboost'
 	if inAdr:match('/embed/')
 	then m_simpleTV.User.Rezka.embed = inAdr:match('/embed/(.-)$') m_simpleTV.User.Rezka.embed = m_simpleTV.User.Rezka.embed:gsub('%&.-$','')
 	elseif inAdr:match('%&embed=')
@@ -116,11 +144,18 @@
 	if kp_id then imdb_id, title_v, year_v = imdbid(kp_id) end
 	local logo = 'https://static.hdrezka.ac/templates/hdrezka/images/avatar.png'
 	if imdb_id and imdb_id~='' and bg_imdb_id(imdb_id) then
-	m_simpleTV.User.Rezka.background, m_simpleTV.User.Rezka.title = bg_imdb_id(imdb_id)
+	m_simpleTV.User.Rezka.background, m_simpleTV.User.Rezka.title, m_simpleTV.User.Rezka.year = bg_imdb_id(imdb_id)
+	m_simpleTV.User.Rezka.title = m_simpleTV.User.Rezka.title .. ' (' .. m_simpleTV.User.Rezka.year .. ')'
 	if m_simpleTV.User.Rezka.background ~= '' then
 	m_simpleTV.Control.ChangeChannelLogo(m_simpleTV.User.Rezka.background, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
 	end
 	end
+
+	if m_simpleTV.User.TVPortal.get.title and m_simpleTV.User.TVPortal.get.year then
+	m_simpleTV.User.Rezka.title = m_simpleTV.User.TVPortal.get.title .. ' (' .. m_simpleTV.User.TVPortal.get.year .. ')'
+	m_simpleTV.User.Rezka.background = m_simpleTV.User.TVPortal.get.background
+	end
+
 	if not m_simpleTV.User.Rezka.title and title_v and title_v~='' then
 		m_simpleTV.User.Rezka.title = title_v .. ' (' .. year_v .. ')'
 	elseif not m_simpleTV.User.Rezka.title and kp_id then
@@ -135,8 +170,9 @@
 --[[	if not m_simpleTV.User.Rezka.background or m_simpleTV.User.Rezka.background=='' then
 		m_simpleTV.Control.ChangeChannelLogo(logo, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
 	end--]]
-	if m_simpleTV.User.Rezka.title then 
-	m_simpleTV.Control.SetTitle(m_simpleTV.User.Rezka.title) 
+
+	if m_simpleTV.User.Rezka.title then
+	m_simpleTV.Control.SetTitle(m_simpleTV.User.Rezka.title)
 	end
 	local function showError(str)
 		m_simpleTV.OSD.ShowMessageT({text = 'hdrezka ошибка: ' .. str, showTime = 5000, color = 0xffff1000, id = 'channelName'})
@@ -178,7 +214,7 @@
 			end
 			subt = '$OPT:sub-track=0$OPT:input-slave=' .. table.concat(s, '#')
 		end
-		local t, i = {}, 1
+		local t1, i = {}, 1
 		local url = urls:match("file\'(:.-)return pub")
 		url = url:gsub(": ",''):gsub("'#",'#'):gsub("'\n.-$",'')
 		url = playerjs.decode(url, m_simpleTV.User.Rezka.playerjs_url)
@@ -186,19 +222,46 @@
 		local qlty, adr
 			for qlty, adr in url:gmatch('%[(.-)%](http.-) ') do
 			if not qlty:match('%d+') then break end
-				t[i] = {}
-				t[i].Address = adr
-				t[i].Name = qlty
-				t[i].qlty = tonumber(qlty:match('%d+'))
+				t1[i] = {}
+				t1[i].Address = adr
+				t1[i].Name = qlty
+---				t1[i].qlty = tonumber(qlty:match('%d+'))
 				i = i + 1
 			end
 			if i == 1 then return end
-		table.sort(t, function(a, b) return a.qlty < b.qlty end)
+--		table.sort(t, function(a, b) return a.qlty < b.qlty end)
+			local hash, t = {}, {}
+			for i = 1, #t1 do
+			if not hash[t1[i].Address]
+			then
+				t[#t + 1] = t1[i]
+				hash[t1[i].Address] = true
+			end
+			end
+
+--		table.sort(t, function(a, b) return a.qlty < b.qlty end)
+		local z = {
+				{'1080p Ultra', '1080p'},
+				{'1080p', '720p'},
+				{'720p', '480p'},
+				{'480p', '360p'},
+				{'360p', '240p'},
+			}
+		local h = {}
 			for i = 1, #t do
 				t[i].Id = i
-				t[i].Address = t[i].Address:gsub('^https://', 'http://'):gsub(':hls:manifest%.m3u8', '') .. '$OPT:NO-STIMESHIFT$OPT:demux=mp4,any$OPT:http-referrer=https://rezka.ag/' .. (subt or '')
+				t[i].Address = t[i].Address:gsub('^https://', 'http://'):gsub(':hls:manifest%.m3u8', '')
+						.. '$OPT:NO-STIMESHIFT$OPT:demux=mp4,any$OPT:http-referrer=https://rezka.ag/' .. (subt or '')
+				for j = 1, #z do
+					if t[i].Name == z[j][1] and not h[i] then
+						t[i].Name = z[j][2]
+						h[i] = true
+					 break
+					end
+				end
 				t[i].qlty = tonumber(t[i].Name:match('%d+'))
 			end
+		table.sort(t, function(a, b) return a.qlty < b.qlty end)
 		m_simpleTV.User.Rezka.Tab = t
 		local index = rezkaIndex(t)
 	 return t[index].Address

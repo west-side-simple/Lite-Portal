@@ -97,5 +97,5 @@ end
 	end
 	m_simpleTV.User.westSide.PortalTable,m_simpleTV.User.TMDB.tv,m_simpleTV.User.TMDB.Id=nil,nil,nil
 
-	dofile(m_simpleTV.MainScriptDir .. "user\\video\\video.lua")
+	dofile(m_simpleTV.MainScriptDir .. "user\\westSidePortal\\video\\ashdi.lua")
 -- debug_in_file(retAdr .. '\n')

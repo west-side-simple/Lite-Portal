@@ -1,6 +1,6 @@
 -- видеоскрипт для сайта http://www.lostfilm.tv (15/10/20)
 -- Copyright © 2017-2020 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod and up west_side 04.04.23 (movies)
+-- mod and up west_side 06.06.24 (movies)
 -- ## необходим ##
 -- Acestream
 -- ## Авторизация ##
@@ -14,7 +14,7 @@
 -- http://www.lostfilm.tv/series/The_Night_Manager
 -- http://www.lostfilm.tv/series/The_Punisher/video/2
 -- ## зеркало ##
-local zer = 'https://www.lostfilmtv5.site'
+local zer = 'https://www.lostfilmtv.site'
 -- '' = нет
 -- 'https://www.lostfilmtv1.site' (пример)
 -- ## прокси ##
@@ -58,10 +58,10 @@ local prx = ''
 			m_simpleTV.Control.CurrentAddress = retAdr
 		 return
 		end
-	local title
+	local title,logo
 	if m_simpleTV.User.lostfilm.Tabletitle then
 		local index = m_simpleTV.Control.GetMultiAddressIndex()
-		if index then
+		if index and m_simpleTV.User.lostfilm.Tabletitle and m_simpleTV.User.lostfilm.Tabletitle[index] then
 			title = m_simpleTV.User.lostfilm.title .. ' - '
 			.. m_simpleTV.User.lostfilm.Tabletitle[index].Name
 		end
@@ -274,7 +274,10 @@ local prx = ''
 		end
 		title = answer:match('<title>(.-)</title>') or 'lostfilm'
 		title = title:gsub(':.+', ''):gsub('%(.-%)', ''):gsub('Гид по.+', ''):gsub('%s%s+', ' '):gsub('%s%.', '.'):gsub('%.', '')
+		logo = answer:match('og:image.-content="(.-)"')
+--			debug_in_file(logo .. '\n')
 		m_simpleTV.User.lostfilm.title = title
+		m_simpleTV.User.lostfilm.logo = logo
 		local sesons_list = answer:match('<div class="left%-part".-<div class="select%-box".-(</option>.-</select>)')
 		local sesons_name = ''
 		if sesons_list and not retAdr:match('/season%W') and not retAdr:match('/episode%w') then
@@ -367,6 +370,7 @@ local prx = ''
 			title = title .. ' - ' .. m_simpleTV.User.lostfilm.Tabletitle[1].Name
 		end
 	end
+
 	local Posterc = retAdr:match('c=(%d+)')
 	local Posters = retAdr:match('s=(%d+)')
 	Posters = 'shmoster_s' .. Posters
@@ -374,8 +378,9 @@ local prx = ''
 		Posters = 'poster'
 	end
 	if Posterc and Posters then
-		m_simpleTV.User.lostfilm.posterUrl = host:gsub('https?://www%.', 'http://static.') .. '/Images/' .. Posterc .. '/Posters/' .. Posters .. '.jpg'
+		m_simpleTV.User.lostfilm.posterUrl = host:gsub('https?://www%.', 'http://static.'):gsub('tv%..-/','.top') .. '/Images/' .. Posterc:gsub('^0',''):gsub('^0','') .. '/Posters/' .. Posters:gsub('^shmoster_s0','shmoster_s'):gsub('^shmoster_s0','shmoster_s') .. '.jpg'
 		m_simpleTV.Interface.SetBackground({BackColor = 0, BackColorEnd = 255, PictFileName = m_simpleTV.User.lostfilm.posterUrl, TypeBackColor = 0, UseLogo = 3, Once = 1})
+--		debug_in_file(retAdr .. ' ' .. m_simpleTV.User.lostfilm.posterUrl .. '\n')
 	end
 	m_simpleTV.Control.ChangeChannelLogo(m_simpleTV.User.lostfilm.posterUrl or 'https://www.tarablog.net.ua/wp-content/uploads/2014/01/lostfilm1.jpg', m_simpleTV.Control.ChannelID)
 	m_simpleTV.Http.SetCookies(session, retAdr, '', m_simpleTV.User.lostfilm.cooki)
@@ -407,18 +412,25 @@ local prx = ''
 			m_simpleTV.Http.Close(session)
 			m_simpleTV.Control.CurrentAddress = 'https://s3.ap-south-1.amazonaws.com/ttv-videos/InVideo___This_is_where_ypprender_1554571391885.mp4'
 		 return
-		end
-		if proxy ~= '' then
+		else
 			local rc, torFile = m_simpleTV.Http.Request(session, {url = retAdr:gsub('torrent://', ''), writeinfile = true})
 			m_simpleTV.Http.Close(session)
 				if rc ~= 200 then return end
+			m_simpleTV.OSD.ShowMessageT({text = title, color = 0xff9999ff, showTime = 1000 * 5})
+			m_simpleTV.Control.SetTitle(title)
+			m_simpleTV.Control.ChangeChannelName(title, m_simpleTV.Control.ChannelID, false)
+			m_simpleTV.Control.ChangeChannelLogo(m_simpleTV.User.lostfilm.logo:gsub('poster','image'), m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
+			m_simpleTV.Control.CurrentTitle_UTF8 = title
 			m_simpleTV.Control.CurrentAddress = 'torrent://' .. torFile
 		 return
 		end
 	m_simpleTV.Http.Close(session)
-	m_simpleTV.Control.SetTitle(title)
-	m_simpleTV.Control.CurrentTitle_UTF8 = title
 
+	m_simpleTV.Control.SetTitle(title)
+	m_simpleTV.Control.ChangeChannelName(title, m_simpleTV.Control.ChannelID, false)
+	m_simpleTV.Control.ChangeChannelLogo(m_simpleTV.User.lostfilm.logo, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
+
+	m_simpleTV.Control.CurrentTitle_UTF8 = title
 	m_simpleTV.OSD.ShowMessageT({text = title, color = 0xff9999ff, showTime = 1000 * 5, id = 'channelName'})
 	m_simpleTV.Control.CurrentAddress = retAdr
 -- debug_in_file(retAdr .. '\n')

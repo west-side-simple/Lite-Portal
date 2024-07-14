@@ -38,7 +38,7 @@
 	local i, t = 1, {}
 		for w in answer:gmatch('<li data%-iframe=".-</li>') do
 			local adr,name = w:match('<li data%-iframe="(.-)">(.-)</li>')
-				if not adr then break end
+				if not adr or not name then break end
 			if (name == 'HDVB' or name == 'Collaps' or name == 'cdn') and adr~='' then
 				t[i] = {}
 				t[i].Id = i
@@ -94,9 +94,11 @@
 		m_simpleTV.Control.ChangeChannelLogo('https://kinokong.pro' .. poster, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
 		m_simpleTV.Control.ChangeChannelName(title, m_simpleTV.Control.ChannelID, false)
 	end
+	m_simpleTV.Control.SetTitle(title)
 	m_simpleTV.Control.CurrentTitle_UTF8 = title
 	retAdr = retAdr:gsub('^//', 'http://'):gsub('amp;', '')
 	m_simpleTV.Control.ChangeAddress = 'No'
 	m_simpleTV.Control.CurrentAddress = retAdr
-	dofile(m_simpleTV.MainScriptDir .. 'user\\video\\video.lua')
+	dofile(m_simpleTV.MainScriptDir .. 'user\\westSidePortal\\video\\hdvb.lua')
+	dofile(m_simpleTV.MainScriptDir .. 'user\\westSidePortal\\video\\collaps.lua')
 -- debug_in_file(retAdr .. '\n')

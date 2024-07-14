@@ -1,4 +1,4 @@
--- видеоскрипт для сайта https://ex-fs.net (01/09/23) - автор west_side
+-- видеоскрипт для сайта https://ex-fs.net (10/02/24) - автор west_side
 -- открывает подобные ссылки:
 -- https://ex-fs.net/cartoon/105216-boss-molokosos-2.html
 -- необходимы скрипты poisk_kinopoisk.lua, kinopoisk.lua - автор nexterr

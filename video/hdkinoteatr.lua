@@ -91,6 +91,5 @@ end
 	end
 
 	m_simpleTV.User.westSide.PortalTable,m_simpleTV.User.TMDB.tv,m_simpleTV.User.TMDB.Id,m_simpleTV.User.hdua.serial=nil,nil,nil,nil
-
-	dofile(m_simpleTV.MainScriptDir .. "user\\video\\video.lua")
+	m_simpleTV.Control.SetNewAddress(retAdr)
 -- debug_in_file(retAdr .. '\n')

@@ -1,4 +1,4 @@
--- видеоскрипт воспроизведения контента по content_id (28/04/23)
+-- видеоскрипт воспроизведения контента по content_id (08/01/24)
 -- author west_side
 -- открывает подобные ссылки:
 -- content_id=622e87da83dcfc38d2c69f1a&magnet:?xt=urn:btih:BB7C024231B3D9A7C90BBD7490B3B048DE46818A
@@ -52,7 +52,7 @@
 	m_simpleTV.User.torrent.balanser = balanser
 	local retAdr = inAdr:gsub('content_id=.-%&',''):gsub('balanser=.-%&',''):gsub('tr=.-$','')
 	local token = decode64('d2luZG93c18yZmRkYTQyMWNkZGI2OTExNmUwNzY4ZjNiZmY0ZGUwNV81OTIwMjE=')
-	local url = 'http://api.vokino.tv/v2/view?id='	.. content_id .. '&token=' .. token
+	local url = 'http://api.vokino.tv/v2/view/'	.. content_id .. '?token=' .. token
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.2785.143 Safari/537.36')
 	if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 8000)
@@ -65,7 +65,7 @@
 	then
 	return end
 	local title = tab.details.name
-	local poster = tab.details.poster
+	local poster = tab.details.poster or ''
 	local background = tab.details.bg_poster.backdrop
 	local released = tab.details.released or ''
 	local desc = tab.details.about
@@ -77,6 +77,9 @@
 	if m_simpleTV.Control.MainMode == 0 then
 		m_simpleTV.Interface.SetBackground({BackColor = 0, BackColorEnd = 255, PictFileName = background, TypeBackColor = 0, UseLogo = 3, Once = 1})
 	end
+	m_simpleTV.User.torrent.title = title
+	m_simpleTV.User.torrent.year = released
+	m_simpleTV.User.torrent.poster = poster
 	title = title .. ' (' .. released .. ')'
 	m_simpleTV.Control.ChangeChannelLogo(logo , m_simpleTV.Control.ChannelID)
 	if m_simpleTV.User.torrent.content ~= content_id then m_simpleTV.User.torrent.audio_id = nil end
@@ -122,7 +125,7 @@
 				end
 			local j = 1
 			while true do
-				if not tab.channels[i].submenu[j] or not tab.channels[i].submenu[j].ident 
+				if not tab.channels[i].submenu[j] or not tab.channels[i].submenu[j].ident
 --				or not tab.channels[i].submenu[j].stream_url
 					then
 					break
@@ -928,6 +931,13 @@ end
 		m_simpleTV.Control.CurrentAddress = retAdr
 --		m_simpleTV.Http.Close(session)
 		m_simpleTV.User.torrent.address = retAdr
+		if retAdr:match('^magnet:') then
+			if not m_simpleTV.User.TVPortal then
+				m_simpleTV.User.TVPortal = {}
+			end
+			info_fox(m_simpleTV.User.torrent.title,m_simpleTV.User.torrent.year,m_simpleTV.User.torrent.poster)
+			m_simpleTV.User.TVPortal.balanser = 'Trackers'
+		end
 		if m_simpleTV.User.torrent.balanser == nil and m_simpleTV.User.torrent.is_set_position and m_simpleTV.User.torrent.is_set_position == true then
 			m_simpleTV.User.torrent.is_set_position = false
 			m_simpleTV.Control.SetNewAddress(retAdr, m_simpleTV.Control.GetPosition())

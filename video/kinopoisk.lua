@@ -1,6 +1,6 @@
 -- видеоскрипт для сайта http://www.kinopoisk.ru
 -- Copyright © 2017-2023 Nexterr | https://github.com/Nexterr/simpleTV
--- mod west_side - (06.07.23)
+-- mod west_side - (10.09.24)
 -- ## необходимы ##
 -- видеоскрипты: videocdn.lua, hdvb.lua, collaps.lua, voidboost.lua, zetflix.lua, kodik.lua, cdnmovies.lua
 -- ## открывает подобные ссылки ##
@@ -136,7 +136,7 @@ tname = {
 -- сортировать: поменять порядок строк
 -- отключить: поставить в начале строки --
  'Videocdn',
- 'ZF',
+-- 'ZF',
  'VB',
 -- 'CDN Movies',
 -- 'Hdvb',
@@ -151,9 +151,9 @@ tname = {
 -- сортировать: поменять порядок строк
 -- отключить: поставить в начале строки --
  'Videocdn',
- 'ZF',
+-- 'ZF',
  'VB',
- 'CDN Movies',
+-- 'CDN Movies',
  'Hdvb',
  'Collaps',
  'Kodik',
@@ -258,10 +258,10 @@ end
 			rc, answer = m_simpleTV.Http.Request(session, {url = url})
 				if rc ~= 200 then return end
 			return url
-		elseif url:match('cdnmovies%.net') then
-			rc, answer = m_simpleTV.Http.Request(session, {url = url})
-				if rc ~= 200 then return end
-			return answer:match('"iframe_src":"([^"]+)')
+		elseif url:match('cdnmovies') then
+			rc, answer = m_simpleTV.Http.Request(session, {url = url, headers = 'Referer: https://cdnmovies.net/'})
+				if rc ~= 200 or (rc == 200 and not answer:match('#2')) then return end
+			return url
 		elseif url:match('kodikapi%.com') then
 			rc, answer = m_simpleTV.Http.Request(session, {url = url})
 				if rc ~= 200 then return end
@@ -474,7 +474,7 @@ end
 			elseif tname[i] == 'Collaps' then
 				turl[i] = {adr = 'https://api' .. os.time() .. decode64('LnN5bmNocm9uY29kZS5jb20vZW1iZWQva3Av') .. kpid, tTitle = 'Большая база фильмов и сериалов', tLogo = logo_k}
 			elseif tname[i] == 'CDN Movies' then
-				turl[i] = {adr = decode64('aHR0cHM6Ly9jZG5tb3ZpZXMubmV0L2FwaT90b2tlbj0wYWVmZDdjMWQ2ZjY0YzAzNzRjYmE4ZmRiZTZmOTE2MyZraW5vcG9pc2tfaWQ9') .. kpid, tTitle = 'Большая база фильмов и сериалов', tLogo = 'https://raw.githubusercontent.com/Nexterr-origin/simpleTV-Images/main/cdnmovie.png'}
+				turl[i] = {adr = decode64('aHR0cHM6Ly9jZG5tb3ZpZXMtc3RyZWFtLm9ubGluZS9raW5vcG9pc2sv') .. kpid .. '/iframe', tTitle = 'Большая база фильмов и сериалов', tLogo = 'https://raw.githubusercontent.com/Nexterr-origin/simpleTV-Images/main/cdnmovie.png'}
 			elseif tname[i] == 'Hdvb' then
 				turl[i] = {adr = decode64('aHR0cHM6Ly92YjE3MTIzZmlsaXBwYWFuaWtldG9zLnB3Ly9hcGkvdmlkZW9zLmpzb24/dG9rZW49Yzk5NjZiOTQ3ZGEyZjNjMjliMzBjMGUwZGNjYTZjZjQmaWRfa3A9') .. kpid, tTitle = 'Большая база фильмов и сериалов', tLogo = logo_k}
 			elseif tname[i] == 'VB' then
@@ -564,4 +564,7 @@ end
 	m_simpleTV.Control.CurrentAddress = retAdr
 
 	dofile(m_simpleTV.MainScriptDir_UTF8 .. 'user\\video\\video.lua')
+	dofile(m_simpleTV.MainScriptDir .. 'user\\westSidePortal\\video\\hdvb.lua')
+	dofile(m_simpleTV.MainScriptDir .. 'user\\westSidePortal\\video\\collaps.lua')
+	dofile(m_simpleTV.MainScriptDir .. 'user\\westSidePortal\\video\\kodik.lua')
 -- debug_in_file(retAdr .. '\n')

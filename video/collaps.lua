@@ -1,12 +1,13 @@
 -- видеоскрипт для видеобалансера "Collaps" https://collaps.org (15/06/22)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod west_side (02/11/23)
+-- mod west_side (18/05/24)
 -- ## открывает подобные ссылки ##
 -- https://api1603044906.kinogram.best/embed/movie/7059
 -- https://api1603044906.kinogram.best/embed/kp/5928
 		if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 		if not m_simpleTV.Control.CurrentAddress:match('^https?://api[%d]*[^/]+/embed/movie/%d+')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://api[%d]*[^/]+/embed/kp/%d+')
+			and not m_simpleTV.Control.CurrentAddress:match('^https?://api[%d]*[^/]+/embed/imdb/tt%d+')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://api%..-/embed/kp/%d+')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://api%..-/embed/movie/%d+')
 			and not m_simpleTV.Control.CurrentAddress:match('^$collaps')
@@ -30,8 +31,12 @@
 	if not m_simpleTV.User.collaps then
 		m_simpleTV.User.collaps = {}
 	end
+	if not m_simpleTV.User.TVPortal then
+		m_simpleTV.User.TVPortal = {}
+	end
 	m_simpleTV.User.collaps.kinogo = nil
 	m_simpleTV.User.collaps.ua = nil
+	m_simpleTV.User.TVPortal.balanser = 'Collaps'
 	local title,logo,subt
 	if m_simpleTV.User.collaps.episode then
 		local index = m_simpleTV.Control.GetMultiAddressIndex()
@@ -139,7 +144,7 @@
 		end
 		if m_simpleTV.User.collaps.ua then
 		ua_info(m_simpleTV.User.collaps.ua)
-		end		
+		end
 		end
 	end
 	local function play(Adr, title)

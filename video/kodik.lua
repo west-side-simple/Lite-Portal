@@ -14,11 +14,11 @@
 		end
 	local inAdr = m_simpleTV.Control.CurrentAddress
 	m_simpleTV.OSD.ShowMessageT({text = '', showTime = 1000, id = 'channelName'})
-	if inAdr:match('^$kodiks') or not inAdr:match('&kinopoisk') then
+--[[	if inAdr:match('^$kodiks') or not inAdr:match('&kinopoisk') then
 		if m_simpleTV.Control.MainMode == 0 then
 			m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = '', TypeBackColor = 0, UseLogo = 0, Once = 1})
 		end
-	end
+	end--]]
 	local psevdotv
 	if inAdr:match('PARAMS=psevdotv') then
 		psevdotv = true
@@ -35,6 +35,10 @@
 	if not m_simpleTV.User.kodik then
 		m_simpleTV.User.kodik = {}
 	end
+	if not m_simpleTV.User.TVPortal then
+		m_simpleTV.User.TVPortal = {}
+	end
+	m_simpleTV.User.TVPortal.balanser = 'Kodik'
 	local title
 	local refer = 'https://the-cinema.online/'
 	if m_simpleTV.User.kodik.Tabletitle and not psevdotv then

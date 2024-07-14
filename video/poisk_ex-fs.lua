@@ -1,4 +1,4 @@
--- видеоскрипт  поиска медиаконтента кинопоиска через сайт https://ex-fs.net/ (01/09/21)
+-- видеоскрипт  поиска медиаконтента кинопоиска через сайт https://ex-fs.net/ (28/04/23)
 -- autor westSide
 		if m_simpleTV.Control.ChangeAdress ~= 'No' then return end
 	local inAdr = m_simpleTV.Control.CurrentAdress
@@ -168,15 +168,15 @@
     t[i] = {}
     t[i].Id = i
 	if i == 1 then
-    t[i].Name = tt[i][1] .. ' (' .. nm1 .. ')'
+    t[i].Name = tt[i][1] .. ' (' .. (nm1 or 0) .. ')'
 	elseif i == 2 then
-    t[i].Name = tt[i][1] .. ' (' .. nm2 .. ')'
+    t[i].Name = tt[i][1] .. ' (' .. (nm2 or 0) .. ')'
 	elseif i == 3 then
-    t[i].Name = tt[i][1] .. ' (' .. nm3 .. ')'
+    t[i].Name = tt[i][1] .. ' (' .. (nm3 or 0) .. ')'
 	elseif i == 4 then
-    t[i].Name = tt[i][1] .. ' (' .. nm4 .. ')'
+    t[i].Name = tt[i][1] .. ' (' .. (nm4 or 0) .. ')'
 	elseif i == 5 then
-    t[i].Name = tt[i][1] .. ' (' .. nm5 .. ')'
+    t[i].Name = tt[i][1] .. ' (' .. (nm5 or 0) .. ')'
 	end
     t[i].Action = tt[i][2]
 	t[i].InfoPanelLogo = tt[i][3]
