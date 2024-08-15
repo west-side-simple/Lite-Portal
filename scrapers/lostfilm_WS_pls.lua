@@ -1,4 +1,4 @@
--- скрапер TVS для сайта https://www.lostfilmtv2.site от west_side (31/07/22)
+-- скрапер TVS для сайта https://www.lostfilmtv2.site от west_side (15/08/24)
 -- ## прокси ##
 local prx = ''
 -- '' - нет
@@ -35,6 +35,7 @@ local prx = ''
 		local t, i = {}, 1
 		local name, ser_name, ser, adr, logo
 		local answer = LoadFromPage()
+		if not answer then return end
 			for w in answer:gmatch('<div class="row">(.-)markEpisodeAsWatched') do
 				name = w:match('<div class="name%-ru">(.-)</div>')
 				name = name:gsub(',', ' '):gsub('%s%s+', ' ')
