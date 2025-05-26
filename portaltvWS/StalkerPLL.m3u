@@ -1,0 +1,3 @@
+#EXTM3U $BorpasFileFormat="1" $NestedGroupsSeparator="/"
+#EXTINF:-1 video-title="http%3A%2F%2Ftvvip.dyndns.tv%2Fstalker_portal%2Fc%2F" video-desc="%5B00%3A1A%3A79%3A28%3AA9%3A8B%5D",TV VIP
+portalTV_stalker_playlist=http://tvvip.dyndns.tv/stalker_portal/c/
