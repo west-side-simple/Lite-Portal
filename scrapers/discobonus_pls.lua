@@ -20,14 +20,21 @@
 		m_simpleTV.Http.Close(session)
 		if rc ~= 200 then return end
 		if not answer then return end
-		answer = answer:gsub('\\', '\\\\'):gsub('\\"', '\\\\"'):gsub('\\/', '/'):gsub('(%[%])', '""')
+		answer = answer:gsub('\\', '\\\\'):gsub('\\"', '\\\\"'):gsub('\\/', '/'):gsub('(%[%])', '""'):gsub('%&quot%;','"'):gsub('null','""')
+--		debug_in_file(answer .. '\n','c://1/db.txt')
 		for w in answer:gmatch('%{.-%}') do
 			t[i] = {}
 			t[i].address,t[i].name,t[i].logo = w:match('"id":(%d+).-"title":"(.-)".-"image":"(.-)"')
-			if i== 1 then
+			if not tonumber(t[i].address) then break end
+			if (tonumber(t[i].address)) == 1 then
 			t[i].address = 'https://casseta-disco.ru:1030/discobonus/1/winamp.m3u' .. '$OPT:NO-STIMESHIFT'
-			else
-			t[i].address = 'https://casseta-disco.ru:1030/discobonus/' .. (tonumber(t[i].address)+1) .. '/winamp.m3u' .. '$OPT:NO-STIMESHIFT'
+			elseif (tonumber(t[i].address)) == 3 then
+			t[i].address = 'https://casseta-disco.ru:1030/discobonus/4/winamp.m3u' .. '$OPT:NO-STIMESHIFT'
+			elseif (tonumber(t[i].address)) == 10 then
+			t[i].address = 'https://casseta-disco.ru:1030/discobonus/12/winamp.m3u' .. '$OPT:NO-STIMESHIFT'
+			elseif (tonumber(t[i].address)) == 11 then
+			t[i].address = 'https://casseta-disco.ru:1030/discobonus/13/winamp.m3u' .. '$OPT:NO-STIMESHIFT'
+			t[i].logo = 'http://casseta-disco.ru:1030/media/servers/Logo512.jpg'
 			end
 			i=i+1
 		end

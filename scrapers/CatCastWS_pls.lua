@@ -1,4 +1,4 @@
--- скрапер TVS для загрузки плейлистов "CatCast" https://catcast.tv/ (08/03/2024)
+-- скрапер TVS для загрузки плейлистов "CatCast" https://catcast.tv/ (02/04/2025)
 -- необходим видоскрипт: catcast.lua
 
 
@@ -20,22 +20,41 @@ end
 
 	local function LoadFromSite()
 		require 'json'
-		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; rv:85.0) Gecko/20100101 Firefox/85.0')
+		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0')
 		if not session then return end
-		m_simpleTV.Http.SetTimeout(session, 300000)
+		m_simpleTV.Http.SetTimeout(session, 10000)
 
 		local t, i = {}, 1
 
-			local function getTbl(t, i, tab)
-				local k = 1
+			for c = 1, 40 do
+				local tt = {}
+				tt.url = 'https://api.catcast.tv/api/channels?type=tv&online=true&sort_by=viewers&page=' .. c
+				tt.method = 'get'
+				tt.headers = 'X-Timezone-Offset: -180\nReferer: https://catcast.tv/tv/online'
+				local rc, answer = m_simpleTV.Http.Request(session, tt)
+--				debug_in_file( 'page=' .. c .. ' / ' .. rc .. '\n', 'c://1/catcast.txt', setnew )
+				if rc ~= 200 then
+				m_simpleTV.Common.Sleep(1000)
+				rc, answer = m_simpleTV.Http.Request(session, tt)
+--				debug_in_file( 'page=' .. c .. ' / ' .. rc .. '\n', 'c://1/catcast.txt', setnew )
+				end
+				if rc ~= 200 then
+				m_simpleTV.Common.Sleep(1000)
+				rc, answer = m_simpleTV.Http.Request(session, tt)
+--				debug_in_file( 'page=' .. c .. ' / ' .. rc .. '\n', 'c://1/catcast.txt', setnew )
+				end
+				if rc == 200 then
+					answer = unescape3(answer):gsub('(%[%])', '""'):gsub('"null"', '""'):gsub('null', '""')
+					require 'json'
+					local tab = json.decode(answer)
+									local k = 1
 				while tab.data.list.data[k] do
-					if tab.data.list.data[k].is_online and tab.data.list.data[k].is_autopilot and not tab.data.list.data[k].need_password and not tab.data.list.data[k].is_banned then
 					t[i] = {}
 					t[i].name = (unescape3(tab.data.list.data[k].name:gsub('\u00a0', ' ')) .. ' '):gsub('%s+', ' '):gsub('%p', ' '):gsub('  ', ' '):gsub('%&nbsp;', ' '):gsub('u2605', '')
 					t[i].id = tab.data.list.data[k].id
 					t[i].video_desc = (unescape3(tab.data.list.data[k].description_text:gsub('\u00a0', ' ')) .. ' '):gsub('%s+', ' '):gsub('%p', ' '):gsub('  ', ' '):gsub('%&nbsp;', ' ') .. ' id=' .. t[i].id
 					t[i].address = 'https://catcast.tv/' .. unescape3(tab.data.list.data[k].shortname)
-					t[i].logo = tab.data.list.data[k].background or tab.data.list.data[k].logo
+					t[i].logo = tab.data.list.data[k].background or tab.data.list.data[k].logo or 'https://catcast.tv/assets/no-logo.svg'
 					if tab.data.list.data[k].tags and tab.data.list.data[k].tags[1] then
 					local j, tags = 1, ''
 					while true do
@@ -65,27 +84,11 @@ end
 					end
 --					debug_in_file( i .. '. ' .. t[i].id .. '\n', 'c://1/catcast.txt', setnew )
 					i = i + 1
-					end
 					k = k + 1
 				end
-			 return t, i
-			end
-
-			for c = 1, 403 do
-				local tt = {}
-				tt.url = 'https://api.catcast.tv/api/channels?page=' .. c
-				tt.method = 'get'
-				tt.headers = 'X-Timezone-Offset: -180\nReferer: https://catcast.tv/tv/online'
-				local rc, answer = m_simpleTV.Http.Request(session, tt)
-				if rc == 200 then
-					answer = unescape3(answer):gsub('(%[%])', '"nil"')
---					debug_in_file( 'page=' .. c .. '\n----------------------\n', 'c://1/catcast.txt', setnew )
-					require 'json'
-					local tab = json.decode(answer)
-					if not tab.data.list.data then return end
-					t, i = getTbl(t, i, tab)
 				end
-				m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/progress1/p' .. math.floor(c/403*100+0.5) .. '.png"', text = ' - общий прогресс загрузки: ' .. c, color = ARGB(255, 255, 255, 255), showTime = 1000 * 30})
+				m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/westSide/progress1/p' .. math.floor(c/40*100+0.5) .. '.png"', text = ' - общий прогресс загрузки: ' .. c, color = ARGB(255, 255, 255, 255), showTime = 1000 * 30})
+				m_simpleTV.Common.Sleep(1000)
 			end
 
 		m_simpleTV.Http.Close(session)

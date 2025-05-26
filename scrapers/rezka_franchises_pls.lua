@@ -1,4 +1,5 @@
--- скрапер TVS для загрузки плейлиста "Franchises" https://hdrezka.ag/franchises/ (07/08/22)
+-- скрапер TVS для загрузки плейлиста "Franchises"
+-- франшиз https://hdrezka.ag/franchises/ и коллекций https://hdrezka.ag/collections/ (20/03/25)
 -- author west_side
 -- ## необходим ##
 -- видеоскрипт: hdrezka.lua - mod west_side for lite version
@@ -31,27 +32,21 @@ local filter = {
 		m_simpleTV.OSD.ShowMessageT(t)
 	end
 
-	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; rv:86.0) Gecko/20100101 Firefox/86.0', prx, false)
-		if not session then return end
-	m_simpleTV.Http.SetTimeout(session, 30000)
+	local session = m_simpleTV.Http.New('Mozilla/5.0')
+		if not session then
+		return end
+	m_simpleTV.Http.SetTimeout(session, 4000)
 
 	local function LoadFromSite()
 	local zerkalo = m_simpleTV.Config.GetValue('zerkalo/rezka','LiteConf.ini') or ''
 	if zerkalo == '' then zerkalo = 'https://hdrezka.ag/' end
 	local t,i,j,all_pg = {},1,1,1
+	local rc,answer
 	while j<=tonumber(all_pg) do
-		local rc,answer = m_simpleTV.Http.Request(session,{url= zerkalo .. 'franchises/' .. 'page/' .. j .. '/'})
-		if rc ~= 200 then
-			m_simpleTV.Common.Sleep(500)
-			rc,answer = m_simpleTV.Http.Request(session,{url= zerkalo .. 'franchises/' .. 'page/' .. j .. '/'})
-		end
-		if rc ~= 200 then
-			m_simpleTV.Common.Sleep(500)
-			rc,answer = m_simpleTV.Http.Request(session,{url= zerkalo .. 'franchises/' .. 'page/' .. j .. '/'})
-		end
-		if rc ~= 200 then
-			return t
-		end
+		m_simpleTV.Common.Sleep(2000)
+		rc,answer = m_simpleTV.Http.Request(session,{url= zerkalo .. 'franchises/' .. 'page/' .. j .. '/', method = 'get', headers = 'X-Requested-With: XMLHttpRequest\nCookie: '})
+--		debug_in_file(zerkalo .. 'franchises/' .. 'page/' .. j .. '/' .. ', ' .. rc .. '\n','c://1/frch.txt')
+		if rc == 200 then
 		if j==1 then
 		 all_pg=answer:match('<span class="nav_ext">%.%.%.</span> <a href=".-(%d+)<')
 		end
@@ -72,11 +67,31 @@ local filter = {
 					t[i].name = t[i].name:gsub('Все части мультфильма ',''):gsub('Все части мультсериала ',''):gsub('Все мультфильмы про ','Про '):gsub('Все мультфильмы франшизы ',''):gsub('Все мультфильмы ',''):gsub('Все части фильма ',''):gsub('Все части сериала ',''):gsub('все части сериала ',''):gsub('Все части документального сериала ',''):gsub('Все фильмы про ','Про '):gsub('Все части франшизы ',''):gsub('Все части аниме ',''):gsub('Все мультфильмы серии ',''):gsub('Все фильмы серии ',''):gsub('%%2C','!') .. ' (' .. num .. ')'
 					t[i].group = grp
 					t[i].group_logo = grp_logo
-				showMsg('Загрузка: ' .. j .. ' из ' .. all_pg .. ' / ' .. i, ARGB(255, 153, 255, 153))
+				showMsg('Загрузка франшиз: ' .. j .. ' из ' .. all_pg .. ' / ' .. i, ARGB(255, 153, 255, 153))
 --				debug_in_file(i .. ' (' .. j .. '), ' .. t[i].name .. '\n','c://1/frch.txt')
 				i=i+1
 			end
+		end
 		j=j+1
+	end
+	local k = 1
+	for k=1,5 do
+		rc,answer = m_simpleTV.Http.Request(session,{url=zerkalo .. 'collections/' .. 'page/' .. k .. '/', method = 'get', headers = 'X-Requested-With: XMLHttpRequest\nCookie: '})
+		if rc == 200 then
+			for w in answer:gmatch('<div class="b%-content__collections_item".-</div></div>') do
+				local adr,logo,num,name = w:match('url="(.-)".-src="(.-)".-tooltip">(%d+).-"title">(.-)<')
+				if not adr or not name then break end
+					t[i] = {}
+					t[i].name = name .. ' (' .. num .. ')'
+					t[i].address = adr
+					t[i].logo = logo
+					t[i].group = 'Коллекции'
+					t[i].group_logo = './luaScr/user/show_mi/IMDB_pack/Collections.png'
+					showMsg('Загрузка коллекций: ' .. k .. ' из ' .. 5 .. ' / ' .. i, ARGB(255, 153, 255, 153))
+				i=i+1
+			end
+		end
+		k=k+1
 	end
 	if #t == 0 then return end
 	 return t

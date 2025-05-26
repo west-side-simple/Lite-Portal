@@ -1,4 +1,4 @@
--- скрапер TVS для загрузки плейлиста "Rezka NEW" https://rezkery.com (30/05/24)
+-- скрапер TVS для загрузки плейлиста "Rezka NEW" https://rezkery.com (20/03/25)
 
 	module('rezka_new_pls', package.seeall)
 	local my_src_name = 'Rezka NEW'
@@ -9,38 +9,46 @@
 	function GetVersion()
 	 return 2, 'UTF-8'
 	end
-	local function LoadFromSite()
-
-		local url = 'https://hdrezka.ag/'
-
-		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML,like Gecko) Chrome/81.0.3785.143 Safari/537.36')
-			if not session then return end
-		m_simpleTV.Http.SetTimeout(session, 8000)
-		local rc, answer = m_simpleTV.Http.Request(session, {url = url})
-		m_simpleTV.Http.Close(session)
-			if rc ~= 200 then return end
+	
+	local function Get_request_start()
 		local t, i = {}, 1
-			for w in answer:gmatch('<div class="b%-content__inline_item".-</div> %-%-> </div></div>') do
-			local logo, group, adr, name, title = w:match('<img src="(.-)".-<i class="entity">(.-)</i>.-<a href="(.-)">(.-)</a> <div class="misc">(.-)<')
---			year = title:match('%d%d%d%d') or 0
-					if not adr or not name then break end
+		local answer0 = ''
+		local zerkalo = m_simpleTV.Config.GetValue('zerkalo/rezka','LiteConf.ini') or ''
+		if zerkalo == '' then zerkalo = 'https://hdrezka.ag/' end
+		for j = 1,4 do
+			m_simpleTV.Common.Sleep(2000)
+			local session = m_simpleTV.Http.New('Mozilla/5.0')
+			if not session then return end
+			m_simpleTV.Http.SetTimeout(session, 4000)			
+			local url = zerkalo .. 'engine/ajax/get_newest_slider_content.php'
+			local body = 'id=' .. tostring(j):gsub('4', '82')
+			local headers = 'X-Requested-With: XMLHttpRequest\nCookie: '
+			local rc, answer = m_simpleTV.Http.Request(session, {url = url, method = 'post', body = body, headers = headers})
+			answer0 = answer0 .. '\n' .. answer
+--			debug_in_file(answer .. '\n~~~~~~~~~~\n', 'c://1/req_rezka.txt')
+			m_simpleTV.Http.Close(session)
+		end
+			for w in answer0:gmatch('data%-id=.-<div class="misc">.-</div>') do
+				local logo, group, adr, name, title = w:match('<img src="(.-)".-<i class="entity">(.-)</i>.-<a href="(.-)">(.-)</a>.-<div class="misc">(.-)<')
+				if not adr or not name then break end
 				t[i] = {}
 				t[i].name = name .. ' (' .. (title:match('%d%d%d%d') or 0) .. ')'
 				t[i].logo = logo
-				t[i].address =  url .. adr
-				t[i].group = group
+				t[i].address =  zerkalo .. adr:gsub('^http.-//.-/','')
+				t[i].group = (group .. 'ы'):gsub('Анимеы','Аниме')
 				t[i].video_title = title
 				i = i + 1
-			end
-			if i == 1 then return end
-	 return t
+			end	
+		if i == 1 then return end
+		return t
 	end
+
 	function GetList(UpdateID, m3u_file)
 			if not UpdateID then return end
 			if not m3u_file then return end
 			if not TVSources_var.tmp.source[UpdateID] then return end
 		local Source = TVSources_var.tmp.source[UpdateID]
-		local t_pls = LoadFromSite()
+		local t_pls = Get_request_start()
 			if not t_pls then
 				m_simpleTV.OSD.ShowMessageT({text = Source.name .. ' ошибка загрузки плейлиста'
 											, color = ARGB(255, 255, 100, 0)

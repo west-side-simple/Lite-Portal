@@ -45,12 +45,12 @@
 	local function GetAdr(adr)
 	local url = 'http://radcap.ru/' .. adr
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML,like Gecko) Chrome/81.0.3785.143 Safari/537.36')
-			if not session then return end
-		m_simpleTV.Http.SetTimeout(session, 8000)
+			if not session then return '' end
+		m_simpleTV.Http.SetTimeout(session, 14000)
 		local rc, answer = m_simpleTV.Http.Request(session, {url = url})
 		m_simpleTV.Http.Close(session)
-			if rc ~= 200 then return end
-		return answer:match('"title":"2"%,file:"(.-)"')
+			if rc ~= 200 then return '' end
+		return answer:match('"title":"2"%,file:"(.-)"') or ''
 	end
 
 	local function LoadFromNet()

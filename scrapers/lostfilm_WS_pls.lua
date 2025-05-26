@@ -6,7 +6,7 @@ local prx = ''
 -- ##
 	module('lostfilm_WS_pls', package.seeall)
 	local my_src_name = 'LOSTFILM WS'
-	local url1 = 'https://www.lostfilmtv.site'
+	local url1 = 'https://www.lostfilm.tv'
 	function GetSettings()
 	 return {name = my_src_name, sortname = '', scraper = '', m3u = 'out_' .. my_src_name .. '.m3u', logo = 'https://www.lostfilmtv2.site/favicon.ico', TypeSource = 1, TypeCoding = 1, DeleteM3U = 1, RefreshButton = 0, AutoBuild = 1, AutoBuildDay = {1, 1, 1, 1, 1, 1, 1}, LastStart = 0, TVS = {add = 0, FilterCH = 0, FilterGR = 0,GetGroup = 0, LogoTVG = 0}, STV = {add = 1, ExtFilter = 1, FilterCH = 0, FilterGR = 0, GetGroup = 1, HDGroup = 0, AutoSearch = 0, AutoSearchLogo =1 ,AutoNumber = 0, NumberM3U = 0, GetSettings = 1, NotDeleteCH = 0, TypeSkip = 1, TypeFind = 1, TypeMedia = 3}}
 	end
