@@ -10,11 +10,11 @@ function getVals()
   return retA;
 }
 //--------------------------------------------------------------
-function setStartVals(enabled,embedded,savePostion,chromium)
+function setStartVals(enabled,embedded,savePosition,chromium)
 { 
  document.getElementById('EnabledID').checked  = enabled;
  document.getElementById('EmbeddedID').checked  = embedded;
- document.getElementById('SavePositionID').checked  = savePostion;
+ document.getElementById('SavePositionID').checked  = savePosition;
  document.getElementById('ChromiumID').checked  = chromium;
 }
 //--------------------------------------------------------------
