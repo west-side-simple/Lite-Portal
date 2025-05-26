@@ -18,7 +18,7 @@ local debugInFile = false
 --interface
 ----------------------------------------------------------------
 function getVersion()
-  return "1.1",1.1
+  return "0.2",0.2
 end
 ----------------------------------------------------------------
 function getDialogId()
