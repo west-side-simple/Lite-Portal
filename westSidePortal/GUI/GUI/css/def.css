@@ -1,0 +1,52 @@
+ 
+* {
+font-family:Geneva, Arial, Helvetica, sans-serif;
+color: #222222;
+}
+
+body {
+font-size:100%;
+background-color  = rgba(20, 20, 20, 1);
+}
+
+.hello_word{
+color: rgba(255, 255, 255, 1);
+font-size: 1.1em;
+}
+
+.disable-select {
+  user-select: none;
+}
+
+#top { 
+position:fixed;
+top:5;		 
+right:1;
+width:2.4em;
+font-size: 1.2em;	
+color:#FF00FFFF;
+background-color:#00000000;
+text-align:center;		 
+}
+
+input[type="text"] {
+font-size: 1.2em;
+width:12em;	
+border: 2px solid #ccc;
+color:#FFFFFFFF;
+background-color:#00000000;	
+}
+
+input[type="button"] {
+font-size: 1.1em;
+border: 0px solid #ccc;
+color:#FFFFFFFF;
+background-color:#00000000;	
+}
+
+input[type="button"]:hover {
+font-size: 1.0em;
+border: 2px solid #ccc;
+color:#FFFFFFFF;
+background-color:#00000000;	
+}

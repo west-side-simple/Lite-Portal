@@ -1,0 +1,196 @@
+*, :before, :after {
+    margin: 0;
+    box-sizing: border-box;
+}
+body {
+	overflow:  hidden;
+	margin: 6vw 0 0vw 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+.search-form {
+height: 5vw;
+	position: relative;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	width: 74vw;
+    font-size: 3vw;
+}
+.btn {
+	cursor: pointer;
+}
+.search-form .btn-search {
+	height: 5vw;
+	width: 5.8vw;
+	border: 0.2vw solid rgba(255, 255, 255, .7);
+	border-radius:20%;
+	background-image: url('../img/magnify.svg');
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 100%;
+	margin-left: 1vw;
+	background-color: rgba(0, 0, 0, .4);
+}
+.search-form .btn-settings {
+	height: 5vw;
+	width: 5.8vw;
+	border: 0.2vw solid rgba(255, 255, 255, .7);
+	border-radius:20%;
+	background-image: url('../img/cog-outline.svg');
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 100%;
+	margin-left: 1vw;
+	background-color: rgba(0, 0, 0, .4);
+}
+.search-form .btn-close {
+	border: 0.2vw solid rgba(255, 255, 255, .7);
+	border-radius:20%;
+	width: 4vw;
+	height: 4vw;
+	position:fixed;
+	top:1;		 
+	right:1;
+	background-image: url('../img/close-thick.svg');
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 100%;
+	background-color: rgba(255, 0, 0, .4);
+}
+.search-form .btn-portal {
+	
+	width: 6vw;
+	height: 6vw;
+	position:fixed;
+	top:1;		 
+	left:1;
+	background-image: url('../img/portal.svg');
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 100%;
+	
+}
+.btn-portal:hover  {
+	height: 6vw;
+	width: 6vw;
+	border: 0.2vw solid rgba(255, 255, 255, .7);
+	border-radius:50%;
+	position:fixed;
+	top:1;		 
+	left:1;
+	background-image: url('../img/portal.svg');
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 100%;
+	background-color: rgba(0, 0, 0, .6);
+}
+.btn-search:hover  {
+	height: 5vw;
+	width: 5.8vw;
+	border: 0.2vw solid rgba(255, 255, 255, .8);
+	border-radius:20%;
+	background-image: url('../img/magnify.svg');
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 100%;
+	margin-left: 1vw;
+	background-color: rgba(0, 255, 0, .5);
+}
+.btn-settings:hover  {
+	height: 5vw;
+	width: 5.8vw;
+	border: 0.2vw solid rgba(255, 255, 255, .8);
+	border-radius:20%;
+	background-image: url('../img/cog-outline.svg');
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 100%;
+	margin-left: 1vw;
+	background-color: rgba(0, 0, 255, .5);
+}
+.btn-close:hover {
+	width: 4vw;
+	height: 4vw;
+	border: 0.2vw solid rgba(255, 255, 255, .8);
+	border-radius:20%;
+	position:fixed;
+	top:1;		 
+	right:1;
+	background-image: url('../img/close-thick.svg');
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 100%;
+	background-color: rgba(255, 0, 0, .7);
+}
+
+.btn-search:active  {
+	background-color: rgba(0, 200, 200, .9);	
+  	background-size: 90%;
+}
+.btn-settings:active  {
+	background-color: rgba(44, 200, 200, .9);
+	background-size: 90%;
+}
+.btn-close:active {
+	background-color: rgba(200, 0, 200, .9);
+    background-size: 90%;	
+}
+#value {
+	background-color: rgba(0, 0, 0, .4);
+	font-size: larger;
+	padding: 0.3vw;
+	border-radius:1vw;
+	border: 0.2vw solid rgba(255, 255, 255, .7);
+	width: 100%;
+	flex-grow: 2;
+	outline: none !important;
+}
+#value:hover {
+    background-color: rgba(33, 33,33, .6);
+border: 0.2vw solid rgba(255, 255, 255, .8);
+}
+#value:active {
+    background-color: rgba(88, 0, 0, .4);
+}
+#keyboard {
+    width: 75%;
+    height: 0;
+    zoom: 200%;
+	margin: 9vw 0 10vw 0;
+	align-items: center;
+	display: flex;
+	justify-content: center;
+}
+#keyboard:active {
+width: 75%;
+}
+#keyboard:not(.ready) {
+	display: none;
+}
+#keyboard.skin-1 {
+  --stroke-color: #ffffff;
+}
+#keyboard.skin-2 {
+  --stroke-color: #00FFff;
+}
+#keyboard.skin-3 {
+  --stroke-color: #efefef;
+}
+
+#keyboard.skin-9 {
+  --stroke-color: #22ccff;
+}
+
+
+#keyboard svg #wrapper.shift g[data-code^=Shift] .str0 {
+  stroke: var(--stroke-color) !important;
+}
+#keyboard svg g[data-code] {
+  cursor: pointer;
+}
+#keyboard svg g[data-code]:hover .str0 {
+  stroke: var(--stroke-color) !important;
+}

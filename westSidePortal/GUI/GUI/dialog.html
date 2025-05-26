@@ -1,0 +1,43 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>klava</title>
+  <link rel="stylesheet" type="text/css" href="css/def.css">
+  <link rel="stylesheet" href="css/style.css">
+<script src="jscript/def.js"></script>
+
+<script language=JavaScript>
+function collect(mode) {
+    var s = document.lex.text.value;
+
+    sourceName = window.name;
+    if (sourceName != 'req')
+    {
+      if (window.opener && !window.opener.closed)
+        window.opener.document.reqForm.elements[sourceName].value = s;
+    }
+    else
+      if (window.opener && !window.opener.closed)
+        window.opener.document.exactForm.elements[sourceName].value = s;
+    window.close();
+}
+form_name="document.lex.text";
+lang = 'russian';
+</script>
+</head>
+<body >
+<!--<div id="top">
+<input type=button class=button value="ABC" onclick="keyboard();">
+</div>-->
+<div class="search-form">
+	<input type="text" id="value">
+	<div class="btn btn-search"></div>
+	<div class="btn btn-settings"></div>
+	<div class="btn btn-close"></div>
+	<div class="btn btn-portal"></div>
+</div>
+<div id="keyboard" class="skin-0"></div>
+<script src="jscript/main.js"></script>
+
+</body>
+</html>

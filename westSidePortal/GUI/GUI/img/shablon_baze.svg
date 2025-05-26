@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="195.968mm" height="67.9096mm" version="1.1" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd" viewBox="0 0 20010 6934"  xmlns:xlink="http://www.w3.org/1999/xlink">
+ <defs>
+  <style type="text/css"> 
+
+    .lang-en .ru, .lang-ru .en {display: none}
+    .lang-en .act-en, .lang-ru .act-ru {fill:#FF0033}
+    .caps #caps-pipka {fill:#FF0033}
+                g[data-code]:hover > path:nth-child(1), 
+                g[data-code]:hover > circle:nth-child(1){
+                fill: #FFA500!important;
+                }
+                g[data-code]:hover > path:nth-child(1), 
+                g[data-code]:hover > rect:nth-child(1){
+                fill: #FFA500!important;
+                }                
+                g[data-code]:hover > path:nth-child(2), 
+                g[data-code]:hover > circle:nth-child(2){
+                fill: #4B0082!important;
+                }
+                g[data-code]:hover > path:nth-child(2), 
+                g[data-code]:hover > rect:nth-child(2){
+                fill: #4B0082!important;
+                }
+  </style>
+
+ </defs>
+ <g id="wrapper" class="lang-en">
+  <g data-code="Backquote">
+  </g>
+  <g data-code="Digit1">
+  </g>
+  <g data-code="Digit2">
+  </g>
+  <g data-code="Digit3">
+   </g>
+  <g data-code="Digit4">
+   </g>
+  <g data-code="Digit5">
+  </g>
+  <g data-code="Digit6">
+  </g>
+  <g data-code="Digit7">
+  </g>
+  <g data-code="Digit8">
+  </g>
+  <g data-code="Digit9">
+  </g>
+  <g data-code="Digit0">
+  </g>
+  <g data-code="Minus">
+  </g>
+  <g data-code="Equal">
+  </g>
+  <g data-code="Backspace">
+  </g>
+  <g data-code="Semicolon">
+  </g>
+  <g data-code="KeyQ">
+  </g>
+  <g data-code="KeyW">
+  </g>
+  <g data-code="KeyE">
+  </g>
+  <g data-code="KeyR">
+  </g>
+  <g data-code="KeyT">
+  </g>
+  <g data-code="KeyY">
+  </g>
+  <g data-code="KeyU">
+  </g>
+  <g data-code="KeyI">
+  </g>
+  <g data-code="KeyO">
+  </g>
+  <g data-code="KeyP">
+  </g>
+  <g data-code="BracketLeftSquare">
+  </g>
+  <g data-code="BracketRightSquare">  
+  </g>
+  <g data-code="QuestionMark">
+  </g>
+  <g data-code="CapsLock">
+  </g>
+  <g data-code="KeyA">
+  </g>
+  <g data-code="KeyS">
+  </g>
+  <g data-code="KeyD">
+  </g>
+  <g data-code="KeyF">
+  </g>
+  <g data-code="KeyG">
+  </g>
+  <g data-code="KeyH">
+  </g>
+  <g data-code="KeyJ">
+  </g>
+  <g data-code="KeyK">
+  </g>
+  <g data-code="KeyL">
+  </g>
+  <g data-code="BracketLeft">
+  </g>
+  <g data-code="BracketRight">
+  </g>
+  <g data-code="Enter">
+  </g>
+  <g data-code="ShiftLeft">
+  </g>
+  <g data-code="KeyZ">
+  </g>
+  <g data-code="KeyX">
+  </g>
+  <g data-code="KeyC">
+  </g>
+  <g data-code="KeyV">
+  </g>
+  <g data-code="KeyB">
+  </g>
+  <g data-code="KeyN">
+  </g>
+  <g data-code="KeyM">
+  </g>
+  <g data-code="LessThan">
+  </g>
+  <g data-code="GreaterThan">
+  </g>
+  <g data-code="Slash">
+  </g>
+  <g data-code="ShiftRight">
+  </g>
+  <g data-code="ControlLeft">
+  </g>
+  <g data-code="LangSwitch">
+  </g>
+  <g data-code="Space">
+  </g>
+  <g data-code="Period">
+  </g>
+  <g data-code="Comma">
+  </g>
+  <g data-code="ControlRight">
+  </g>
+ </g>
+</svg>
