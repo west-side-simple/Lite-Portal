@@ -1,18 +1,18 @@
--- видеоскрипт для сайта https://filmix.fm (31/12/23)
+-- видеоскрипт для сайта https://filmix.my (31/12/23)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- west_side mod for lite (01/07/24)
+-- west_side mod for lite (09/04/25)
 -- ## авторизация ##
 -- логин, пароль установить в 'Password Manager', для id - filmix
 -- ## необходим ##
 -- модуль: /core/playerjs.lua
 -- AceStream
 -- ## открывает подобные ссылки ##
--- https://filmix.fm/semejnyj/103212-odin-doma-2-zateryannyy-v-nyu-yorke-1992.html
--- https://filmix.fm/play/112056
--- https://filmix.fm/fantastika/113095-puteshestvenniki-2016.html
--- https://filmix.fm/download-file/55308
--- https://filmix.fm/download/5409
--- https://filmix.fm/download/35895
+-- https://filmix.my/semejnyj/103212-odin-doma-2-zateryannyy-v-nyu-yorke-1992.html
+-- https://filmix.my/play/112056
+-- https://filmix.my/fantastika/113095-puteshestvenniki-2016.html
+-- https://filmix.my/download-file/55308
+-- https://filmix.my/download/5409
+-- https://filmix.my/download/35895
 -- ## зеркало ##
 local zer = m_simpleTV.Config.GetValue('zerkalo/filmix', 'LiteConf.ini') or ''
 -- ##
@@ -56,6 +56,12 @@ end
 	if not m_simpleTV.User.filmix then
 		m_simpleTV.User.filmix = {}
 	end
+	if not m_simpleTV.User.westSide then
+		m_simpleTV.User.westSide = {}
+	end
+	if not m_simpleTV.User.TVPortal then
+		m_simpleTV.User.TVPortal = {}
+	end
 	if not inAdr:match('^%$filmixnet') then
 		m_simpleTV.User.filmix.CurAddress = inAdr
 	end
@@ -97,7 +103,7 @@ end
 			local title, year = answer:match('<h1>Скачать бесплатно (.-)%, (%d+)<')
 			title = title:gsub('<span class="title">','')
 			if not year then year = 0 end
---			local videodesc, background = info_fox(title,year,'')
+			local videodesc, background = info_fox(title,year,'')
 
 			if m_simpleTV.Control.MainMode == 0 then
 				m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = background or logo, TypeBackColor = 0, UseLogo = 3, Once = 1})
@@ -403,6 +409,7 @@ end
 	local year = answer:match('<a itemprop="copyrightYear".->(.-)</a>') or 0
 	local poster = answer:match('"og:image" content="([^"]+)') or logo
 	local videodesc = info_fox(title, year, poster)
+	add_to_history_filmix(inAdr, title .. ' (' .. year .. ')', poster)
 	local background = answer:match('<ul class="frames%-list">(.-)</ul>')
 	if background then background = background:match('"(.-)"') end
 	if background then background = host .. background:gsub('^/','') end

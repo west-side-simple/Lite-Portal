@@ -3,18 +3,22 @@
 -- ## открывает подобные ссылки ##
 -- https://amuck-planes.cdnmovies-stream.online/content/ee0dc1a5d76a4506a257a45ab399f5e0/iframe
 -- https://cdnmovies-stream.online/kinopoisk/4948219/iframe
+-- mod for Mediaportal (westSide) - 30.09.24
 		if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
+		if m_simpleTV.Control.CurrentAddress:match('^tmdb_id=') then return end
 		if not m_simpleTV.Control.CurrentAddress:match('cdnmovies%-stream%.online')
 			and not m_simpleTV.Control.CurrentAddress:match('^$cdnmovies')
 		then
 		 return
 		end
 	local inAdr = m_simpleTV.Control.CurrentAddress
-	if not inAdr:match('&kinopoisk') then
+	
+--	debug_in_file(inAdr .. '\n')
+--[[	if not inAdr:match('&kinopoisk') then
 		if m_simpleTV.Control.MainMode == 0 then
 			m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = '', TypeBackColor = 0, UseLogo = 0, Once = 1})
 		end
-	end
+	end--]]
 	require 'json'
 	m_simpleTV.Control.ChangeAddress = 'Yes'
 	m_simpleTV.Control.CurrentAddress = 'error'
@@ -24,6 +28,10 @@
 	if not m_simpleTV.User.cdnmovies then
 		m_simpleTV.User.cdnmovies = {}
 	end
+	if not m_simpleTV.User.TVPortal then
+		m_simpleTV.User.TVPortal = {}
+	end
+	m_simpleTV.User.TVPortal.balanser = 'CDN Movies'
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; rv:120.0) Gecko/20100101 Firefox/120.0')
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 8000)
@@ -183,6 +191,11 @@
 				t[i].Id = i
 				t[i].Name = tab[season].folder[i].title
 				t[i].Address = '$cdnmovies' .. tab[season].folder[i].folder[1].file
+-------------------------				
+				if m_simpleTV.User.TVPortal.get.TMDB.Id and m_simpleTV.User.TVPortal.get.TMDB.tv then				
+				t[i].Address = 'tmdb_id=' .. m_simpleTV.User.TVPortal.get.TMDB.Id .. '&tv=' .. m_simpleTV.User.TVPortal.get.TMDB.tv .. '&' .. t[i].Address
+				end
+-------------------------				
 				t[i].Table = tab[season].folder[i].folder
 				i = i + 1
 			end
@@ -205,7 +218,7 @@
 		if m_simpleTV.User.paramScriptForSkin_buttonPlst then
 			t.ExtButton1 = {ButtonEnable = true, ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonPlst, ButtonScript = 'transl_cdnmovies()'}
 		else
-			t.ExtButton1 = {ButtonEnable = true, ButtonName = '📋', ButtonScript = 'transl_cdnmovies()'}
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'transl_cdnmovies()'}
 		end
 		t.ExtParams = {}
 		t.ExtParams.LuaOnCancelFunName = 'OnMultiAddressCancel_cdnmovies'
@@ -237,7 +250,7 @@
 		if m_simpleTV.User.paramScriptForSkin_buttonPlst then
 			t.ExtButton1 = {ButtonEnable = true, ButtonImageCx = 30, ButtonImageCy= 30, ButtonImage = m_simpleTV.User.paramScriptForSkin_buttonPlst, ButtonScript = 'transl_cdnmovies(true)'}
 		else
-			t.ExtButton1 = {ButtonEnable = true, ButtonName = '📋', ButtonScript = 'transl_cdnmovies(true)'}
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'transl_cdnmovies(true)'}
 		end
 		m_simpleTV.OSD.ShowSelect_UTF8('CDN Movies', 0, t, 10000, 64 + 32 + 128)
 		play(adr, title)
@@ -357,8 +370,9 @@
 			showMsg('нет данных')
 		 return
 		end
-	local title = inAdr:match('&kinopoisk=(.+)') or 'CDN Movies'
-	m_simpleTV.User.cdnmovies.title = m_simpleTV.Common.fromPercentEncoding(title)
+	local title = m_simpleTV.Control.CurrentTitle_UTF8 or 'CDN Movies'
+	m_simpleTV.User.cdnmovies.title = title
+	m_simpleTV.Control.SetTitle(title)
 	if m_simpleTV.Control.MainMode == 0 then
 		m_simpleTV.Control.ChangeChannelName(title, m_simpleTV.Control.ChannelID, false)
 	end

@@ -1,4 +1,4 @@
--- видеоскрипт для воспроизведения коллекций из TMDb (06/06/24)
+-- видеоскрипт для воспроизведения коллекций из TMDb (23/01/25)
 -- открывает подобные ссылки:
 -- collection_tmdb=645
 -- автор west_side
@@ -46,8 +46,12 @@
 				return
 			end
 		end
-		url = decode64('aHR0cHM6Ly9id2EtY2xvdWQuYXBuLm1vbnN0ZXIvbGl0ZS96ZXRmbGl4P2tpbm9wb2lza19pZD0=') .. kp_id
+		url = decode64('aHR0cHM6Ly9oaWR4bGdsay5kZXBsb3kuY3gvbGl0ZS96ZXRmbGl4P2tpbm9wb2lza19pZD0=') .. kp_id
 		rc,answer = m_simpleTV.Http.Request(session,{url=url})
+		if rc~=200 or rc==200 and not answer:match('"method":"play"') then
+		m_simpleTV.Common.Sleep(1000)
+		rc,answer = m_simpleTV.Http.Request(session,{url=url})
+		end
 		if rc~=200 or rc==200 and not answer:match('"method":"play"') then
 		return
 		end

@@ -14,7 +14,7 @@
 -- http://www.lostfilm.tv/series/The_Night_Manager
 -- http://www.lostfilm.tv/series/The_Punisher/video/2
 -- ## зеркало ##
-local zer = 'https://www.lostfilmtv.site'
+local zer = 'https://www.lostfilm.tv'
 -- '' = нет
 -- 'https://www.lostfilmtv1.site' (пример)
 -- ## прокси ##
@@ -211,7 +211,7 @@ local prx = ''
 		m_simpleTV.User.lostfilm.ResolutionTable = t
 		local index = GetMaxResolutionIndex(t)
 		m_simpleTV.User.lostfilm.Index = index
-			if not answer:match('<div class="inner%-box%-%-text">.-серия') and not answer:match('<div class="inner%-box%-%-text">.-Дополнительные материалы') then
+--[[			if not answer:match('<div class="inner%-box%-%-text">.-серия') and not answer:match('<div class="inner%-box%-%-text">.-Дополнительные материалы') then
 				if i > 2 then
 					t.ExtButton1 = {ButtonEnable = true, ButtonName = '✕'}
 					local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('⚙ Качество', index-1, t, 5000, 1 + 4 + 2)
@@ -228,7 +228,7 @@ local prx = ''
 				end
 				title = m_simpleTV.User.lostfilm.title
 			 return retAdr, true
-			end
+			end--]]
 		retAdr = t[index].Address
 	 return retAdr
 	end

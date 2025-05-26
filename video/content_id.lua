@@ -81,6 +81,7 @@
 	m_simpleTV.User.torrent.year = released
 	m_simpleTV.User.torrent.poster = poster
 	title = title .. ' (' .. released .. ')'
+	add_to_history_tracker(inAdr,title,poster)
 	m_simpleTV.Control.ChangeChannelLogo(logo , m_simpleTV.Control.ChannelID)
 	if m_simpleTV.User.torrent.content ~= content_id then m_simpleTV.User.torrent.audio_id = nil end
 	m_simpleTV.User.torrent.content = content_id

@@ -66,18 +66,23 @@
 	end
 	local function GetcollapsAdr(url)
 		url = url:gsub('^$collaps', '')
+		if url then
+		return url end
 		local rc, answer = m_simpleTV.Http.Request(session, {url = url:gsub('%$OPT.-$','')})
+		
 			if rc ~= 200 then return end
 		local subt = url:match('(%$OPT.-)$')	or ''
 		local t = {}
 			for w, adr in answer:gmatch('EXT%-X%-STREAM%-INF(.-)\n(.-)\n') do
 				local qlty = w:match('RESOLUTION=%d+x(%d+)')
-				if adr and adr:match('x%-bc') and qlty then
+				if adr and adr:match('x%-bc') and qlty then				
 					t[#t + 1] = {}
 					t[#t].Address = adr
 					t[#t].qlty = tonumber(qlty)
+					debug_in_file(adr .. ' / ' .. qlty .. '\n')
 				end
 			end
+			
 			if #t == 0 then return end
 			for _, v in pairs(t) do
 				v.qlty = tonumber(v.qlty)

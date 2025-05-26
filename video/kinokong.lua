@@ -1,11 +1,11 @@
--- видеоскрипт для сайта https://kinokong.org (13/07/2022) author - nexterr
--- fix west_side 13/07/2022
+-- видеоскрипт для сайта https://kinokong.sk (13/07/2022) author - nexterr
+-- fix west_side 01/04/2025
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr/simpleTV
 -- ## необходимы ##
--- видеоскрипты: hdvb.lua, collaps.lua, videocdn.lua, YT.lua
+-- видеоскрипты: hdvb.lua, browser_collaps.lua
 -- ## открывает подобные ссылки ##
--- https://kinokong.org/42330-films-russkiy-reyd-2020.html
--- https://kinokong.org/45234-serial-ptica-dobrogo-gospoda-1-sezon.html
+-- https://kinokong.sk/42330-films-russkiy-reyd-2020.html
+-- https://kinokong.sk/45234-serial-ptica-dobrogo-gospoda-1-sezon.html
 		if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 		if not m_simpleTV.Control.CurrentAddress:match('^https?://kinokong%.') then return end
 	m_simpleTV.OSD.ShowMessageT({text = '', showTime = 1000, id = 'channelName'})
@@ -39,13 +39,13 @@
 		for w in answer:gmatch('<li data%-iframe=".-</li>') do
 			local adr,name = w:match('<li data%-iframe="(.-)">(.-)</li>')
 				if not adr or not name then break end
-			if (name == 'HDVB' or name == 'Collaps' or name == 'cdn') and adr~='' then
+			if (name == 'HDVB' or name == 'Collaps') and adr~='' then
 				t[i] = {}
 				t[i].Id = i
 				t[i].Name = name
 				t[i].Address = adr
 				t[i].InfoPanelName = title
-				t[i].InfoPanelLogo = 'https://kinokong.pro' .. poster
+				t[i].InfoPanelLogo = 'https://kinokong.sk' .. poster
 				t[i].InfoPanelTitle = desc or name
 				t[i].InfoPanelShowTime = 8000
 				i = i + 1
@@ -91,7 +91,7 @@
 		end
 	m_simpleTV.Http.Close(session)
 	if m_simpleTV.Control.MainMode == 0 then
-		m_simpleTV.Control.ChangeChannelLogo('https://kinokong.pro' .. poster, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
+		m_simpleTV.Control.ChangeChannelLogo('https://kinokong.sk' .. poster, m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
 		m_simpleTV.Control.ChangeChannelName(title, m_simpleTV.Control.ChannelID, false)
 	end
 	m_simpleTV.Control.SetTitle(title)
@@ -100,5 +100,5 @@
 	m_simpleTV.Control.ChangeAddress = 'No'
 	m_simpleTV.Control.CurrentAddress = retAdr
 	dofile(m_simpleTV.MainScriptDir .. 'user\\westSidePortal\\video\\hdvb.lua')
-	dofile(m_simpleTV.MainScriptDir .. 'user\\westSidePortal\\video\\collaps.lua')
+	dofile(m_simpleTV.MainScriptDir .. 'user\\westSidePortal\\video\\browser_collaps.lua')
 -- debug_in_file(retAdr .. '\n')

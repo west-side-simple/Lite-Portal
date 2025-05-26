@@ -1,4 +1,4 @@
--- видеоскрипт для балансера ashdi (26.05.24)
+-- видеоскрипт для балансера ashdi (15.12.24)
 -- author west_side
 	if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 	if m_simpleTV.Control.CurrentAddress:match('^tmdb_id=')
@@ -50,7 +50,7 @@
 
 	local function get_serial(kpid,season,episode)
 		if not kpid or tonumber(kpid) == 0 then return end
-		local url_al = decode64('aHR0cHM6Ly9hcGkuYWxsb2hhLnR2Lz90b2tlbj0wNDk0MWE5YTNjYTNhYzE2ZTJiNDMyNzM0N2JiYzEma3A9') .. kpid
+		local url_al = decode64('aHR0cHM6Ly9hcGkuYXBidWdhbGwub3JnLz90b2tlbj0wNDk0MWE5YTNjYTNhYzE2ZTJiNDMyNzM0N2JiYzEma3A9') .. kpid
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 		if not session then	return end
 		m_simpleTV.Http.SetTimeout(session, 10000)
@@ -73,7 +73,7 @@
 				t[i] = {}
 				t[i].Id = i
 				t[i].Name = 'Сезон ' .. s .. ', Эпизод ' .. e
-				t[i].Address = decode64('aHR0cHM6Ly9id2EtY2xvdWQuYXBuLm1vbnN0ZXIvbGl0ZS9hc2hkaT9raW5vcG9pc2tfaWQ9') .. kpid .. '&s=' .. s .. '&e=' .. e
+				t[i].Address = decode64('aHR0cHM6Ly9hcGkubWFuaGFuLm9uZS9sYXRlL2FzaGRpP2tpbm9wb2lza19pZD0=') .. kpid .. '&s=' .. s .. '&e=' .. e
 				if season == s and episode == e then current_ep = i end
 				i = i + 1
 			end
@@ -83,22 +83,32 @@
 
 	local function imdbid(kpid)
 	if not kpid then return end
+	if tonumber(kpid)== 1101239 then return 'tt15307130','Реализация',2019,1 end
 	local tv = 0
 	local url_vn = decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvc2hvcnQ/YXBpX3Rva2VuPW9TN1d6dk5meGU0SzhPY3NQanBBSVU2WHUwMVNpMGZtJmtpbm9wb2lza19pZD0=') .. kpid
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then	return false end
 	local rc5,answer_vn = m_simpleTV.Http.Request(session,{url=url_vn})
 		if rc5~=200 then
+		if tonumber(kpid) == 231141 then return 'tt0435978','','',1 end
+		url_vn = decode64('aHR0cHM6Ly9hcGkuYWxsb2hhLnR2Lz90b2tlbj0wNDk0MWE5YTNjYTNhYzE2ZTJiNDMyNzM0N2JiYzEma3A9') .. kpid
+		rc5,answer_vn = m_simpleTV.Http.Request(session,{url=url_vn})
+		if rc5==200 and answer_vn:match('"id_imdb":"(tt%d+)') then
+		if answer_vn:match('"seasons":') then tv = 1 end
+		return answer_vn:match('"id_imdb":"(tt%d+)'),'','',tv
+		end
 		return '','','',0
 		end
 		require('json')
 		answer_vn = answer_vn:gsub('\\', '\\\\'):gsub('\\"', '\\\\"'):gsub('\\/', '/'):gsub('(%[%])', '"nil"')
 		local tab_vn = json.decode(answer_vn)
 		if tab_vn and tab_vn.data and tab_vn.data[1] and tab_vn.data[1].content_type and tab_vn.data[1].content_type == 'tv-series' then tv = 1 end
+		local kostyl
+		if tonumber(kpid) == 1309418 then kostyl = 'tt15325406' tv = 1 end
 		if tab_vn and tab_vn.data and tab_vn.data[1] and tab_vn.data[1].imdb_id and tab_vn.data[1].imdb_id ~= 'null' and tab_vn.data[1].year then
-		return tab_vn.data[1].imdb_id or '', unescape3(tab_vn.data[1].title) or '',tab_vn.data[1].year:match('%d%d%d%d') or '', tv
-		elseif tab_vn and tab_vn.data and tab_vn.data[1] and ( not tab_vn.data[1].imdb_id or tab_vn.data[1].imdb_id ~= 'null') then
-		return '', unescape3(tab_vn.data[1].title) or '',tab_vn.data[1].year:match('%d%d%d%d') or '', tv
+		return kostyl or tab_vn.data[1].imdb_id or '', unescape3(tab_vn.data[1].title) or '',tab_vn.data[1].year:match('%d%d%d%d') or '', tv
+		elseif tab_vn and tab_vn.data and tab_vn.data[1] and ( not tab_vn.data[1].imdb_id or tab_vn.data[1].imdb_id == '') then
+		return kostyl or '', unescape3(tab_vn.data[1].title) or '',tab_vn.data[1].year:match('%d%d%d%d') or '', tv
 		else return '','','',0
 		end
 	end
@@ -107,6 +117,7 @@
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then	return false end
 	local urld = 'https://api.themoviedb.org/3/find/' .. imdb_id .. decode64('P2FwaV9rZXk9ZDU2ZTUxZmI3N2IwODFhOWNiNTE5MmVhYWE3ODIzYWQmbGFuZ3VhZ2U9cnUtUlUmZXh0ZXJuYWxfc291cmNlPWltZGJfaWQ=')
+
 	local rc5,answerd = m_simpleTV.Http.Request(session,{url=urld})
 	if rc5~=200 then
 		m_simpleTV.Http.Close(session)
@@ -116,11 +127,32 @@
 	answerd = answerd:gsub('(%[%])', '"nil"')
 	local tab = json.decode(answerd)
 	local background, name_tmdb, tmdb_id, tv, year_tmdb, overview_tmdb = '', '', '', 0, '', ''
+	if imdb_id == 'tt27053234' then
+	tab.tv_results = {}
+	tab.tv_results[1] = {}
+	tab.tv_results[1].backdrop_path = "/vkwkX6x7ymz0w6ibmYdmSx38MrJ.jpg"
+	tab.tv_results[1].poster_path = "/f7gsprOjZZXuD4cXOQaAiFO4v04.jpg"
+	tab.tv_results[1].name = "Призвание"
+	tab.tv_results[1].first_air_date = "2021-03-13"
+	tab.tv_results[1].overview = "Середина 80-х, Москва. Старшего оперуполномоченного МУРа Владимира Чеянова назначают начальником следственной группы по одному резонансному делу — об убийстве семьи Лошкарёвых. Тела отца, его пожилой матери и старшего сына нашли в собственной квартире в Москве."
+	tab.tv_results[1].id = 222216
+	end
+	if imdb_id == 'tt15307130' then
+	tab.tv_results = {}
+	tab.tv_results[1] = {}
+	tab.tv_results[1].backdrop_path = "/vVUNtiF2Ncnyq4DpK4iAOGrgnHS.jpg"
+	tab.tv_results[1].poster_path = "/8VMftUs6jYduri1zYdUWDsV43eZ.jpg"
+	tab.tv_results[1].name = "Реализация"
+	tab.tv_results[1].first_air_date = "2019-03-11"
+	tab.tv_results[1].overview = "Опытного розыскника из Великого Новгорода с необычной фамилией Красавéц после конфликта с криминальным бизнесменом переводят на должность простого участкового в Центральный район Петербурга. Всё, что хочет теперь Красавец — это тихо и мирно дослужить до пенсии. Но каждый раз, неожиданно для себя, оказывается в эпицентре преступных событий. То он втянут в разборки между криминальным авторитетом и коллегами из УМВД, то ищет похищенного начальника главка, то ловит неуловимого киллера."
+	tab.tv_results[1].id = 120724
+	end
 	if not tab and (not tab.movie_results[1] or tab.movie_results[1]==nil) and not tab.movie_results[1].backdrop_path and not tab.movie_results[1].poster_path
 	and not (tab.tv_results[1] or tab.tv_results[1]==nil) and not tab.tv_results[1].backdrop_path and not tab.tv_results[1].poster_path
 	then return '', '', '', '', '', ''
 	else
 	if tab.movie_results[1] and imdb_id ~= 'tt0078655' and imdb_id ~= 'tt2317100' and imdb_id ~= 'tt0108778' then
+
 	background = tab.movie_results[1].backdrop_path or ''
 	background1 = tab.movie_results[1].poster_path or ''
 	name_tmdb = tab.movie_results[1].title or ''
@@ -143,6 +175,7 @@
 	if background and background ~= nil and background ~= '' then background = 'http://image.tmdb.org/t/p/original' .. background
 	elseif background1 and background1 ~= nil and background1 ~= '' then background = 'http://image.tmdb.org/t/p/original' .. background1 end
 	if background == nil then background = '' end
+
 	m_simpleTV.User.TMDB.Id = tmdb_id
 	m_simpleTV.User.TMDB.tv = tv
 	m_simpleTV.User.westSide.PortalTable = m_simpleTV.User.TMDB.Id .. ',' .. m_simpleTV.User.TMDB.tv
@@ -269,7 +302,7 @@
 			if not t then return end
 		local index = ashdiIndex(t)
 			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Кинопоиск ', ButtonScript = ''}
-			if getConfigVal('perevod/ashdi') ~= '' then
+			if getConfigVal('perevod/ashdi') ~= '' and m_simpleTV.User.ashdi.TabPerevod and #m_simpleTV.User.ashdi.TabPerevod>1 then
 				t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_ashdi()'}
 			end
 		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('⚙ Качество', index - 1, t, 5000, 1 + 4 + 8 + 2)
@@ -287,7 +320,10 @@
 			m_simpleTV.Config.SetValue('ashdi_qlty', t[id].qlty)
 		end
 		if ret == 2 then
-			m_simpleTV.Control.SetNewAddress('**' .. m_simpleTV.User.ashdi.kpid, m_simpleTV.Control.GetPosition())
+			setConfigVal('search/media',m_simpleTV.User.ashdi.kpid)
+			add_to_history_of_search()
+			search_media()
+--			m_simpleTV.Control.SetNewAddress('**' .. m_simpleTV.User.ashdi.kpid, m_simpleTV.Control.GetPosition())
 		end
 		if ret == 3 then
 			perevod_ashdi()
@@ -343,9 +379,9 @@
 		m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = logo, TypeBackColor = 0, UseLogo = 3, Once = 1})
 	end
 	local retAdr,retAdr1,retAdr2
---	debug_in_file(answer .. '\n','c://1/ans_ashdi.txt')
-	retAdr = answer
-
+	
+	retAdr = unescape3(answer)
+--	debug_in_file(retAdr .. '\n','c://1/ans_ashdi.txt')
 		if not retAdr then
 			m_simpleTV.Control.ExecuteAction(37)
 			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'ashdi: Медиаконтент не доступен', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
@@ -453,7 +489,7 @@
 		m_simpleTV.User.ashdi.titleTab = t
 
 		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_ashdi()'}
-		if getConfigVal('perevod/ashdi') ~= '' then
+		if getConfigVal('perevod/ashdi') ~= '' and m_simpleTV.User.ashdi.TabPerevod and #m_simpleTV.User.ashdi.TabPerevod>1 then
 			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_ashdi()'}
 		end
 		m_simpleTV.OSD.ShowSelect_UTF8((title or ''), current_ep - 1, t, 10000, 32)
@@ -467,7 +503,7 @@
 		t[1].Id = 1
 		t[1].Name = title:gsub(' %- ' .. current_np,'')
 		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_ashdi()'}
-		if getConfigVal('perevod/ashdi') ~= '' then
+		if getConfigVal('perevod/ashdi') ~= '' and m_simpleTV.User.ashdi.TabPerevod and #m_simpleTV.User.ashdi.TabPerevod>1 then
 			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_ashdi()'}
 		end
 		m_simpleTV.OSD.ShowSelect_UTF8('ASHDI: ' .. getConfigVal('perevod/ashdi'), 0, t, 8000, 32 + 64 + 128)

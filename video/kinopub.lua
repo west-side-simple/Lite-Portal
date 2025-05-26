@@ -1,4 +1,4 @@
--- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (05/07/24) - автор west_side
+-- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (02/10/24) - автор west_side
 -- необходим действующий аккаунт на сайте https://kino.pub
 -- работает в связке со скриптом Lite_qt_kinopub.lua - автор west_side
 -- дополнительная информация обеспечивается скриптом info_fox.lua - автор west_side
@@ -18,6 +18,9 @@
 	if not m_simpleTV.User.kinopub then
 		m_simpleTV.User.kinopub = {}
 	end
+	if not m_simpleTV.User.TVPortal then
+		m_simpleTV.User.TVPortal = {}
+	end	
 	m_simpleTV.User.kinopub.address = inAdr
 	m_simpleTV.User.kinopub.tr = inAdr:match('%&tr=(%d+)$') or 1
 	m_simpleTV.User.TVPortal.balanser = 'Kinopub'
@@ -149,7 +152,7 @@ end
 	local rc, answer = m_simpleTV.Http.Request(session, {url = inAdr, headers = 'Cookie: ' .. cookies})
 --	m_simpleTV.Http.Close(session)
 		if rc ~= 200 then return end
---	debug_in_file(answer .. '\n','c://1/testpub.txt')
+	debug_in_file(answer .. '\n','c://1/testpub.txt')
 	answer = answer:gsub(' \n', ' '):gsub('\n', ' ')
 	answer = answer:gsub('<!%-%-.-%-%->', ''):gsub('/%*.-%*/', '')
 	if inAdr:match('/tv/view/') then
@@ -473,8 +476,11 @@ else
 				end
 			header = m_simpleTV.Common.UTF8ToMultiByte(header)
 			header = header:gsub('%c', ''):gsub('[\\/"%*:<>%|%?]+', ' '):gsub('%s+', ' '):gsub('^%s*', ''):gsub('%s*$', '')
-			local fileEnd = ' (Kinopub ' .. os.date('%d.%m.%y') ..').m3u'
+			
 			local folder = m_simpleTV.Common.GetMainPath(1) .. m_simpleTV.Common.UTF8ToMultiByte('сохраненные плейлисты/')
+			local kp_id = m_simpleTV.User.kinopub.kp_id
+			if kp_id then kp_id = ' (kp-' .. kp_id .. ')' else kp_id = '' end
+			local fileEnd = ' (Kinopub ' .. os.date('%d.%m.%y') ..')' .. kp_id .. '.m3u'
 			lfs.mkdir(folder)
 			local folderAk = folder .. 'Kinopub/'
 			lfs.mkdir(folderAk)
@@ -657,7 +663,10 @@ else
 	local logo = answer:match('<hr>.-<img src="(.-)"') or 'https://cdn.service-kp.com/logo.png'
 	local desc_text = answer:match('id="plot">(.-)<') or ''
 	local videodesc = info_fox(title:gsub('&#039;',"´"):gsub('&amp;',"&"):gsub(' %(.-$',''):gsub(' /.-$',''),year,logo)
-	local imdb_id = answer:match('href="http://www%.imdb%.com/title/(.-)"')
+	local imdb_id = answer:match('href="http://www%.imdb%.com/title/(tt%d+)')
+	local kp_id = answer:match('href="http://www%.kinopoisk%.ru/film/(%d+)')
+	m_simpleTV.User.kinopub.kp_id = nil
+	if kp_id then m_simpleTV.User.kinopub.kp_id = kp_id end
 	local logo1
 	if imdb_id then
 --ошибки базы

@@ -1,9 +1,9 @@
--- видеоскрипт для балансера ZF (19.04.25)
+-- видеоскрипт для балансера VideoDB (17.10.24)
 -- author west_side
 	if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
-	if m_simpleTV.Control.CurrentAddress and m_simpleTV.Control.CurrentAddress:match('^tmdb_id=')
+	if m_simpleTV.Control.CurrentAddress:match('^tmdb_id=')
 	then return end
-	if not m_simpleTV.Control.CurrentAddress:match('/lite/zetflix')
+	if not m_simpleTV.Control.CurrentAddress:match('/late/videodb')
 	then return end
 	local inAdr = m_simpleTV.Control.CurrentAddress
 	m_simpleTV.Control.ChangeAddress = 'Yes'
@@ -11,8 +11,8 @@
 	if not m_simpleTV.User then
 		m_simpleTV.User = {}
 	end
-	if not m_simpleTV.User.ZF then
-		m_simpleTV.User.ZF = {}
+	if not m_simpleTV.User.DB then
+		m_simpleTV.User.DB = {}
 	end
 	if not m_simpleTV.User.TMDB then
 		m_simpleTV.User.TMDB = {}
@@ -22,25 +22,25 @@
 	end
 	m_simpleTV.User.TMDB.Id = nil
 	m_simpleTV.User.TMDB.tv = nil
-	m_simpleTV.User.ZF.CurAddress = inAdr
-	m_simpleTV.User.ZF.DelayedAddress = nil
-	m_simpleTV.User.TVPortal.balanser = 'Zetflix'
+	m_simpleTV.User.DB.CurAddress = inAdr
+	m_simpleTV.User.DB.DelayedAddress = nil
+	m_simpleTV.User.TVPortal.balanser = 'VideoDB'
 	local function getConfigVal(key)
 		return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
 	end
 	local function setConfigVal(key,val)
 		m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
 	end
-	local current_np = getConfigVal('perevod/zf') or ''
-	if not getConfigVal('perevod/zf') then setConfigVal('perevod/zf','') end
-	local function Get_DB(id)
+	local current_np = getConfigVal('perevod/db') or ''
+	if not getConfigVal('perevod/db') then setConfigVal('perevod/db','') end
+	local function Get_ZF(id)
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36')
 		if not session then return false end
-		m_simpleTV.Http.SetTimeout(session, 8000)
-		local url = decode64('aHR0cHM6Ly9hcGkubWFuaGFuLm9uZS9sYXRlL3ZpZGVvZGI/a2lub3BvaXNrX2lkPQ==') .. id
+		m_simpleTV.Http.SetTimeout(session, 4000)
+		local url = decode64('aHR0cHM6Ly90dGx6Znh5eC5kZXBsb3kuY3gvbGl0ZS96ZXRmbGl4P2tpbm9wb2lza19pZD0=') .. id
 		local rc,answer = m_simpleTV.Http.Request(session,{url = url})
 
---		debug_in_file(url .. '\n' .. answer,'c://1/deb_zf.txt')
+	--	debug_in_file(url .. '\n' .. answer,'c://1/deb_zf.txt')
 		if rc==200 and answer:match('data%-json') then
 			m_simpleTV.Http.Close(session)
 			return url
@@ -54,67 +54,7 @@
 		m_simpleTV.Http.Close(session)
 		return false
 	end
-	local function Get_VF(kp_id)
-		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36')
-		if not session then return false end
-		m_simpleTV.Http.SetTimeout(session, 8000)
-		local url = 'https://vibix.org/api/v1/catalog/data?draw=1&search[value]=' .. kp_id
-		local rc,answer = m_simpleTV.Http.Request(session,{url = url, method = 'post', headers = m_simpleTV.User.VF.headers})
-		if rc~=200 then
-			m_simpleTV.Http.Close(session)
-			return false
-		end
-		local url_out = answer:match('"iframe_video_id":(%d+)')
-	--	debug_in_file(unescape1(answer) .. '\n','c://1/VX.txt')
-		if url_out then
-		local embed = '/embed/'
-		if unescape1(answer):match('"type":"serial"') then embed = '/embed-serials/' end
-		url_out = 'https://672723821.videoframe1.com' .. embed .. url_out
-		m_simpleTV.Http.Close(session)
-		return url_out .. '&kp_id=' .. kp_id
-		end
-		m_simpleTV.Http.Close(session)
-		return false
-	end	
-	local function Get_Mega(title, year)
-		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36')
-		if not session then return false end
-		m_simpleTV.Http.SetTimeout(session, 8000)
-		local function Get_Mega_Adr(url)
-			local rc, answer = m_simpleTV.Http.Request(session,{url = url})
-			if rc==200 then
-				local adr = answer:match('"url":"(.-)"')
-				if not adr then return end
-				return adr
-			end
-			return
-		end
-		local url = 'https://api.manhan.one/lite/megatv?title=' .. title .. '&year=' .. year
-		local rc, answer = m_simpleTV.Http.Request(session,{url = url})
-		if rc==200 then
-			answer = unescape (unescape3 (answer))
---			debug_in_file(url .. '\n' .. answer .. '\n','c://1/deb_mega.txt')
-			local t, i = {}, 1
-			for w in answer:gmatch('data%-json=.->') do
-				local adr, title = w:match('"url":"(.-)".-"title":"(.-)"')
-				if not adr then break end
-				local adr_mega = Get_Mega_Adr(adr)
-				if adr_mega then
-					t[i] = {}
-					t[i].Id = i
-					t[i].Name = title
-					t[i].Address = adr_mega
---					debug_in_file(i .. '. ' .. t[i].Name .. ' ' .. t[i].Address .. '\n','c://1/deb_mega.txt')
-					i = i + 1
-				end
-			end
-			m_simpleTV.Http.Close(session)
-			if #t == 0 then return false end
-			return t
-		end
-		m_simpleTV.Http.Close(session)
-		return false
-	end
+
 	local function get_logo_yandex(kp_id)
 	if not kp_id then return end
 		local url = 'https://st.kp.yandex.net/images/film_big/' .. kp_id .. '.jpg'
@@ -134,15 +74,15 @@
 		if not kpid or tonumber(kpid) == 0 then return end
 		local kpid_cur
 		if tonumber(kpid) == 77381 or tonumber(kpid) == 94103 or tonumber(kpid) == 77388 or tonumber(kpid) == 77385 or tonumber(kpid) == 77387 or tonumber(kpid) == 77386 or tonumber(kpid) == 426306 or tonumber(kpid) == 426309 or tonumber(kpid) == 420337 or tonumber(kpid) == 426310 then kpid_cur = kpid kpid = 77381 end
-		local url_al = decode64('aHR0cHM6Ly9hcGkuYXBidWdhbGwub3JnLz90b2tlbj1kMzE3NDQxMzU5ZTUwNWMzNDNjMjA2M2VkYzk3ZTc=') .. '&kp=' .. kpid
+		local url_al = decode64('aHR0cHM6Ly9hcGkuYXBidWdhbGwub3JnLz90b2tlbj0wNDk0MWE5YTNjYTNhYzE2ZTJiNDMyNzM0N2JiYzEma3A9') .. kpid
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 		if not session then	return end
 		m_simpleTV.Http.SetTimeout(session, 10000)
 		local rc,answer = m_simpleTV.Http.Request(session,{url=url_al})
+--		debug_in_file(answer .. '\n')
 		m_simpleTV.Http.Close(session)
 		if rc~=200 then return end
 		require('json')
-		htmlEntities = require 'htmlEntities'
 		answer = htmlEntities.decode(answer)
 		answer = answer:gsub('\\\\\\/', '/')
 		answer = answer:gsub(' \\"', ' «'):gsub('\\"', '»')
@@ -172,15 +112,15 @@
 						{9,12,'Голландский Пассаж',420337,'tt4810954',2006},
 						{10,12,'Расплата',426310,'tt4786988',2007},
 						}
-				t[i].Name = t1[tonumber(s)][3] .. ' , Серия ' .. e
-				t[i].Address = decode64('aHR0cHM6Ly9oaWR4bGdsay5kZXBsb3kuY3gvbGl0ZS96ZXRmbGl4P2tpbm9wb2lza19pZD0=') .. t1[tonumber(s)][4] .. '&s=1&e=' .. e
-				if t1[tonumber(s)][4] == tonumber(kpid_cur) and tonumber(episode) == tonumber(e) then current_ep = i end
+					t[i].Name = t1[tonumber(s)][3] .. ' , Серия ' .. e
+					t[i].Address = m_simpleTV.User.DB.CurAddress:gsub('&s=%d+',''):gsub('&e=%d+',''):gsub('&kinopoisk_id=%d+','') .. '&kinopoisk_id=' .. t1[tonumber(s)][4] .. '&s=1&e=' .. e
+					if t1[tonumber(s)][4] == tonumber(kpid_cur) and tonumber(episode) == tonumber(e) then current_ep = i end
 				else
-				t[i].Name = 'Сезон ' .. s .. ', Эпизод ' .. e
-				t[i].Address = decode64('aHR0cHM6Ly9oaWR4bGdsay5kZXBsb3kuY3gvbGl0ZS96ZXRmbGl4P2tpbm9wb2lza19pZD0=') .. kpid .. '&s=' .. s .. '&e=' .. e
-				if season == s and episode == e then current_ep = i end
+					t[i].Name = 'Сезон ' .. s .. ', Эпизод ' .. e
+					t[i].Address = m_simpleTV.User.DB.CurAddress:gsub('&s=%d+',''):gsub('&e=%d+','') .. '&s=' .. s .. '&sid=' .. (tonumber(s)-1) .. '&e=' .. e
+					if tonumber(season) == tonumber(s) and tonumber(episode) == tonumber(e) then current_ep = i end
 				end
---				debug_in_file(t[i].Name .. ' / ' .. t[i].Address .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer_als.txt')
+--				debug_in_file(t[i].Name .. ' / ' .. t[i].Address .. '\n','c://1/answer_als.txt')
 				i = i + 1
 			end
 		end
@@ -242,26 +182,6 @@
 	tab.tv_results[1].first_air_date = "2021-03-13"
 	tab.tv_results[1].overview = "Середина 80-х, Москва. Старшего оперуполномоченного МУРа Владимира Чеянова назначают начальником следственной группы по одному резонансному делу — об убийстве семьи Лошкарёвых. Тела отца, его пожилой матери и старшего сына нашли в собственной квартире в Москве."
 	tab.tv_results[1].id = 222216
-	end
-	if imdb_id == 'tt13496050' then
-	tab.tv_results = {}
-	tab.tv_results[1] = {}
-	tab.tv_results[1].backdrop_path = "/1KbB8eNZfxCspZ3iBGntTqh8V7G.jpg"
-	tab.tv_results[1].poster_path = "/1WC3DwHG7B00hcgBNo2G9ppDnC9.jpg"
-	tab.tv_results[1].name = "Казанова"
-	tab.tv_results[1].first_air_date = "2020-11-19"
-	tab.tv_results[1].overview = "Побег не задается. Казанова решает, что им с Эллой нужно разделиться, и едет на попутке в Выборг. Подполковник Бескрылов очень недоволен: результатов нет, Казанова не найден, ограбленный директор завода из Пскова пожаловался руководству, и им дают две недели на то, чтобы появились хоть какие-то результаты.  Шмаков и Новгородцева едут в Псков. Шмаков понимает, что с Новгородцевой что-то происходит. Казанова по наводке приезжает в Ленинград и, представившись поэтом, внедряется в круги прогрессивных творческих людей. Ему необходимо во что бы то ни стало найти возможность уехать за границу. На квартирнике он знакомится с дочерью шведского консула Ингрид и снова делает «ставку» на свое обаяние, перед которым пока не устояла ни одна женщина…"
-	tab.tv_results[1].id = 112349
-	end
-	if imdb_id == 'tt34422564' then
-	tab.tv_results = {}
-	tab.tv_results[1] = {}
-	tab.tv_results[1].backdrop_path = "/q20c7O6kQLJVBrpjwGcd7RT4kEB.jpg"
-	tab.tv_results[1].poster_path = "/17pN2J3FQqtzA1VIAUXGnHqufmJ.jpg"
-	tab.tv_results[1].name = "Женщина с котом и детективом"
-	tab.tv_results[1].first_air_date = "2022-06-10"
-	tab.tv_results[1].overview = "Юлия Логинова — стоматолог и начинающий писатель детективов. Недавно у нее вышел первый роман, получивший много положительных отзывов от читателей. Поклонники ждут новую книгу, но есть нюанс. Бойфренд Логиновой — следователь СК Денис Потапов — считает, что первая книга написана благодаря его рассказам и советам, и хочет получить свою часть пирога и быть соавтором книги. Из-за этого Денис и Юлия ссорятся, и Юлия остается без источника вдохновения для новых детективных историй. Вскоре Юлия становится невольной свидетельницей убийства. У нее появляется возможность непосредственно поучаствовать в расследовании."
-	tab.tv_results[1].id = 234007
 	end
 	if imdb_id == 'tt15307130' then
 	tab.tv_results = {}
@@ -325,8 +245,8 @@
 	return background, name_tmdb, year_tmdb, overview_tmdb, tmdb_id, tv
 	end
 
-	local function ZFIndex(t)
-		local lastQuality = tonumber(m_simpleTV.Config.GetValue('zf_qlty') or 5000)
+	local function DBIndex(t)
+		local lastQuality = tonumber(m_simpleTV.Config.GetValue('db_qlty') or 5000)
 		local index = #t
 			for i = 1, #t do
 				if t[i].qlty >= lastQuality then
@@ -342,7 +262,7 @@
 	 return index
 	end
 
-	local function GetZFAdr(urls)
+	local function GetDBAdr(urls)
 
 		local subt = urls:match("subtitle\':(.-)return pub")
 --		debug_in_file(subt .. '\n')
@@ -357,7 +277,7 @@
 		end
 		local t, i = {}, 1
 		local qlty, adr
-			for qlty, adr in urls:gmatch('"(.-)":"(http.-%.mp4)"') do
+			for qlty, adr in urls:gmatch('"(.-)":"(.-)"') do
 			if not qlty:match('%d+') then break end
 				t[i] = {}
 				t[i].Address = adr
@@ -365,85 +285,89 @@
 				t[i].qlty = tonumber(qlty:match('%d+'))
 				i = i + 1
 			end
-			for qlty, adr in urls:gmatch('"(.-)":"(http.-%.m3u8)"') do
+--[[			for qlty, adr in urls:gmatch('"(.-)":"(.-)"') do
 			if not qlty:match('%d+') then break end
 				t[i] = {}
 				t[i].Address = adr
 				t[i].Name = qlty
 				t[i].qlty = tonumber(qlty:match('%d+'))
 				i = i + 1
-			end
+			end--]]
 			if i == 1 then return end
 		table.sort(t, function(a, b) return a.qlty < b.qlty end)
 			for i = 1, #t do
 				t[i].Id = i
-				t[i].Address = t[i].Address:gsub('^https://', 'http://') .. '$OPT:NO-STIMESHIFT$OPT:demux=mp4,any' .. (subt or '')
+				t[i].Address = t[i].Address:gsub('^https://', 'http://') .. '$OPT:NO-STIMESHIFT' .. (subt or '')
 				t[i].qlty = tonumber(t[i].Name:match('%d+'))
 			end
-		m_simpleTV.User.ZF.Tab = t
-		local index = ZFIndex(t)
+		m_simpleTV.User.DB.Tab = t
+		local index = DBIndex(t)
 	 return t[index].Address
 	end
 
-	function perevod_ZF()
-	local t = m_simpleTV.User.ZF.TabPerevod
+	local function GetDBTrAdr(adr)
+		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
+		if not session then	return end
+		local rc,answer = m_simpleTV.Http.Request(session,{url=adr})
+		if rc~=200 then return end
+		local episode=adr:match('&e=(%d+)')
+		if not episode then return end
+		for w in answer:gmatch('%{"method":"play".-%}%}') do
+--			debug_in_file(w .. '\n','c://1/ans_FX2.txt')
+			local name, file = w:match('"title":".-%((.-)%)".-"quality":(.-%})')
+			if not name or not file then break end
+			if name:match('%d+') and name:match('%d+') == episode then return file end
+		end
+		return
+	end
+
+	function perevod_DB()
+	local t = m_simpleTV.User.DB.TabPerevod
 		if not t then return end
 		if #t > 0 then
 		local current_p = 1
 		for i = 1,#t do
-		if t[i].Name == getConfigVal('perevod/zf') then current_p = i end
+		if t[i].Name == getConfigVal('perevod/db') then current_p = i end
 		i = i + 1
 		end
-			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_ZF()'}
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_DB()'}
 			local ret, id = m_simpleTV.OSD.ShowSelect_UTF8(' 🔊 Перевод ', current_p - 1, t, 5000, 1 + 4 + 8 + 2)
 			if ret == 1 then
-			setConfigVal('perevod/zf', t[id].Name)
-			local episode = m_simpleTV.User.ZF.CurAddress:match('&e=(%d+)')
-			if episode then
+			setConfigVal('perevod/db', t[id].Name)
+			local episode = m_simpleTV.User.DB.CurAddress:match('&e=(%d+)') or ''
+			if episode and episode ~= '' then
 			episode = '&e=' .. episode
+--			debug_in_file(m_simpleTV.User.FX.CurAddress .. '\n')
+--			local adr = GetFXTrAdr(t[id].Address .. episode)
+--			adr = GetFXAdr(adr)
+			m_simpleTV.Control.ChangeAdress = 'Yes'
+--			m_simpleTV.Control.CurrentAddress = m_simpleTV.User.DB.CurAddress:gsub('&t=%d+','') .. '&t=' .. id
 			m_simpleTV.Control.SetNewAddressT({address = t[id].Address .. episode, position = m_simpleTV.Control.GetPosition()})
+--			m_simpleTV.Control.Restart()
 			else
-			episode = ''
 			m_simpleTV.Control.Restart()
 			end
---			debug_in_file(t[id].Address .. episode .. ' / ' .. m_simpleTV.Control.GetPosition() .. '\n','c://1/answer_zftr.txt')
---			m_simpleTV.Control.SetNewAddressT({address = GetZFAdr(t[id].Address .. episode), position = m_simpleTV.Control.GetPosition()})
 			end
 			if ret == 3 then
-				Qlty_ZF()
+				Qlty_DB()
 			end
 		end
 	end
 
-	function Get_adr_mega()
-		local t = m_simpleTV.User.ZF.mega_bal
-		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('Megaoblako', 0, t, 10000, 1 + 4 + 8 + 2)
-			if ret == 1 then
-				m_simpleTV.Control.SetTitle(t[id].Name)
-				m_simpleTV.Control.SetNewAddressT({address=t[id].Address, title=t[id].Name})
-			end
-	end
-
-	function Qlty_ZF()
+	function Qlty_DB()
 		m_simpleTV.Control.ExecuteAction(36, 0)
-		local t = m_simpleTV.User.ZF.Tab
+		local t = m_simpleTV.User.DB.Tab
 			if not t then return end
-		local index = ZFIndex(t)
---		if m_simpleTV.User.ZF.db_bal then
---			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' VDB ', ButtonScript = ''}
---		end
---		if m_simpleTV.User.ZF.mega_bal then
---			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Megaoblako ', ButtonScript = ''}
---		end
-		if m_simpleTV.User.ZF.vf_bal then
-			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' VF ', ButtonScript = ''}
+		local index = DBIndex(t)
+		if m_simpleTV.User.DB.zf_bal then
+			t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ZF ', ButtonScript = ''}
 		end
-			if getConfigVal('perevod/zf') ~= '' and m_simpleTV.User.ZF.TabPerevod and #m_simpleTV.User.ZF.TabPerevod > 1 then
-				t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_ZF()'}
+			if getConfigVal('perevod/db') ~= '' and m_simpleTV.User.DB.TabPerevod and #m_simpleTV.User.DB.TabPerevod > 1 then
+				t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_DB()'}
 			end
 		local ret, id = m_simpleTV.OSD.ShowSelect_UTF8('⚙ Качество', index - 1, t, 5000, 1 + 4 + 8 + 2)
-		if m_simpleTV.User.ZF.isVideo == false then
-			if m_simpleTV.User.ZF.DelayedAddress then
+		if m_simpleTV.User.DB.isVideo == false then
+			if m_simpleTV.User.DB.DelayedAddress then
 				m_simpleTV.Control.ExecuteAction(108)
 			else
 				m_simpleTV.Control.ExecuteAction(37)
@@ -453,22 +377,21 @@
 		end
 		if ret == 1 then
 			m_simpleTV.Control.SetNewAddress(t[id].Address, m_simpleTV.Control.GetPosition())
-			m_simpleTV.Config.SetValue('zf_qlty', t[id].qlty)
+			m_simpleTV.Config.SetValue('db_qlty', t[id].qlty)
 		end
 		if ret == 2 then
-			m_simpleTV.Control.PlayAddressT({address=m_simpleTV.User.ZF.vf_bal, position=m_simpleTV.Control.GetPosition()})
---			Get_adr_mega()
+			m_simpleTV.Control.PlayAddressT({address=m_simpleTV.User.DB.zf_bal, position=m_simpleTV.Control.GetPosition()})
 		end
 		if ret == 3 then
-			perevod_ZF()
+			perevod_DB()
 		end
 	end
 
 	local kpid = inAdr:match('kinopoisk_id=(%d+)')
-	m_simpleTV.User.ZF.kpid = kpid
+	m_simpleTV.User.DB.kpid = kpid
 	local id_imdb,title_v,year_v,tv
 --	id_imdb = inAdr:match('kp%=(tt%d+)')
-	local season,episode=m_simpleTV.User.ZF.CurAddress:match('&s=(%d+).-&e=(%d+)')
+	local season,episode=m_simpleTV.User.DB.CurAddress:match('&s=(%d+).-&e=(%d+)')
 
 	local logo, title, year, overview, tmdbid, tv
 	if kpid then
@@ -477,10 +400,10 @@
 	end
 	if id_imdb and id_imdb~= '' and bg_imdb_id(id_imdb) and bg_imdb_id(id_imdb)~= '' then
 		logo, title, year, overview, tmdbid, tv = bg_imdb_id(id_imdb)
-		if tonumber(kpid) == 77381 or tonumber(kpid) == 94103 or tonumber(kpid) == 77388 or tonumber(kpid) == 77385 or tonumber(kpid) == 77387 or tonumber(kpid) == 77386 or tonumber(kpid) == 426306 or tonumber(kpid) == 426309 or tonumber(kpid) == 420337 or tonumber(kpid) == 426310 or tonumber(kpid) == 77261 or tonumber(kpid) == 45789 or tonumber(kpid) == 77263 or tonumber(kpid) == 46068 then tv = 1 end
+		if tonumber(kpid) == 77381 or tonumber(kpid) == 94103 or tonumber(kpid) == 77388 or tonumber(kpid) == 77385 or tonumber(kpid) == 77387 or tonumber(kpid) == 77386 or tonumber(kpid) == 426306 or tonumber(kpid) == 426309 or tonumber(kpid) == 420337 or tonumber(kpid) == 426310 or tonumber(kpid) == 77261 or tonumber(kpid) == 45789 or tonumber(kpid) == 77263 then tv = 1 end
 
 	else
-	if tonumber(kpid) == 77381 or tonumber(kpid) == 94103 or tonumber(kpid) == 77388 or tonumber(kpid) == 77385 or tonumber(kpid) == 77387 or tonumber(kpid) == 77386 or tonumber(kpid) == 426306 or tonumber(kpid) == 426309 or tonumber(kpid) == 420337 or tonumber(kpid) == 426310 or tonumber(kpid) == 46068 then tv = 1 end
+	if tonumber(kpid) == 77381 or tonumber(kpid) == 94103 or tonumber(kpid) == 77388 or tonumber(kpid) == 77385 or tonumber(kpid) == 77387 or tonumber(kpid) == 77386 or tonumber(kpid) == 426306 or tonumber(kpid) == 426309 or tonumber(kpid) == 420337 or tonumber(kpid) == 426310 then tv = 1 end
 		logo = get_logo_yandex(kpid)
 --		id_imdb,title_v,year_v,tv = imdbid(kpid)
 		title = title_v
@@ -490,9 +413,9 @@
 		if not season or not episode then
 			if not season then season = 1 end
 			if not episode then episode = 1 end
-			inAdr = inAdr:gsub('&s=%d+',''):gsub('&e=%d+','') .. '&s=' .. season .. '&e=' .. episode
-			m_simpleTV.Control.PlayAddressT({address=inAdr, title=title .. ', ' .. (year or '')})
-			return
+			inAdr = inAdr:gsub('&s=%d+',''):gsub('&e=%d+','') .. '&s=' .. season .. '&sid=' .. (tonumber(season)-1) .. '&e=' .. episode
+--			m_simpleTV.Control.PlayAddressT({address=inAdr, title=title .. ', ' .. (year or '')})
+--			return
 		end
 		if tonumber(kpid) == 77381 or tonumber(kpid) == 94103 or tonumber(kpid) == 77388 or tonumber(kpid) == 77385 or tonumber(kpid) == 77387 or tonumber(kpid) == 77386 or tonumber(kpid) == 426306 or tonumber(kpid) == 426309 or tonumber(kpid) == 420337 or tonumber(kpid) == 426310 then
 			local t3 =
@@ -545,15 +468,11 @@
 	if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 10000)
 	local rc,answer = m_simpleTV.Http.Request(session,{url = inAdr})
---	debug_in_file(unescape3(answer) .. '\n','c://1/ans_ZF1.txt')
-
 -------------------------
 
-	m_simpleTV.User.ZF.titleTab = nil
-	m_simpleTV.User.ZF.isVideo = nil
-	m_simpleTV.User.ZF.db_bal = nil
-	m_simpleTV.User.ZF.mega_bal = nil
-	m_simpleTV.User.ZF.vf_bal = nil
+	m_simpleTV.User.DB.titleTab = nil
+	m_simpleTV.User.DB.isVideo = nil
+	m_simpleTV.User.DB.zf_bal = nil
 	m_simpleTV.Control.ChangeChannelLogo(logo or '', m_simpleTV.Control.ChannelID, 'CHANGE_IF_NOT_EQUAL')
 	m_simpleTV.Control.CurrentTitle_UTF8 = (title or '') .. ', ' .. (year or '')
 	m_simpleTV.Control.SetTitle((title or '') .. ', ' .. (year or ''))
@@ -561,24 +480,22 @@
 	if m_simpleTV.Control.MainMode == 0 then
 		m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = logo, TypeBackColor = 0, UseLogo = 3, Once = 1})
 	end
-	local db_b, mega, vf_b
+	local zf_b
 	if kpid then
-		vf_b = Get_VF(kpid) 
---		db_b = Get_DB(kpid)
-		if season and vf_b then vf_b = vf_b .. '&s=' .. season end
-		if episode and vf_b then vf_b = vf_b .. '&e=' .. episode end
---		m_simpleTV.User.ZF.db_bal = db_b
-		m_simpleTV.User.ZF.vf_bal = vf_b
+		zf_b = Get_ZF(kpid)
+		if zf_b then
+		if season then zf_b = zf_b .. '&s=' .. season end
+		if episode then zf_b = zf_b .. '&e=' .. episode end
+		m_simpleTV.User.DB.zf_bal = zf_b
+		end
 	end
---	mega = Get_Mega(title, year)
---	m_simpleTV.User.ZF.mega_bal = mega
 	local retAdr,retAdr1
---	debug_in_file(answer .. '\n','c://1/ans_ZF.txt')
-	retAdr = unescape3(answer)
-	retAdr = retAdr:gsub('&#179;','³')
+--	debug_in_file(answer .. '\n','c://1/ans_DB.txt')
+	retAdr = answer
+--	debug_in_file(inAdr .. '\n' .. tv .. '\n' .. retAdr .. '\n','c://1/FXX.txt')
 		if not retAdr then
 			m_simpleTV.Control.ExecuteAction(37)
-			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'ZF: Медиаконтент не доступен', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
+			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'DB: Медиаконтент не доступен', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
 			m_simpleTV.Control.ExecuteAction(11)
 			return
 		end
@@ -590,51 +507,85 @@
 		local t2,j,current_ep = {},1,1
 		local name, file, get_tr
 		local is_perevod = false
+		if not retAdr:match('%{"method":"play".-%}%}') and retAdr:match('"method":"link".-</div>') then
+			local newAdr = retAdr:match('"url":"(.-)"')
+			if season and not newAdr:match('&s=%d+') then newAdr = newAdr .. '&s=' .. season end
+			rc,retAdr = m_simpleTV.Http.Request(session,{url = newAdr})
+		end
+--		debug_in_file(inAdr .. '\n' .. tv .. '\n' .. retAdr .. '\n','c://1/FXX.txt')
+		if not retAdr:match('%{"method":"play".-%}%}') and retAdr:match('"method":"link".-</div>') then
+			local newAdr = retAdr:match('"url":"(.-)"')
+			if season and not newAdr:match('&s=%d+') then newAdr = newAdr .. '&s=' .. season end
+			rc,retAdr = m_simpleTV.Http.Request(session,{url = newAdr})
+		end
+--		debug_in_file(inAdr .. '\n' .. tv .. '\n' .. retAdr .. '\n','c://1/FXX.txt')
+		if retAdr:match('серия') or retAdr:match('эпизод') then
+		tv = 1
+		if not season or not episode then
+			if not season then season = 1 end
+			if not episode then episode = 1 end
+			inAdr = inAdr:gsub('&s=%d+',''):gsub('&e=%d+',''):gsub('&sid=%d+','') .. '&s=' .. season .. '&sid=' .. tonumber(season)-1 .. '&e=' .. episode
+		end
+		else
+		tv = 0
+		end
 		if tonumber(tv)==1 then
 			for w in retAdr:gmatch('"method":"link".-</div>') do
---				debug_in_file(w .. '\n','c://1/ans_ZF1.txt')
+--				debug_in_file(w .. '\n','c://1/ans_FX1.txt')
 				file, name = w:match('"url":"(.-)".->(.-)</div>')
 				if not name or not file then break end
+--				debug_in_file(file .. '/' .. name .. '\n','c://1/ans_FX1.txt')
 				t1[i]={}
 				t1[i].Id = i
 				t1[i].Address = file
 				t1[i].Name = name
-				if t1[i].Name == getConfigVal('perevod/zf') then
+				if i == 1 and getConfigVal('perevod/db') and getConfigVal('perevod/db') == '' then 
+				current_p = 1
+				is_perevod = true
+				setConfigVal('perevod/db',t1[1].Name)
+				end
+				if t1[i].Name and getConfigVal('perevod/db') and t1[i].Name:gsub('%-','') == getConfigVal('perevod/db'):gsub('%-','') then
 				current_p = i
 				is_perevod = true
 				end
 				i=i+1
 			end
+--			debug_in_file(t1[tonumber(current_p)].Address .. '\n','c://1/ans_FX3.txt')
 			get_tr = retAdr:match('<div class="videos__button selector active".->(.-)</div>')
-			if get_tr ~= getConfigVal('perevod/zf') and is_perevod then
-				m_simpleTV.Control.SetNewAddressT({address=t1[tonumber(current_p)].Address .. '&e=' .. episode or 1, position = m_simpleTV.Control.GetPosition()})
+			if get_tr:gsub('%-','') ~= getConfigVal('perevod/db'):gsub('%-','') and is_perevod then
+				m_simpleTV.Control.SetNewAddressT({address=t1[tonumber(current_p)].Address:gsub('&kinopoisk_id=%d+','') .. '&kinopoisk_id=' .. kpid .. '&e=' .. episode or 1, position = m_simpleTV.Control.GetPosition()})
 				return
 			end
 			for w in retAdr:gmatch('%{"method":"play".-%}%}') do
---				debug_in_file(w .. '\n','c://1/ans_ZF2.txt')
-				name, file = w:match('"title":".-%((.-)%)".-"quality":(.-)%}')
+--				debug_in_file(w .. '\n','c://1/ans_FX2.txt')
+				name, file = w:match('"title":".-%((.-)%)".-"quality":(.-%})')
 				if not name or not file then break end
+--				debug_in_file(file .. '/' .. name .. '\n','c://1/ans_FX2.txt')
 				t2[j]={}
 				t2[j].Id = j
 				t2[j].Address = file
 				t2[j].Name = name:match('%d+')
-				if t2[j].Name == episode then retAdr1 = t2[j].Address end
+				if tonumber(t2[j].Name) == tonumber(episode) then retAdr1 = t2[j].Address:gsub('&kinopoisk_id=%d+','') .. '&kinopoisk_id=' .. kpid end
 				j=j+1
 			end
 		else
-			for w in retAdr:gmatch('%{"method":"play".-</div>') do
---				debug_in_file(w .. '\n','c://1/ans_ZF1.txt')
-				file, name = w:match('"quality":(.-)%}.-"title":".-%((.-)%)"')
+			for w in retAdr:gmatch('%{"method":"play".-%}%}') do
+--				debug_in_file(w .. '\n','c://1/ans_DB1.txt')
+				name, file = w:match('"title":".-%((.-)%)".-"quality":(.-%})')
 				if not name or not file then break end
 				t1[i]={}
 				t1[i].Id = i
 				t1[i].Address = file
 				t1[i].Name = name
-				if t1[i].Name == getConfigVal('perevod/zf') then current_p = i end
+				if i == 1 and getConfigVal('perevod/db') and getConfigVal('perevod/db') == '' then 
+				current_p = 1
+				setConfigVal('perevod/db',t1[1].Name)
+				end
+				if getConfigVal('perevod/db') and t1[i].Name:gsub('%-','') == getConfigVal('perevod/db'):gsub('%-','') then current_p = i end
 				i=i+1
 			end
 		end
-		m_simpleTV.User.ZF.TabPerevod = t1
+		m_simpleTV.User.DB.TabPerevod = t1
 	if i > 2 then
 		if current_p then
 		retAdr = t1[tonumber(current_p)].Address
@@ -643,15 +594,15 @@
 		else
 	--		local _, id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите озвучку - ' .. (title or ''), 0, t1, 5000, 1)
 	--		id = id or 1
-			retAdr = t1[1].Address
+			retAdr = t1[1].Address:gsub('&kinopoisk_id=%d+','') .. '&kinopoisk_id=' .. kpid
 			current_p = 1
-			setConfigVal('perevod/zf', t1[1].Name)
+			setConfigVal('perevod/db', t1[1].Name)
 			title = (title or '') .. ' - ' .. t1[1].Name
 		end
 	elseif i == 2 then
-		retAdr = t1[1].Address
+		retAdr = t1[1].Address:gsub('&kinopoisk_id=%d+','') .. '&kinopoisk_id=' .. kpid
 		current_p = 1
-		setConfigVal('perevod/zf', t1[1].Name)
+		setConfigVal('perevod/db', t1[1].Name)
 		title = (title or '') .. ' - ' .. t1[1].Name
 	else
 		return
@@ -664,44 +615,50 @@
 	end
 
 	if  tonumber(tv) == 0 then
-		retAdr = GetZFAdr(retAdr)
+		retAdr = GetDBAdr(retAdr)
 	end
 	if tonumber(tv) == 1	then
---		debug_in_file(kpid .. ' ' .. season .. '/' .. episode .. '\n','c://1/ans_ZF2.txt')
+
 		t,current_ep = get_serial(kpid,season,episode)
-		if #t==0 then
+--		debug_in_file(kpid .. ' ' .. season .. '/' .. episode .. ' - ' .. #t .. '/' .. current_ep .. '\n' .. retAdr1 .. '\n','c://1/ans_FX4.txt')
+		if #t and #t==0 then
 			for i = 1,#t2 do
 				t[i] = {}
 				t[i].Id = i
 				t[i].Name = 'Сезон ' .. 1 .. ', Эпизод ' .. i
-				t[i].Address = decode64('aHR0cHM6Ly9oaWR4bGdsay5kZXBsb3kuY3gvbGl0ZS96ZXRmbGl4P2tpbm9wb2lza19pZD0=') .. kpid .. '&s=' .. 1 .. '&e=' .. i
+				t[i].Address = inAdr:gsub('&e=%s+','') .. '&e=' .. i
 				if tonumber(episode) == i then current_ep = i end
 				i=i+1
 			end
 		end
-		m_simpleTV.User.ZF.titleTab = t
+		m_simpleTV.User.DB.titleTab = t
 
-		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_ZF()'}
-		if getConfigVal('perevod/zf') ~= '' and m_simpleTV.User.ZF.TabPerevod and #m_simpleTV.User.ZF.TabPerevod > 1 then
-			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_ZF()'}
+		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_DB()'}
+		if getConfigVal('perevod/db') ~= '' and m_simpleTV.User.DB.TabPerevod and #m_simpleTV.User.DB.TabPerevod > 1 then
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_DB()'}
 		end
 		m_simpleTV.OSD.ShowSelect_UTF8((title or ''), current_ep - 1, t, 10000, 32)
-
+		
+			if not retAdr1 then
+				setConfigVal('perevod/db', '')
+				m_simpleTV.Control.Restart()		
+			end
+			
 		retAdr = retAdr1
-		retAdr = GetZFAdr(retAdr)
+		retAdr = GetDBAdr(retAdr)
+
 		m_simpleTV.Control.ChangeAdress = 'Yes'
 		m_simpleTV.Control.CurrentAddress = retAdr
---		debug_in_file(retAdr .. '\n')
-		return
+
 	else
 		t[1] = {}
 		t[1].Id = 1
 		t[1].Name = title:gsub(' %- $','')
-		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_ZF()'}
-		if getConfigVal('perevod/zf') ~= '' and m_simpleTV.User.ZF.TabPerevod and #m_simpleTV.User.ZF.TabPerevod > 1 then
-			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_ZF()'}
+		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_DB()'}
+		if getConfigVal('perevod/db') ~= '' and m_simpleTV.User.DB.TabPerevod and #m_simpleTV.User.DB.TabPerevod > 1 then
+			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_DB()'}
 		end
-		m_simpleTV.OSD.ShowSelect_UTF8('ZF: ' .. (title:gsub('^.- %- ','') or ''), 0, t, 8000, 32 + 64 + 128)
+		m_simpleTV.OSD.ShowSelect_UTF8('DB: ' .. (title:gsub('^.- %- ','') or ''), 0, t, 8000, 32 + 64 + 128)
 	end
 
 	m_simpleTV.Http.Close(session)

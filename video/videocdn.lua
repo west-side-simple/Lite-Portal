@@ -1,13 +1,13 @@
--- видеоскрипт для видеобалансера "videocdn" https://videocdn.tv (16/11/23)
+-- видеоскрипт для видеобалансера "videocdn" https://videocdn.tv (22/08/24)
 -- Copyright © 2017-2022 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
--- mod - west_side (24/05/24)
+-- mod - west_side (03/01/25)
 -- ## открывает подобные ссылки ##
 -- https://32.svetacdn.in/fnXOUDB9nNSO?kp_id=5928
 -- https://32.tvmovies.in/fnXOUDB9nNSO/tv-series/92
 -- https://32.tvmovies.in/fnXOUDB9nNSO/movie/22080
 -- http://32.svetacdn.in/fnXOUDB9nNSO/movie/36905
 -- ## домен ##
-local domen = 'https://567886534688564.svetacdn.in'
+local domen = '' --'https://567886534688564.svetacdn.in'
 -- '' - по умолчанию
 -- 'http://58.svetacdn.in' (пример)
 -- ## прокси ##
@@ -27,6 +27,8 @@ local proxy = ''
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/ra5OAHwotvWa')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/96wagtY5sXIm')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/JcS1NDFjFuta')
+			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/0HlZgU1l1mw5')
+			and not m_simpleTV.Control.CurrentAddress:match('^https?://.-/nPBZWDQ5doe2')
 			and not m_simpleTV.Control.CurrentAddress:match('^$videocdn')
 		then
 		 return
@@ -117,6 +119,7 @@ local function bg_imdb_id(imdb_id)
 	year_tmdb = year_tmdb:match('%d%d%d%d')
 	else year_tmdb = 0 end
 	info_fox(name_tmdb,year_tmdb,background)
+--	debug_in_file(background .. '\n' .. name_tmdb .. '\n' .. year_tmdb .. '\n' .. overview_tmdb .. '\n' .. tv .. '\n' .. id .. '\n----------------\n',m_simpleTV.MainScriptDir .. 'user/westSide/pars_cont.txt')
 	return background, name_tmdb, year_tmdb, overview_tmdb, tv, id
 end
 local function title_translate(translate)
@@ -226,7 +229,7 @@ end
 	m_simpleTV.User.Videocdn.overview = m_simpleTV.User.TVPortal.get.overview
 --	m_simpleTV.User.westSide.PortalTable = m_simpleTV.User.TVPortal.stena.TMDB.Id .. ',' .. m_simpleTV.User.TVPortal.stena.TMDB.tv
 	end
---	debug_in_file(inAdr .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer.txt')
+--	debug_in_file(inAdr .. '\n','c://1/answer_cdn.txt')
 	local translate = inAdr:match('%?translation=(%d+)')
 	if translate then
 	m_simpleTV.User.Videocdn.translate = translate
@@ -234,14 +237,17 @@ end
 	end
 	local imdb_id, kp_id
 
-	local rc, answer = m_simpleTV.Http.Request(session, {url = inAdr:gsub('$OPT:.+', ''), headers = 'Referer: https://www.videocdn.tv/'})
+	local rc, answer = m_simpleTV.Http.Request(session, {url = inAdr:gsub('$OPT:.+', '')})
 		if rc ~= 200 then return end
+
 	answer = htmlEntities.decode(answer)
+
 	answer = answer:gsub('\\\\\\/', '/')
 	answer = answer:gsub('\\"', '"')
 	answer = unescape3(answer)
+
 	answer = answer:gsub('\\', '')
---	debug_in_file(answer .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer.txt')
+--	debug_in_file(rc .. '\n' .. answer .. '\n','c://1/answer_cdn.txt')
 
 	if inAdr:match('&embed=') or inAdr:match('kp_id=')
 	then m_simpleTV.User.Videocdn.embed = inAdr:match('&embed=(.-)$') or inAdr:match('kp_id=(.-)$')
@@ -343,7 +349,7 @@ end
 				if qlty then
 					t[#t + 1] = {}
 					t[#t].qlty = tonumber(qlty)
-					t[#t].Address = adr:gsub('^//', 'https://')
+					t[#t].Address = 'https:' .. adr
 					t[#t].Name = qlty .. 'p'
 --	debug_in_file(t[#t].Name .. ' ' .. t[#t].Address .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer.txt')
 --		:gsub('cloud%.cdnland%.in','phantom.cloud.cdnland.in') --на всякий случай
@@ -505,6 +511,32 @@ end
 	inAdr = inAdr:gsub('&kinopoisk', ''):gsub('%?block=%w+', '')
 	m_simpleTV.User.Videocdn.Tabletitle = nil
 
+	local function Get_ZF(id)
+		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36')
+		if not session then return false end
+		m_simpleTV.Http.SetTimeout(session, 4000)
+		local url = decode64('aHR0cHM6Ly9oaWR4bGdsay5kZXBsb3kuY3gvbGl0ZS96ZXRmbGl4P2tpbm9wb2lza19pZD0=') .. id
+		local rc,answer = m_simpleTV.Http.Request(session,{url = url})
+
+--		debug_in_file(url .. '\n' .. answer,'c://1/deb_zf.txt')
+		if rc==200 and answer:match('data%-json') then
+			m_simpleTV.Http.Close(session)
+			return url
+		end
+		m_simpleTV.Common.Sleep(1000)
+		rc,answer = m_simpleTV.Http.Request(session,{url = url})
+		if rc==200 and answer:match('data%-json') then
+			m_simpleTV.Http.Close(session)
+			return url
+		end
+		m_simpleTV.Http.Close(session)
+		return false
+	end
+	if kp_id then
+		m_simpleTV.Control.ChangeAddress = 'No'
+		m_simpleTV.Control.CurrentAddress = Get_ZF(kp_id)
+		dofile(m_simpleTV.MainScriptDir .. 'user\\westSidePortal\\video\\ZF.lua')
+	end
 	if answer:match('"file":"~') then
 		kp_id = kp_id or answer:match('"kp":"(.-)"')
 		if not kp_id or kp_id == '' then return end
@@ -562,8 +594,8 @@ end
 			end
 		end
 --		debug_in_file(answer .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer_files.txt')
-		local files = answer:match('id="ury" value=\'(.-)\'')
-
+		local files = answer:match('value=\'(%{.-)\'')
+--		debug_in_file(files .. '\n','c://1/answer_files.txt')
 		local session1 = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36', proxy, false)
 		if not session1 then return end
 		m_simpleTV.Http.SetTimeout(session1, 1000)
@@ -572,8 +604,8 @@ end
 			for i = 1, #t0 do
 				local test_address = files:match('"' .. t0[i].Address .. '":.-"%[.-%](.-%.mp4)')
 				if not test_address then break end
+--				test_address = test_address:gsub('.-//','https://upn.lkpma.xyz/http://')
 --				debug_in_file(test_address .. '\n' .. files .. '\n' .. #t0 .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer_files.txt')
-				test_address = test_address:gsub('.-//','https://')
 				if check_address(test_address,t0[i].Name,session1) == true then
 					j = j + 1
 					tt[j] = {}
@@ -614,7 +646,7 @@ end
 		or 'Озвучка'
 	end
 	m_simpleTV.User.Videocdn.title_translate = m_simpleTV.User.Videocdn.title_translate:gsub('<template.-template>', 'неизвестно'):gsub('&amp;', '&'):gsub('\n		               	','')
-	local answer = answer:match('id="ury" value=\'(.-)\'')
+	local answer = answer:match('value=\'(%{.-)\'')
 		if not answer then return end
 	if tv_series then
 		answer = answer:match('"' .. transl .. '":(%[.-%}%]%}%])')

@@ -137,7 +137,7 @@ tname = {
 -- отключить: поставить в начале строки --
  'Videocdn',
 -- 'ZF',
- 'VB',
+-- 'VB',
 -- 'CDN Movies',
 -- 'Hdvb',
 -- 'Collaps',
@@ -152,11 +152,11 @@ tname = {
 -- отключить: поставить в начале строки --
  'Videocdn',
 -- 'ZF',
- 'VB',
+-- 'VB',
 -- 'CDN Movies',
  'Hdvb',
  'Collaps',
- 'Kodik',
+-- 'Kodik',
  'Magnets',
 	}
 -- ##
