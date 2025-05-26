@@ -74,6 +74,7 @@ local function set_skin(dir)
     or dir:match('BloodNight')
 	or dir:match('Dark')
 	or dir:match('BlackGlass')
+	or dir:match('Black Tiger')
 -- add dir for backgroundimage
 	then backgroundimage = '../Channel/logo/Wallpapers/' .. dir .. '.jpg' end
 	return name, m_simpleTV.Common.GetMainPath(2) .. 'skin/' .. dir .. '/' .. preview:gsub('\\','/'), desc .. ', author: ' .. author .. ', version: ' .. version, backgroundimage, controlside
@@ -195,7 +196,11 @@ function select_keyboard()
     end
 end
 		if not m_simpleTV.Config.GetValue('mainPlayController/playLastChannelOnStartup','simpleTVConfig') == true and not io.open(m_simpleTV.MainScriptDir .. 'user/startup/ScriptForAssemblage.lua', 'r') then
-			m_simpleTV.Control.PlayAddressT({title='SimpleTV',address='SimpleTV'})-- fix title
+
+			m_simpleTV.Control.CurrentAdress = 'wait'
+			m_simpleTV.Control.PlayAddressT({title='Welcome to SimpleTV',address='wait'})-- fix title
+			m_simpleTV.Control.ExecuteAction(36,0) --KEYOSDCURPROG
+			m_simpleTV.Control.ExecuteAction(11)
 		end
 -------------------------------------------------------------------
  local t={}
@@ -203,9 +208,9 @@ end
  t.name = 'Skin settings'
  t.luastring = 'skin_schema_settings()'
  t.lua_as_scr = true
- t.key = string.byte('E')
+ t.key = string.byte('R')
  t.ctrlkey = 4
  t.location = 0
- t.image= m_simpleTV.MainScriptDir_UTF8 .. 'user/show_mi/emptyLogo.png'
+ t.image= m_simpleTV.MainScriptDir_UTF8 .. 'user/westSide/icons/palette-custom.png'
  m_simpleTV.Interface.AddExtMenuT(t)
 -------------------------------------------------------------------
