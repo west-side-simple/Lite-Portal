@@ -6,16 +6,58 @@ if not file then
 	return
 end
 
+local answer = file:read('*a')
+file:close()
+
+local color = {
+{'Blue', 'B0C4DE', '1E213D', '5D76CB'},
+{'Green', 'A0D6B4', '123524', '009B77'},
+{'Red', 'FFCBBB', '490005', 'FF2400'},
+}
+
+local k = 1
+
+if answer:match('Blue') then
+	k = 1
+elseif answer:match('Green') then
+	k = 2
+elseif answer:match('Red') then
+	k = 3
+end
+
+local title_color, color_light, color_black, color_base = color[k][1], color[k][2], color[k][3], color[k][4]
+
+local i = 1
+if answer:match('WS Light') then
+	i = 1
+elseif answer:match('WS Black') then
+	i = 2
+else
+	return
+end
+
 local t = {
 { [[
 <svg version="1.0" xmlns="http://www.w3.org/2000/svg"
  width="905.000000pt" height="1280.000000pt" viewBox="0 0 905.000000 1280.000000"
  preserveAspectRatio="xMidYMid meet">
 <metadata>
-WS Black
-</metadata>
+WS Black ]] .. title_color .. 
+[[</metadata>
 <g transform="translate(0.000000,1280.000000) scale(0.100000,-0.100000)"
-fill="#B0C4DE" stroke="none">
+fill="#]] .. color_black .. [[" stroke="none">
+<path d="M0 6220 l0 -6130 4525 0 4525 0 0 6130 0 6130 -4525 0 -4525 0 0
+-6130z"/>
+</g>
+</svg>
+]],
+[[
+<svg version="1.0" xmlns="http://www.w3.org/2000/svg"
+ width="905.000000pt" height="1280.000000pt" viewBox="0 0 905.000000 1280.000000"
+ preserveAspectRatio="xMidYMid meet">
+<metadata>WS Back</metadata>
+<g transform="translate(0.000000,1280.000000) scale(0.100000,-0.100000)"
+fill="#]] .. color_base .. [[" stroke="none">
 <path d="M0 6220 l0 -6130 4525 0 4525 0 0 6130 0 6130 -4525 0 -4525 0 0
 -6130z"/>
 </g>
@@ -111,10 +153,22 @@ viewBox="0 0 1868.02 622.67"
  width="905.000000pt" height="1280.000000pt" viewBox="0 0 905.000000 1280.000000"
  preserveAspectRatio="xMidYMid meet">
 <metadata>
-WS Light
-</metadata>
+WS Light ]] .. title_color .. 
+[[</metadata>
 <g transform="translate(0.000000,1280.000000) scale(0.100000,-0.100000)"
-fill="#1E213D" stroke="none">
+fill="#]] .. color_light .. [[" stroke="none">
+<path d="M0 6220 l0 -6130 4525 0 4525 0 0 6130 0 6130 -4525 0 -4525 0 0
+-6130z"/>
+</g>
+</svg>
+]],
+[[
+<svg version="1.0" xmlns="http://www.w3.org/2000/svg"
+ width="905.000000pt" height="1280.000000pt" viewBox="0 0 905.000000 1280.000000"
+ preserveAspectRatio="xMidYMid meet">
+<metadata>WS Back</metadata>
+<g transform="translate(0.000000,1280.000000) scale(0.100000,-0.100000)"
+fill="#]] .. color_base .. [[" stroke="none">
 <path d="M0 6220 l0 -6130 4525 0 4525 0 0 6130 0 6130 -4525 0 -4525 0 0
 -6130z"/>
 </g>
@@ -162,24 +216,15 @@ viewBox="0 0 80.66 26.89"
 },
 }
 
-local answer = file:read('*a')
-file:close()
-local i
-if answer:match('WS Black') then
-	i = 2
-elseif answer:match('WS Light') then
-	i = 1
-else
-	return
-end
-
 local header
 local fileEnd = '.svg'
-for j = 1,2 do
+for j = 1,3 do
 local filePath
 if j == 1 then
 header = 'back'
-else
+elseif j == 2 then
+header = 'back_active'
+elseif j == 3 then
 header = 'day'
 end
 filePath = pass .. '/img/' .. header .. fileEnd
