@@ -8,6 +8,7 @@
 			 return
 			end
 			if not eventParams.params.address:match('only4%.tv')
+			and not eventParams.params.address:match('1ce%.xyz')
 			then
 			 return
 			end

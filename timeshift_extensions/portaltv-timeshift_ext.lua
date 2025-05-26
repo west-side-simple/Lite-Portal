@@ -20,17 +20,17 @@
 				or eventParams.queryType == 'IsRecordAble'
 			then
 				local days = eventParams.params.rawM3UString:match('tvg%-rec="(%d+)') or eventParams.params.rawM3UString:match('catchup%-days="(%d+)')
-				eventParams.params.rawM3UString = 'catchup="append" catchup-days="' .. days .. '"'
+				eventParams.params.rawM3UString = 'catchup-days="' .. days .. '" catchup="shift"'
 			 return true
 			end
 			if eventParams.queryType == 'Start' then
 				local days = eventParams.params.rawM3UString:match('tvg%-rec="(%d+)') or eventParams.params.rawM3UString:match('catchup%-days="(%d+)')
-				eventParams.params.rawM3UString = 'catchup="append" catchup-days="' .. days .. '" catchup-source="?utc=${start}&lutc=${timestamp}"'
+				eventParams.params.rawM3UString = 'catchup-days="' .. days .. '" catchup="shift"'
 			 return true
 			end
 			if eventParams.queryType == 'GetRecordAddress' then
 				local days = eventParams.params.rawM3UString:match('tvg%-rec="(%d+)') or eventParams.params.rawM3UString:match('catchup%-days="(%d+)')
-				eventParams.params.rawM3UString = 'catchup="append" catchup-days="' .. days .. '" catchup-source="?utc=${start}&lutc=${timestamp}"'
+				eventParams.params.rawM3UString = 'catchup-days="' .. days .. '" catchup="shift"'
 			 return true
 			end
 		 return true

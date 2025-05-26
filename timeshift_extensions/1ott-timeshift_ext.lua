@@ -1,4 +1,4 @@
--- расширение дополнения httptimeshift - 1ott.net (26/04/21)
+-- расширение дополнения httptimeshift - 1ott.net (26/01/24)
 -- west_side
 	function httpTimeshift_1ott(eventType, eventParams)
 		if eventType == 'StartProcessing' then
@@ -7,8 +7,9 @@
 			then
 			 return
 			end
-			if not (eventParams.params.address:match('1ott%.net')
-				and eventParams.params.rawM3UString:match('tvg%-rec="%d'))
+
+			if not (eventParams.params.address:match('1ott%.net'))
+				and not (eventParams.params.rawM3UString:match('tvg%-rec="%d') or eventParams.params.rawM3UString:match('timeshift="%d'))
 			then
 			 return
 			end
@@ -16,17 +17,17 @@
 				or eventParams.queryType == 'TestAddress'
 				or eventParams.queryType == 'IsRecordAble'
 			then
-				local days = eventParams.params.rawM3UString:match('tvg%-rec="(%d+)')
+				local days = eventParams.params.rawM3UString:match('tvg%-rec="(%d+)') or eventParams.params.rawM3UString:match('timeshift="(%d+)')
 				eventParams.params.rawM3UString = 'catchup="append" catchup-days="' .. days .. '"'
 			 return true
 			end
 			if eventParams.queryType == 'Start' then
-				local days = eventParams.params.rawM3UString:match('tvg%-rec="(%d+)')
+				local days = eventParams.params.rawM3UString:match('tvg%-rec="(%d+)') or eventParams.params.rawM3UString:match('timeshift="(%d+)')
 				eventParams.params.rawM3UString = 'catchup="append" catchup-days="' .. days .. '" catchup-source="?utc=${start}&lutc=${timestamp}"'
 			 return true
 			end
 			if eventParams.queryType == 'GetRecordAddress' then
-				local days = eventParams.params.rawM3UString:match('tvg%-rec="(%d+)')
+				local days = eventParams.params.rawM3UString:match('tvg%-rec="(%d+)') or eventParams.params.rawM3UString:match('timeshift="(%d+)')
 				eventParams.params.rawM3UString = 'catchup="append" catchup-days="' .. days .. '" catchup-source="?utc=${start}&lutc=${timestamp}"'
 			 return true
 			end
