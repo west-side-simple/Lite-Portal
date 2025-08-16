@@ -1,4 +1,4 @@
--- видеоскрипт для балансера ZF (19.04.25)
+-- видеоскрипт для балансера ZF (16.08.25)
 -- author west_side
 	if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 	if m_simpleTV.Control.CurrentAddress and m_simpleTV.Control.CurrentAddress:match('^tmdb_id=')
@@ -25,6 +25,7 @@
 	m_simpleTV.User.ZF.CurAddress = inAdr
 	m_simpleTV.User.ZF.DelayedAddress = nil
 	m_simpleTV.User.TVPortal.balanser = 'Zetflix'
+	
 	local function getConfigVal(key)
 		return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
 	end
@@ -33,14 +34,225 @@
 	end
 	local current_np = getConfigVal('perevod/zf') or ''
 	if not getConfigVal('perevod/zf') then setConfigVal('perevod/zf','') end
+
+local function check_thumb(url, session)
+	local rc, answer = m_simpleTV.Http.Request(session,{url=url})
+	if rc == 200 then return true end
+--	m_simpleTV.Http.Close(session)
+	return
+end
+
+local function get_id_for_episode(answer, season, episode)
+	local id
+	local all_data = answer:match('seasons:(.-)\n')
+	if all_data then
+		require('json')
+		all_data = all_data:gsub('%[%]', '"nil"'):gsub('\\', '\\\\'):gsub('\\"', '\\\\"'):gsub('\\/', '/')
+		local tab = json.decode(all_data)
+		if not tab then
+			return
+		end
+		local t, i, j = {}, 1, 1
+		while true do
+			if not tab[j] or not tab[j].season then break end
+			local k = 1
+			while true do
+				t[i] = {}
+				t[i].season = tab[j].season
+				if not tab[j].episodes[k] or not tab[j].episodes[k].episode or not tab[j].episodes[k].videoKey then break end
+				t[i].episode = tab[j].episodes[k].episode
+				t[i].videoKey = tab[j].episodes[k].videoKey
+				if tonumber(season) == t[i].season and tonumber(episode) == tonumber(t[i].episode) then
+					return t[i].videoKey
+				end
+				k = k + 1
+				i = i + 1
+			end
+			j = j + 1
+		end
+	end
+	return
+end
+
+local function get_thumb(season, episode)
+
+	local url = 'https://api.kinogram.best/embed/kp/' .. m_simpleTV.User.ZF.kpid
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
+	if not session then return end
+	m_simpleTV.Http.SetTimeout(session, 4000)
+	local rc, answer = m_simpleTV.Http.Request(session,{url=url})
+	if rc == 200 and answer then
+		local all_data = answer:match('preview: %{(.-)%}%,')
+		if not all_data then
+			m_simpleTV.Http.Close(session)
+			if not m_simpleTV.User.TVPortal.get.TMDB.PositionThumbsHandler then
+				local handlerInfo = {}
+				handlerInfo.luaFunction = 'PositionThumbs_ZF'
+				handlerInfo.regexString = '/lite/zetflix'
+				handlerInfo.sizeFactor = 0.15
+				handlerInfo.backColor = ARGB(191, 30, 33, 61)
+				handlerInfo.textColor = ARGB(255, 255, 215, 0)
+				handlerInfo.glowParams = 'glow="7" samples="5" extent="4" color="0xB0000000"'
+				handlerInfo.marginBottom = 5
+				handlerInfo.showPreviewWhileSeek = false
+				handlerInfo.clearImgCacheOnStop = false
+				handlerInfo.minImageWidth = 0
+				handlerInfo.minImageHeight = 0
+				m_simpleTV.User.TVPortal.get.TMDB.PositionThumbsHandler = m_simpleTV.PositionThumbs.AddHandler(handlerInfo)
+			end
+			return
+		end
+		local interval = all_data:match("interval:.-(%d+)")
+		local width = all_data:match("width:.-(%d+)")
+		local height = all_data:match("height:.-(%d+)")
+		local spriteSize = all_data:match("spriteSize:.-(%d+)")
+		local src_pre, src_id = all_data:match("src:.-'(.-)'.-(%d+)")
+		local firstNum = all_data:match("firstNum:.-(%d+)")
+--		debug_in_file(all_data .. '\n' .. interval .. '\n' .. width .. '\n' .. height .. '\n' .. spriteSize .. '\n' .. firstNum .. '\n' .. src_pre .. '\n' .. src_id .. '\n' .. src_pre .. src_id .. '/desktop/thumb-' .. '\n')
+		if not src_pre or not src_id or not interval or not width or not height or not spriteSize or not firstNum then
+			m_simpleTV.Http.Close(session)
+			if not m_simpleTV.User.TVPortal.get.TMDB.PositionThumbsHandler then
+				local handlerInfo = {}
+				handlerInfo.luaFunction = 'PositionThumbs_ZF'
+				handlerInfo.regexString = '/lite/zetflix'
+				handlerInfo.sizeFactor = 0.15
+				handlerInfo.backColor = ARGB(191, 30, 33, 61)
+				handlerInfo.textColor = ARGB(255, 255, 215, 0)
+				handlerInfo.glowParams = 'glow="7" samples="5" extent="4" color="0xB0000000"'
+				handlerInfo.marginBottom = 5
+				handlerInfo.showPreviewWhileSeek = false
+				handlerInfo.clearImgCacheOnStop = false
+				handlerInfo.minImageWidth = 0
+				handlerInfo.minImageHeight = 0
+				m_simpleTV.User.TVPortal.get.TMDB.PositionThumbsHandler = m_simpleTV.PositionThumbs.AddHandler(handlerInfo)
+			end
+			return
+		end
+		if season and episode then src_id = get_id_for_episode(answer,season,episode) or src_id end
+		local src = src_pre .. src_id .. '/desktop/'
+		local check = check_thumb(src .. firstNum .. '.webp',session)
+		if not check then
+			m_simpleTV.Http.Close(session)
+			if not m_simpleTV.User.TVPortal.get.TMDB.PositionThumbsHandler then
+				local handlerInfo = {}
+				handlerInfo.luaFunction = 'PositionThumbs_ZF'
+				handlerInfo.regexString = '/lite/zetflix'
+				handlerInfo.sizeFactor = 0.15
+				handlerInfo.backColor = ARGB(191, 30, 33, 61)
+				handlerInfo.textColor = ARGB(255, 255, 215, 0)
+				handlerInfo.glowParams = 'glow="7" samples="5" extent="4" color="0xB0000000"'
+				handlerInfo.marginBottom = 5
+				handlerInfo.showPreviewWhileSeek = false
+				handlerInfo.clearImgCacheOnStop = false
+				handlerInfo.minImageWidth = 0
+				handlerInfo.minImageHeight = 0
+				m_simpleTV.User.TVPortal.get.TMDB.PositionThumbsHandler = m_simpleTV.PositionThumbs.AddHandler(handlerInfo)
+			end
+			return
+		end
+			--[[interval: 5,
+			width: 160, height: 90,
+			spriteSize: 100, rowSize: 10,
+			src: 'https://img.zcvh.net/'+  920021  +'/desktop/thumb-${spriteNum}.webp',
+			firstNum: 1, pad: 1]]
+
+		if m_simpleTV.Control.MainMode ~= 0 then return end
+
+		m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo = {}
+		m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo.samplingFrequency = interval * 1000
+		m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo.thumbsPerImage = spriteSize
+		m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo.thumbWidth = width
+		m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo.thumbHeight = height
+		m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo.urlPattern = src
+		m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo.firstNum = firstNum
+
+		if not m_simpleTV.User.TVPortal.get.TMDB.PositionThumbsHandler then
+			local handlerInfo = {}
+			handlerInfo.luaFunction = 'PositionThumbs_ZF'
+			handlerInfo.regexString = '/lite/zetflix'
+			handlerInfo.sizeFactor = 0.12
+			handlerInfo.backColor = ARGB(191, 26, 22, 42)
+			if m_simpleTV.User.TVPortal.isTEXTonTHUMB then 			
+			handlerInfo.textColor = ARGB(222, 253, 234, 168)
+			handlerInfo.glowParams = 'glow="7" samples="5" extent="4" color="0xB0000000"'
+			else			
+			handlerInfo.textColor = ARGB(0, 253, 234, 168)
+			handlerInfo.glowParams = 'glow="0" samples="0" extent="0" color="0x00000000"'
+			end
+			handlerInfo.marginBottom = 5
+			handlerInfo.showPreviewWhileSeek = false
+			handlerInfo.clearImgCacheOnStop = false
+			handlerInfo.minImageWidth = width
+			handlerInfo.minImageHeight = height
+			m_simpleTV.User.TVPortal.get.TMDB.PositionThumbsHandler = m_simpleTV.PositionThumbs.AddHandler(handlerInfo)
+		end
+		m_simpleTV.Http.Close(session)
+	else
+		if not m_simpleTV.User.TVPortal.get.TMDB.PositionThumbsHandler then
+			local handlerInfo = {}
+			handlerInfo.luaFunction = 'PositionThumbs_ZF'
+			handlerInfo.regexString = '/lite/zetflix'
+			handlerInfo.sizeFactor = 0.15
+			handlerInfo.backColor = ARGB(191, 30, 33, 61)
+			handlerInfo.textColor = ARGB(255, 255, 215, 0)
+			handlerInfo.glowParams = 'glow="7" samples="5" extent="4" color="0xB0000000"'
+			handlerInfo.marginBottom = 5
+			handlerInfo.showPreviewWhileSeek = false
+			handlerInfo.clearImgCacheOnStop = false
+			handlerInfo.minImageWidth = 0
+			handlerInfo.minImageHeight = 0
+			m_simpleTV.User.TVPortal.get.TMDB.PositionThumbsHandler = m_simpleTV.PositionThumbs.AddHandler(handlerInfo)
+		end
+		m_simpleTV.Http.Close(session)
+		return
+	end
+end
+
+function PositionThumbs_ZF(queryType, address, forTime)
+	if not m_simpleTV.User.TVPortal.get then return true end
+--[[	if queryType == 'testAddress' and m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo then
+	 return false
+	end--]]
+	if queryType == 'getThumbs' then
+			if not m_simpleTV.User.TVPortal.get or not m_simpleTV.User.TVPortal.get.TMDB or not m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo or m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo == nil then
+			 return false
+			end
+		local imgLen = m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo.samplingFrequency * m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo.thumbsPerImage
+		local index = math.floor(forTime / imgLen)
+		local t = {}
+		t.playAddress = address
+		t.url = m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo.urlPattern .. (m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo.firstNum + index) .. '.webp'
+		t.httpParams = {}
+		t.httpParams.extHeader = 'referer:' .. address
+		t.elementWidth = m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo.thumbWidth
+		t.elementHeight = m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo.thumbHeight
+		t.startTime = index * imgLen
+		t.length = imgLen
+		t.elementsPerImage = m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo.thumbsPerImage
+		t.marginLeft = 0
+		t.marginRight = 0
+		t.marginTop = 0
+		t.marginBottom = 0
+		m_simpleTV.PositionThumbs.AppendThumb(t)
+	 return true
+	end
+end
+
 	local function Get_DB(id)
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36')
 		if not session then return false end
 		m_simpleTV.Http.SetTimeout(session, 8000)
-		local url = decode64('aHR0cHM6Ly9hcGkubWFuaGFuLm9uZS9sYXRlL3ZpZGVvZGI/a2lub3BvaXNrX2lkPQ==') .. id
+--		local rc,answer = m_simpleTV.Http.Request(session,{url = 'https://api.manhan.one/ws/negotiate?negotiateVersion=1', method = "OPTION"})
+		local rc,answer = m_simpleTV.Http.Request(session,{url = 'https://api.manhan.one/ws/negotiate?negotiateVersion=1', method = "POST"})
+		debug_in_file(rc .. '\n' .. answer .. '\n','c://1/deb_zf.txt')
+		local token = answer:match('"connectionToken".-"(.-)"')
+		local rc,answer = m_simpleTV.Http.Request(session,{url = 'ws://api.manhan.one/ws?id=' .. token})
+		debug_in_file(rc .. '\n' .. answer .. '\n','c://1/deb_zf.txt')
+		
+		local url = 'https://api.manhan.one/lite/cdnvideohub?kinopoisk_id=' .. id
 		local rc,answer = m_simpleTV.Http.Request(session,{url = url})
 
---		debug_in_file(url .. '\n' .. answer,'c://1/deb_zf.txt')
+		debug_in_file(url .. '\n' .. unescape (unescape3 (answer)) .. '\n','c://1/deb_zf.txt')
 		if rc==200 and answer:match('data%-json') then
 			m_simpleTV.Http.Close(session)
 			return url
@@ -65,7 +277,7 @@
 			return false
 		end
 		local url_out = answer:match('"iframe_video_id":(%d+)')
-	--	debug_in_file(unescape1(answer) .. '\n','c://1/VX.txt')
+--		debug_in_file(unescape1(answer) .. '\n','c://1/VX.txt')
 		if url_out then
 		local embed = '/embed/'
 		if unescape1(answer):match('"type":"serial"') then embed = '/embed-serials/' end
@@ -75,7 +287,7 @@
 		end
 		m_simpleTV.Http.Close(session)
 		return false
-	end	
+	end
 	local function Get_Mega(title, year)
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36')
 		if not session then return false end
@@ -137,7 +349,7 @@
 		local url_al = decode64('aHR0cHM6Ly9hcGkuYXBidWdhbGwub3JnLz90b2tlbj1kMzE3NDQxMzU5ZTUwNWMzNDNjMjA2M2VkYzk3ZTc=') .. '&kp=' .. kpid
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 		if not session then	return end
-		m_simpleTV.Http.SetTimeout(session, 10000)
+		m_simpleTV.Http.SetTimeout(session, 12000)
 		local rc,answer = m_simpleTV.Http.Request(session,{url=url_al})
 		m_simpleTV.Http.Close(session)
 		if rc~=200 then return end
@@ -149,6 +361,7 @@
 		answer = unescape3(answer)
 		answer = answer:gsub('\\', '')
 		answer = answer:gsub('(%[%])', '"nil"')
+		answer = answer:gsub('"Лунный свет"','«Лунный свет»')
 --		debug_in_file(answer .. '\n')
 		local tab = json.decode(answer)
 		local t,i,current_ep = {},1,1
@@ -190,10 +403,21 @@
 	local function imdbid(kpid)
 	if not kpid then return end
 	if tonumber(kpid)== 1101239 then return 'tt15307130','Реализация',2019,1 end
+	if tonumber(kpid)== 1343902 then return 'tt21827450','Полицейское братство',2022,1 end
+	if tonumber(kpid)== 891353 then return 'tt21827450','Если любишь - прости',2015,0 end
 	local tv = 0
 	local url_vn = decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvc2hvcnQ/YXBpX3Rva2VuPW9TN1d6dk5meGU0SzhPY3NQanBBSVU2WHUwMVNpMGZtJmtpbm9wb2lza19pZD0=') .. kpid
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then	return false end
+	local url = 'https://api.manhan.one/externalids?' .. 'kinopoisk_id=' .. kpid
+		local rc, answer = m_simpleTV.Http.Request(session,{url=url})
+		if rc == 200 then
+			local imdb_id = answer:match('"imdb_id":"(tt%d+)"')
+			if imdb_id then
+				m_simpleTV.Http.Close(session)
+				return imdb_id,'','',tv
+			end
+		end
 	local rc5,answer_vn = m_simpleTV.Http.Request(session,{url=url_vn})
 		if rc5~=200 then
 		if tonumber(kpid) == 231141 then return 'tt0435978','','',1 end
@@ -273,9 +497,19 @@
 	tab.tv_results[1].overview = "Опытного розыскника из Великого Новгорода с необычной фамилией Красавéц после конфликта с криминальным бизнесменом переводят на должность простого участкового в Центральный район Петербурга. Всё, что хочет теперь Красавец — это тихо и мирно дослужить до пенсии. Но каждый раз, неожиданно для себя, оказывается в эпицентре преступных событий. То он втянут в разборки между криминальным авторитетом и коллегами из УМВД, то ищет похищенного начальника главка, то ловит неуловимого киллера."
 	tab.tv_results[1].id = 120724
 	end
-	if not tab and (not tab.movie_results[1] or tab.movie_results[1]==nil) and not tab.movie_results[1].backdrop_path and not tab.movie_results[1].poster_path
-	and not (tab.tv_results[1] or tab.tv_results[1]==nil) and not tab.tv_results[1].backdrop_path and not tab.tv_results[1].poster_path
-	then return '', '', '', '', '', ''
+	if not tab or tab and (not tab.movie_results or tab.movie_results and not tab.movie_results[1]) and (not tab.tv_results or tab.tv_results and not tab.tv_results[1])
+	--or tab and tab.movie_results and not tab.movie_results[1] and not tab.movie_results[1].backdrop_path and not tab.movie_results[1].poster_path	and not (tab.tv_results[1] or tab.tv_results[1]==nil) and not tab.tv_results[1].backdrop_path and not tab.tv_results[1].poster_path
+	then 
+			if not m_simpleTV.User.TVPortal then
+				m_simpleTV.User.TVPortal = {}
+			end
+			if not m_simpleTV.User.TVPortal.get then
+				m_simpleTV.User.TVPortal.get = {}
+			end
+			if not m_simpleTV.User.TVPortal.get.TMDB then
+				m_simpleTV.User.TVPortal.get.TMDB = {}
+			end
+	return '', '', '', '', '', ''
 	else
 	if tab.movie_results[1] and imdb_id ~= 'tt0078655' and imdb_id ~= 'tt2317100' and imdb_id ~= 'tt0108778' then
 
@@ -322,6 +556,7 @@
 	m_simpleTV.User.TVPortal.get.TMDB.Id = tmdb_id
 	m_simpleTV.User.TVPortal.get.TMDB.tv = tv
 	info_fox(name_tmdb,year_tmdb,background)
+--	debug_in_file(imdb_id ..' '..background .. '\ndddddddddddddddd\n')
 	return background, name_tmdb, year_tmdb, overview_tmdb, tmdb_id, tv
 	end
 
@@ -340,6 +575,22 @@
 			end
 		end
 	 return index
+	end
+
+	local function Get_check_adr(adr)
+		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
+		if not session then	return adr end
+		local rc,answer = m_simpleTV.Http.Request(session,{url=adr})
+--		debug_in_file(answer .. '\n')
+		if rc==200 and answer:match('http.-%.m3u8') then
+			local adr_ch
+			for w in answer:gmatch('http.-%.m3u8') do
+				adr_ch = w:match('(http.-%.m3u8)')
+			end
+--		debug_in_file('-------\n' .. adr_ch .. '\n------\n')
+			return adr_ch
+		end
+		return adr
 	end
 
 	local function GetZFAdr(urls)
@@ -368,7 +619,7 @@
 			for qlty, adr in urls:gmatch('"(.-)":"(http.-%.m3u8)"') do
 			if not qlty:match('%d+') then break end
 				t[i] = {}
-				t[i].Address = adr
+				t[i].Address = Get_check_adr(adr)
 				t[i].Name = qlty
 				t[i].qlty = tonumber(qlty:match('%d+'))
 				i = i + 1
@@ -452,7 +703,7 @@
 			m_simpleTV.Control.ExecuteAction(37)
 		end
 		if ret == 1 then
-			m_simpleTV.Control.SetNewAddress(t[id].Address, m_simpleTV.Control.GetPosition())
+			m_simpleTV.Control.SetNewAddress( t[id].Address, m_simpleTV.Control.GetPosition())
 			m_simpleTV.Config.SetValue('zf_qlty', t[id].qlty)
 		end
 		if ret == 2 then
@@ -477,14 +728,15 @@
 	end
 	if id_imdb and id_imdb~= '' and bg_imdb_id(id_imdb) and bg_imdb_id(id_imdb)~= '' then
 		logo, title, year, overview, tmdbid, tv = bg_imdb_id(id_imdb)
-		if tonumber(kpid) == 77381 or tonumber(kpid) == 94103 or tonumber(kpid) == 77388 or tonumber(kpid) == 77385 or tonumber(kpid) == 77387 or tonumber(kpid) == 77386 or tonumber(kpid) == 426306 or tonumber(kpid) == 426309 or tonumber(kpid) == 420337 or tonumber(kpid) == 426310 or tonumber(kpid) == 77261 or tonumber(kpid) == 45789 or tonumber(kpid) == 77263 or tonumber(kpid) == 46068 then tv = 1 end
-
+		if tonumber(kpid) == 77381 or tonumber(kpid) == 94103 or tonumber(kpid) == 77388 or tonumber(kpid) == 77385 or tonumber(kpid) == 77387 or tonumber(kpid) == 77386 or tonumber(kpid) == 426306 or tonumber(kpid) == 426309 or tonumber(kpid) == 420337 or tonumber(kpid) == 426310 or tonumber(kpid) == 77261 or tonumber(kpid) == 45789 or tonumber(kpid) == 77263 or tonumber(kpid) == 46068 or tonumber(kpid) == 43395 or tonumber(kpid) == 89676 or tonumber(kpid) == 77283 then tv = 1 end
+--	debug_in_file(logo .. '\nccccccccccccccccc\n')
 	else
-	if tonumber(kpid) == 77381 or tonumber(kpid) == 94103 or tonumber(kpid) == 77388 or tonumber(kpid) == 77385 or tonumber(kpid) == 77387 or tonumber(kpid) == 77386 or tonumber(kpid) == 426306 or tonumber(kpid) == 426309 or tonumber(kpid) == 420337 or tonumber(kpid) == 426310 or tonumber(kpid) == 46068 then tv = 1 end
-		logo = get_logo_yandex(kpid)
+	if tonumber(kpid) == 77381 or tonumber(kpid) == 94103 or tonumber(kpid) == 77388 or tonumber(kpid) == 77385 or tonumber(kpid) == 77387 or tonumber(kpid) == 77386 or tonumber(kpid) == 426306 or tonumber(kpid) == 426309 or tonumber(kpid) == 420337 or tonumber(kpid) == 426310 or tonumber(kpid) == 77261 or tonumber(kpid) == 45789 or tonumber(kpid) == 77263 or tonumber(kpid) == 46068 or tonumber(kpid) == 43395 or tonumber(kpid) == 89676 or tonumber(kpid) == 77283 then tv = 1 end
+	
+		logo = m_simpleTV.User.EXFS.logo or get_logo_yandex(kpid)
 --		id_imdb,title_v,year_v,tv = imdbid(kpid)
-		title = title_v
-		year = year_v
+		title = m_simpleTV.User.EXFS.title or title_v
+		year = m_simpleTV.User.EXFS.year or year_v
 	end
 	if tonumber(tv) == 1 then
 		if not season or not episode then
@@ -560,10 +812,11 @@
 
 	if m_simpleTV.Control.MainMode == 0 then
 		m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = logo, TypeBackColor = 0, UseLogo = 3, Once = 1})
+		m_simpleTV.Control.ChangeChannelName(m_simpleTV.Control.CurrentTitle_UTF8, m_simpleTV.Control.ChannelID, false)
 	end
 	local db_b, mega, vf_b
 	if kpid then
-		vf_b = Get_VF(kpid) 
+		vf_b = Get_VF(kpid)
 --		db_b = Get_DB(kpid)
 		if season and vf_b then vf_b = vf_b .. '&s=' .. season end
 		if episode and vf_b then vf_b = vf_b .. '&e=' .. episode end
@@ -619,6 +872,7 @@
 				t2[j].Address = file
 				t2[j].Name = name:match('%d+')
 				if t2[j].Name == episode then retAdr1 = t2[j].Address end
+--				debug_in_file(t2[j].Name .. ' ' .. t2[j].Address .. '\n','c://1/ans_ZF3.txt')
 				j=j+1
 			end
 		else
@@ -669,7 +923,8 @@
 	if tonumber(tv) == 1	then
 --		debug_in_file(kpid .. ' ' .. season .. '/' .. episode .. '\n','c://1/ans_ZF2.txt')
 		t,current_ep = get_serial(kpid,season,episode)
-		if #t==0 then
+		if not t or #t==0 then
+			t={}
 			for i = 1,#t2 do
 				t[i] = {}
 				t[i].Id = i
@@ -680,7 +935,7 @@
 			end
 		end
 		m_simpleTV.User.ZF.titleTab = t
-
+		get_thumb(season, episode)
 		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_ZF()'}
 		if getConfigVal('perevod/zf') ~= '' and m_simpleTV.User.ZF.TabPerevod and #m_simpleTV.User.ZF.TabPerevod > 1 then
 			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_ZF()'}
@@ -697,6 +952,7 @@
 		t[1] = {}
 		t[1].Id = 1
 		t[1].Name = title:gsub(' %- $','')
+		get_thumb()
 		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_ZF()'}
 		if getConfigVal('perevod/zf') ~= '' and m_simpleTV.User.ZF.TabPerevod and #m_simpleTV.User.ZF.TabPerevod > 1 then
 			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_ZF()'}
@@ -705,5 +961,13 @@
 	end
 
 	m_simpleTV.Http.Close(session)
+	--[[
+	local tcd = {}
+	tcd.chapters = {}
+	tcd.chapters[1] = {}
+	tcd.chapters[1].name='ZF'
+	tcd.chapters[1].seekpoint=1	
+	m_simpleTV.Control.SetChaptersDesc(tcd)
+	--]]
 	m_simpleTV.Control.CurrentAddress = retAdr
 --  debug_in_file(retAdr .. '\n')

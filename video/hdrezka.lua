@@ -363,7 +363,7 @@
 			local handlerInfo = {}
 			handlerInfo.luaFunction = 'PositionThumbs_Rezka'
 			handlerInfo.regexString = 'rezka\.ag|kinopub\.me|rezka\.fi|hdrezka|rezkery\.com|rezka\-ua\.in|rezka\-ua\.org'
-			handlerInfo.sizeFactor = 0.15
+			handlerInfo.sizeFactor = 0.12
 			handlerInfo.backColor = ARGB(127, 30, 33, 61)
 			handlerInfo.textColor = ARGB(255, 255, 215, 0)
 			handlerInfo.glowParams = 'glow="7" samples="5" extent="4" color="0xB0000000"'

@@ -1,4 +1,4 @@
--- видеоскрипт для сайта https://www.imdb.com/ (19/04/25) - автор west_side
+-- видеоскрипт для сайта https://www.imdb.com/ (27/06/25) - автор west_side
 -- открывает подобные ссылки:
 -- https://www.imdb.com/title/tt5491994
 -- title=Форсаж
@@ -97,6 +97,15 @@
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36')
 		if not session then return false end
 		m_simpleTV.Http.SetTimeout(session, 8000)
+		local url = 'https://api.manhan.one/externalids?' .. 'imdb_id=' .. imdbid
+		local rc, answer = m_simpleTV.Http.Request(session,{url=url})
+		m_simpleTV.Http.Close(session)
+		if rc == 200 then
+			local kp_id = answer:match('"kinopoisk_id":"(%d+)"')
+			if kp_id then
+				return kp_id
+			end
+		end	
 		local url = decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvc2hvcnQ/YXBpX3Rva2VuPXROamtaZ2M5N2JtaTlqNUl5NnFaeXNtcDlSZG12SG1oJmltZGJfaWQ9') .. imdbid
 		local rc, answer = m_simpleTV.Http.Request(session,{url=url})
 		m_simpleTV.Http.Close(session)
@@ -109,6 +118,27 @@
 		end
 		return false
 	end
+
+local function check_stream(url, session)
+	local rc,answer = m_simpleTV.Http.Request(session,{url = url, method = 'post', 
+	headers = 'Referer: ' .. url})
+--	debug_in_file(url .. '\n' .. answer .. '\n','c://1/VXtest.txt')
+	if rc~=200 or not answer then return false end
+	local retAdr = answer:match('new Playerjs%((.-)%);')
+--	debug_in_file(retAdr .. '\n','c://1/VXtest.txt')
+	if not retAdr then return false end
+	retAdr = retAdr:gsub('&#179;','³'):gsub('^.-%,file:',''):gsub('%,poster.-$',''):gsub('%}$','')
+	local tr, file, url1
+	for w in retAdr:gmatch('%{.-%}') do
+		tr,file = w:match('"title":"(.-)"%,"file":"(.-)"')
+		if not tr or not file then break end
+		url1 = file:match('(http.-%.mp4/)')
+		rc, answer = m_simpleTV.Http.Request(session,{url=url1, method='HEAD'})
+--		debug_in_file(url .. '\n' .. answer .. '\n','c://1/VXtest.txt')
+		if rc == 200 then return true end
+	end
+	return false
+end
 
 	local function Get_Vibix(id)
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36')
@@ -128,10 +158,12 @@
 		if url_out then
 		local embed = '/embed/'	
 		if unescape1(answer):match('"type":"serial"') then embed = '/embed-serials/' end	
-		url_out = 'https://videoframe1.com' .. embed .. url_out 
-		rc,answer = m_simpleTV.Http.Request(session,{url = url_out})
-		answer = answer:match('new Playerjs%((.-)%);')
---		debug_in_file(answer .. '\n','c://1/VX1.txt')
+		url_out = 'https://672723821.videoframe2.com' .. embed .. url_out 
+		local check_stream_VF
+		if embed == '/embed/' then
+			check_stream_VF = check_stream(url_out, session)
+			if not check_stream_VF or check_stream_VF~=true then return false end
+		end
 		m_simpleTV.Http.Close(session)
 		return url_out .. '&id=' .. id
 		end

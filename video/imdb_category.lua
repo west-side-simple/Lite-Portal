@@ -18,6 +18,7 @@
 	and not inAdr:match('https?://www%.imdb%.com/find/')
 	and not inAdr:match('https?://www%.imdb%.com/event/')
 	and not inAdr:match('https?://www%.imdb%.com/search/')
+	and not inAdr:match('https?://www%.imdb%.com/list/')
 	and not inAdr:match('^*')
 	then return end
 	m_simpleTV.Control.ChangeAdress = 'Yes'
@@ -46,7 +47,7 @@
 	answer = unescape3(answer)
 			if not answer then return end
 			answer = answer:gsub('\\', '\\\\'):gsub('\\"', '\\\\"'):gsub('\\/', '/'):gsub('(%[%])', '"nil"')
---			debug_in_file(answer .. '\n','c://1/imdb_int.txt')
+			debug_in_file(answer .. '\n','c://1/imdb_int.txt')
 			m_simpleTV.Control.SetTitle(name_ch)
 			if m_simpleTV.Control.MainMode == 0 then
 				m_simpleTV.Control.ChangeChannelName(name_ch, m_simpleTV.Control.ChannelID, false)

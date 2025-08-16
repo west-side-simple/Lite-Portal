@@ -1,4 +1,4 @@
--- видеоскрипт для балансера FilmixLite (03.04.25)
+-- видеоскрипт для балансера FilmixLite (19.07.25)
 -- author west_side
 	if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 	if m_simpleTV.Control.CurrentAddress:match('^tmdb_id=')
@@ -113,6 +113,15 @@
 	local url_vn = decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvc2hvcnQ/YXBpX3Rva2VuPW9TN1d6dk5meGU0SzhPY3NQanBBSVU2WHUwMVNpMGZtJmtpbm9wb2lza19pZD0=') .. kpid
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then	return false end
+	local url = 'https://api.manhan.one/externalids?' .. 'kinopoisk_id=' .. kpid
+		local rc, answer = m_simpleTV.Http.Request(session,{url=url})
+		if rc == 200 then
+			local imdb_id = answer:match('"imdb_id":"(tt%d+)"')
+			if imdb_id then
+				m_simpleTV.Http.Close(session)
+				return imdb_id,'','',tv
+			end
+		end
 	local rc5,answer_vn = m_simpleTV.Http.Request(session,{url=url_vn})
 		if rc5~=200 then
 		if tonumber(kpid) == 231141 then return 'tt0435978','','',1 end
@@ -376,6 +385,7 @@
 		id_imdb,title_v,year_v,tv = imdbid(kpid)
 --		debug_in_file(tv .. ' / ' .. id_imdb .. '\n',m_simpleTV.MainScriptDir .. 'user/westSide/answer_al.txt')
 	end
+	id_imdb = id_imdb or inAdr:match('imdb_id=(tt%d+)')
 	if id_imdb and id_imdb~= '' and bg_imdb_id(id_imdb) and bg_imdb_id(id_imdb)~= '' then
 		logo, title, year, overview, tmdbid, tv = bg_imdb_id(id_imdb)
 		if tonumber(kpid) == 77381 or tonumber(kpid) == 94103 or tonumber(kpid) == 77388 or tonumber(kpid) == 77385 or tonumber(kpid) == 77387 or tonumber(kpid) == 77386 or tonumber(kpid) == 426306 or tonumber(kpid) == 426309 or tonumber(kpid) == 420337 or tonumber(kpid) == 426310 or tonumber(kpid) == 77261 or tonumber(kpid) == 45789 or tonumber(kpid) == 77263 then tv = 1 end
@@ -446,7 +456,7 @@
 	if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 10000)
 	local rc,answer = m_simpleTV.Http.Request(session,{url = inAdr})
-	
+
 -------------------------
 
 	m_simpleTV.User.FX.titleTab = nil
@@ -481,15 +491,15 @@
 			rc,retAdr = m_simpleTV.Http.Request(session,{url = newAdr})
 --			debug_in_file(inAdr .. '\n' .. tv .. '\n' .. retAdr .. '\n','c://1/FXX.txt')
 		end
-		
+
 		if not retAdr:match('"method":"play"') and retAdr:match('"method":"link"') then
 			local newAdr = retAdr:match('"url":"(.-)"')
 			if season and not newAdr:match('&s=%d+') then newAdr = newAdr .. '&s=' .. season end
 			rc,retAdr = m_simpleTV.Http.Request(session,{url = newAdr})
 		end
-		
+
 --		retAdr = unescape3(retAdr)
-		
+
 --		debug_in_file(inAdr .. '\n' .. tv .. '\n' .. retAdr .. '\n','c://1/FXXX.txt')
 		if unescape3(retAdr):match('серия') then
 		tv = 1
@@ -505,7 +515,7 @@
 			for w in retAdr:gmatch('"method":"link".-</div>') do
 --				debug_in_file(w .. '\n','c://1/ans_FX1.txt')
 				file, name = w:match('"url":"(.-)".->(.-)</div>')
-				if not name or not file then break end				
+				if not name or not file then break end
 				t1[i]={}
 				t1[i].Id = i
 				t1[i].Address = file
@@ -522,10 +532,10 @@
 			get_tr = retAdr:match('<div class="videos__button selector active".->(.-)</div>')
 --			debug_in_file(retAdr .. '\n' .. get_tr .. '\n','c://1/ans_FX4.txt')
 			if get_tr:gsub('%-','') ~= getConfigVal('perevod/fx'):gsub('%-','') and is_perevod then
-				local adrt = t1[tonumber(current_p)].Address:gsub('&kinopoisk_id=%d+','') .. '&kinopoisk_id=' .. kpid .. '&e=' .. (episode or 1)				
+				local adrt = t1[tonumber(current_p)].Address:gsub('&kinopoisk_id=%d+','') .. '&kinopoisk_id=' .. (kpid or 0) .. '&e=' .. (episode or 1)
 				local rct,retAdrt = m_simpleTV.Http.Request(session,{url = adrt})
 --				debug_in_file(get_tr:gsub('%-','') .. ' -- ' .. getConfigVal('perevod/fx'):gsub('%-','') .. '\n' .. inAdr.. '\n' .. (t1[tonumber(current_p)].Address:gsub('&kinopoisk_id=%d+','') .. '&kinopoisk_id=' .. kpid .. '&e=' .. (episode or 1)) .. '\n' .. retAdrt .. '\n','c://1/ans_FXt.txt')
-				return m_simpleTV.Control.SetNewAddressT({address=t1[tonumber(current_p)].Address:gsub('&kinopoisk_id=%d+','') .. '&kinopoisk_id=' .. kpid .. '&e=' .. (episode or 1), position = m_simpleTV.Control.GetPosition()})
+				return m_simpleTV.Control.SetNewAddressT({address=t1[tonumber(current_p)].Address:gsub('&kinopoisk_id=%d+','') .. '&kinopoisk_id=' .. (kpid or 0) .. '&e=' .. (episode or 1), position = m_simpleTV.Control.GetPosition()})
 			end
 			for w in retAdr:gmatch('"method":"play".-</div>') do
 --				debug_in_file(w .. '\n','c://1/ans_FX2.txt')
@@ -536,7 +546,7 @@
 				t2[j].Id = j
 				t2[j].Address = file
 				t2[j].Name = unescape3(name):match('%d+')
-				if tonumber(t2[j].Name) == tonumber(episode) then retAdr1 = t2[j].Address:gsub('&kinopoisk_id=%d+','') .. '&kinopoisk_id=' .. kpid end
+				if tonumber(t2[j].Name) == tonumber(episode) then retAdr1 = t2[j].Address:gsub('&kinopoisk_id=%d+','') .. '&kinopoisk_id=' .. (kpid or 0) end
 				j=j+1
 			end
 		else
@@ -544,7 +554,7 @@
 --				debug_in_file(w .. '\n','c://1/ans_fx1.txt')
 				file, name = w:match('"quality":(.-%}).-"translate":"(.-)"')
 				if not name or not file then break end
---				debug_in_file(name .. '\n' .. file .. '\n','c://1/ans_fx1.txt')				
+--				debug_in_file(name .. '\n' .. file .. '\n','c://1/ans_fx1.txt')
 				t1[i]={}
 				t1[i].Id = i
 				t1[i].Address = file
@@ -562,13 +572,13 @@
 		else
 	--		local _, id = m_simpleTV.OSD.ShowSelect_UTF8('Выберите озвучку - ' .. (title or ''), 0, t1, 5000, 1)
 	--		id = id or 1
-			retAdr = t1[1].Address:gsub('&kinopoisk_id=%d+','') .. '&kinopoisk_id=' .. kpid
+			retAdr = t1[1].Address:gsub('&kinopoisk_id=%d+','') .. '&kinopoisk_id=' .. (kpid or 0)
 			current_p = 1
 			setConfigVal('perevod/fx', t1[1].Name)
 			title = (title or '') .. ' - ' .. t1[1].Name
 		end
 	elseif i == 2 then
-		retAdr = t1[1].Address:gsub('&kinopoisk_id=%d+','') .. '&kinopoisk_id=' .. kpid
+		retAdr = t1[1].Address:gsub('&kinopoisk_id=%d+','') .. '&kinopoisk_id=' .. (kpid or 0)
 		current_p = 1
 		setConfigVal('perevod/fx', t1[1].Name)
 		title = (title or '') .. ' - ' .. t1[1].Name
@@ -589,7 +599,8 @@
 
 		t,current_ep = get_serial(kpid,season,episode)
 --		debug_in_file(kpid .. ' ' .. season .. '/' .. episode .. ' - ' .. #t .. '/' .. current_ep .. '\n' .. retAdr1 .. '\n','c://1/ans_FX4.txt')
-		if #t and #t==0 then
+		if not t or t and not #t or t and #t and #t==0 then
+			t = {}
 			for i = 1,#t2 do
 				t[i] = {}
 				t[i].Id = i

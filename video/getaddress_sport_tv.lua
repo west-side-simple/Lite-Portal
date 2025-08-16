@@ -127,6 +127,7 @@
 			local year, month, day = os.date("%Y"), os.date("%m"), os.date("%d")
 			local arr = {year = year, month = month, day = day, hour = cor, min = m, sec = 0}
 			local flag = os.time() - os.time(arr)
+--			debug_in_file(flag .. '\n')
 			local flagg
 			if tonumber(flag) < 0 then flagg = '🔴 ' end
 			if tonumber(flag) >= 0 then flagg = '🟢 ' end

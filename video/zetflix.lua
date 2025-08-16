@@ -1,8 +1,11 @@
--- видеоскрипт для балансера ZF (29.02.24)
+-- видеоскрипт для балансера ZF (03.08.25)
 -- author west_side
+-- ссылки 'https://zet-flix.online/iplayer/videodb.php?kp=300'
+--        'https://zet-flix.online/iplayer/videodb.php?kp=3574'
 	if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 	if not m_simpleTV.Control.CurrentAddress:match('^https?://hdi%.zetflix%.online') and
-	not m_simpleTV.Control.CurrentAddress:match('^https?://.-%.zeflix%.online')
+	not m_simpleTV.Control.CurrentAddress:match('^https?://.-%.zeflix%.online') and
+	not m_simpleTV.Control.CurrentAddress:match('^https?://zet%-flix%.online')
 	then return end
 	local inAdr = m_simpleTV.Control.CurrentAddress
 	m_simpleTV.Control.ChangeAddress = 'Yes'
@@ -53,6 +56,15 @@
 	local url_vn = decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvc2hvcnQ/YXBpX3Rva2VuPW9TN1d6dk5meGU0SzhPY3NQanBBSVU2WHUwMVNpMGZtJmtpbm9wb2lza19pZD0=') .. kpid
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then	return false end
+	local url = 'https://api.manhan.one/externalids?' .. 'kinopoisk_id=' .. kpid
+		local rc, answer = m_simpleTV.Http.Request(session,{url=url})
+		if rc == 200 then
+			local imdb_id = answer:match('"imdb_id":"(tt%d+)"')
+			if imdb_id then
+				m_simpleTV.Http.Close(session)
+				return imdb_id,'','',tv
+			end
+		end
 	local rc5,answer_vn = m_simpleTV.Http.Request(session,{url=url_vn})
 		if rc5~=200 then
 		return '','','',0
@@ -297,18 +309,25 @@ local function update_phpsesid()
 	return false
 end
 
+local function get_cookies_zetflix(session,inAdr)
+local rc,answer = m_simpleTV.Http.Request(session,{url = 'https://zet-flix.online/iplayer/player.php?id=JTJGaXBsYXllciUyRnZpZGVvZGIucGhwJTNGa3AlM0Q1MjY3NDMyJTI2cG9zdGVyJTNEaHR0cHMlM0ElMkYlMkZ6ZXQtZmxpeC5vbmxpbmUlMkZ1cGxvYWRzJTJGcG9zdHMlMkYyMDI1LTA1JTJGMTc0ODMwOTU5N18ydWsuanBn&poster=aHR0cHM6Ly96ZXQtZmxpeC5vbmxpbmUvdXBsb2Fkcy9wb3N0cy8yMDI1LTA1LzE3NDgzMDk1OTdfMnVrLmpwZw==', method = 'get', headers = 'User-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36\nReferer: ' .. 'https://www.google.com/'})
+--'https://4aug.zet-flix.online/serials/simpsony/'	
+	debug_in_file(rc .. '\n' .. answer .. '\n')
+end
+
 -------------------------
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36')
 	if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 10000)
-	
-	local rc,answer = m_simpleTV.Http.Request(session,{url = inAdr, method = 'get', headers = 'User-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36\nReferer: ' .. 'https://go.zeflix.online/iplayer/player.php\nCookie: ' .. m_simpleTV.User.ZF.cookies})
+
+	get_cookies_zetflix(session,inAdr)
+	local rc,answer = m_simpleTV.Http.Request(session,{url = inAdr, method = 'get', headers = 'User-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36\nReferer: ' .. 'https://www.google.com/\nCookie: ' .. m_simpleTV.User.ZF.cookies})
 	if rc ~= 200 then return end
 	if rc==200 and answer:match('^<script>') then
 		if update_phpsesid() then
 			rc,answer = m_simpleTV.Http.Request(session,{url = inAdr, method = 'get', headers = 'User-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36\nReferer: ' .. 'https://go.zeflix.online/iplayer/player.php\nCookie: ' .. m_simpleTV.User.ZF.cookies})
 		else return
-			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'ZF: Скопируйте актуальные cookie с сайта \nhttps://go.zeflix.online/', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
+			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="1.0" src="http://m24.do.am/images/logoport.png"', text = 'ZF: Скопируйте актуальные cookie с сайта \nhttps://go.zetflix.online/', color = ARGB(255, 255, 255, 255), showTime = 1000 * 10})
 		end
 	end
 -------------------------

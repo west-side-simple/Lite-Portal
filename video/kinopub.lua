@@ -1,4 +1,4 @@
--- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (02/10/24) - автор west_side
+-- видеоскрипт для воспроизведения медиа с сайта https://kino.pub (16/08/25) - автор west_side
 -- необходим действующий аккаунт на сайте https://kino.pub
 -- работает в связке со скриптом Lite_qt_kinopub.lua - автор west_side
 -- дополнительная информация обеспечивается скриптом info_fox.lua - автор west_side
@@ -22,7 +22,8 @@
 		m_simpleTV.User.TVPortal = {}
 	end	
 	m_simpleTV.User.kinopub.address = inAdr
-	m_simpleTV.User.kinopub.tr = inAdr:match('%&tr=(%d+)$') or 1
+	m_simpleTV.User.kinopub.tr = inAdr:match('%&tr=(%d+)$')
+	m_simpleTV.User.kinopub.audio_name = nil
 	m_simpleTV.User.TVPortal.balanser = 'Kinopub'
 	inAdr = inAdr:gsub('%&tr=%d+$','')
 -- '' - нет
@@ -149,10 +150,10 @@ local t0={}
 			end
 		end
 end
-	local rc, answer = m_simpleTV.Http.Request(session, {url = inAdr, headers = 'Cookie: ' .. cookies})
+	local rc, answer = m_simpleTV.Http.Request(session, {url = inAdr, headers = 'Cookie: ' .. cookies .. '\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:141.0) Gecko/20100101 Firefox/141.0\nAlt-Used: kino.pub'})
 --	m_simpleTV.Http.Close(session)
 		if rc ~= 200 then return end
-	debug_in_file(answer .. '\n','c://1/testpub.txt')
+--	debug_in_file(answer .. '\n','c://1/testpub.txt')
 	answer = answer:gsub(' \n', ' '):gsub('\n', ' ')
 	answer = answer:gsub('<!%-%-.-%-%->', ''):gsub('/%*.-%*/', '')
 	if inAdr:match('/tv/view/') then
@@ -396,31 +397,28 @@ else
 
 	local function GetAdr(url)
 		local transl = m_simpleTV.User.kinopub.tr
+		if transl then
 		transl = tonumber(transl)
+		end
 --		local domen = url:match('^(http.-)/hls4/')
 		local rc, answer = m_simpleTV.Http.Request(session, {url = url})
 		if rc ~= 200 then return false end
-
+--		debug_in_file(answer .. '\n','c://1/testpub.txt')
 		local t = {}
 			for w, adr in answer:gmatch('EXT%-X%-STREAM%-INF(.-)\n(.-)\n') do
 				local qlty_name, audio_name = w:match('RESOLUTION=(.-)%,.-AUDIO="(.-)"')
-				if adr and qlty_name and audio_name then
+				if adr and qlty_name and audio_name then				
 					t[#t + 1] = {}
 --					t[#t].Address = domen .. adr
 					t[#t].Address = adr
 					t[#t].Name = qlty_name:gsub('x',' X ')
 					t[#t].audio = audio_name
-					t[#t].qlty = qlty_name:match('%d+')
-
+					t[#t].qlty = qlty_name:match('%d+')					
 				end
 			end
+--			if not transl then transl = 1 end
 			if #t == 0 then return false end
-		for i = 1, #t do
-				t[i].Id = i
-				t[i].Address = t[i].Address:gsub('%.m3u8', '-a' .. transl ..'.m3u8')
---				debug_in_file(t[i].Address .. '\n','c://1/testpub5.txt')
-			end
-		m_simpleTV.User.kinopub.Tab = t
+
 		local index = StreamIndex(t)
 		local res = t[index].audio
 		local t1 = {}
@@ -437,16 +435,43 @@ else
 				t1[i].Id = i
 				t1[i].Name = t1[i].Name
 				t1[i].Address = t1[i].Address
-				if tonumber(transl) == tonumber(t1[i].Address) then
+--				debug_in_file((transl or 'NOT')..'|'..m_simpleTV.Common.UTF8ToMultiByte(t1[i].Name,'Windows-1251')..'\n')
+				if transl and tonumber(transl) == tonumber(t1[i].Address) then
 				m_simpleTV.User.kinopub.audio_name = t1[i].Name
 				end
+				if m_simpleTV.Common.UTF8ToMultiByte(t1[i].Name,'Windows-1251'):match('AC3') and not transl then 
+				transl = tonumber(t1[i].Address) 
+				m_simpleTV.User.kinopub.audio_name = t1[i].Name
+				m_simpleTV.User.kinopub.tr = transl
+				end
+				
 				i = i + 1
 			end
 			if #t1 == 0 then
 			t1 = nil
 			end
+		m_simpleTV.User.kinopub.audio_name = m_simpleTV.User.kinopub.audio_name or t1[1].Name
+		m_simpleTV.User.kinopub.tr = m_simpleTV.User.kinopub.tr or 1
 		m_simpleTV.User.kinopub.audio_ind = t1
+		
+			for i = 1, #t do
+				t[i].Id = i
+				t[i].Address = t[i].Address:gsub('%.m3u8', '-a' .. (transl or 1) ..'.m3u8')
+--				debug_in_file(t[i].Address .. '\n','c://1/testpub5.txt')
+			end
+		m_simpleTV.User.kinopub.Tab = t
 
+--[[
+-- subtitles - not release		
+			local s = {}
+			for w in answer:gmatch('TYPE=SUBTITLES.-URI=".-"') do
+				if w:match('RUS') then
+				s[#s + 1] = w:match('URI="(.-)"')
+				end
+			end
+			local domen = t[index].Address:match('^(http.-)/hls')
+			local subt = '$OPT:sub-track=0$OPT:input-slave=' .. domen .. table.concat(s, '#')
+--]]		
 	 return t[index].Address
 	end
 
@@ -535,7 +560,7 @@ else
 		local t = m_simpleTV.User.kinopub.audio_ind
 			if not t or #t == 0 then return end
 		m_simpleTV.Control.ExecuteAction(37)
-		local index = m_simpleTV.User.kinopub.tr
+		local index = m_simpleTV.User.kinopub.tr or 1
 		t.ExtButton0 = {ButtonEnable = true, ButtonName = '💾', ButtonScript = 'SavePlaylist()'}
 		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' ⚙ Качество', ButtonScript = 'Qlty_Kinopub()'}
 
@@ -709,7 +734,7 @@ else
 		if not adr then break end
 		t[i] = {}
 		t[i].Id = i
-		t[i].Address = 'https://kino.pub' .. adr .. '&tr=' .. m_simpleTV.User.kinopub.tr
+		t[i].Address = 'https://kino.pub' .. adr .. '&tr=' .. (m_simpleTV.User.kinopub.tr or 1)
 		if m_simpleTV.User.kinopub.address == t[i].Address then e = i end
 		t[i].Name = name2 .. name1:gsub('&#039;',"´"):gsub('&amp;',"&")
 		t[i].InfoPanelTitle = desc_text

@@ -1,5 +1,5 @@
--- видеоскрипт для видеобалансера "kodik" http://kodik.cc (16/4/23)
--- Copyright © 2017-2023 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
+-- видеоскрипт для видеобалансера "kodik" http://kodik.cc (23/4/25) --fixWS 230725
+-- Copyright © 2017-2025 Nexterr | https://github.com/Nexterr-origin/simpleTV-Scripts
 -- ## открывает подобные ссылки ##
 -- https://hdrise.com/video/31756/445f20d7950d3df08f7574311e82521e/720p
 -- http://kodik.info/video/27565/0f93e7a7ce4c247c3b66b47b1b8910b2/720p
@@ -14,11 +14,12 @@
 		end
 	local inAdr = m_simpleTV.Control.CurrentAddress
 	m_simpleTV.OSD.ShowMessageT({text = '', showTime = 1000, id = 'channelName'})
---[[	if inAdr:match('^$kodiks') or not inAdr:match('&kinopoisk') then
+	if inAdr:match('^$kodiks') or not inAdr:match('&kinopoisk') then
 		if m_simpleTV.Control.MainMode == 0 then
 			m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = '', TypeBackColor = 0, UseLogo = 0, Once = 1})
 		end
-	end--]]
+	end
+	htmlEntities = require 'htmlEntities'
 	local psevdotv
 	if inAdr:match('PARAMS=psevdotv') then
 		psevdotv = true
@@ -26,7 +27,7 @@
 	inAdr = inAdr:gsub('/$', '')
 	m_simpleTV.Control.ChangeAddress = 'Yes'
 	m_simpleTV.Control.CurrentAddress = 'error'
-	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; rv:102.0) Gecko/20100101 Firefox/102.0')
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:124.0) Gecko/20100101 Firefox/124.0')
 		if not session then return end
 	m_simpleTV.Http.SetTimeout(session, 8000)
 	if not m_simpleTV.User then
@@ -40,7 +41,7 @@
 	end
 	m_simpleTV.User.TVPortal.balanser = 'Kodik'
 	local title
-	local refer = 'https://the-cinema.online/'
+	local refer = 'https://hdkinoteatr.com/'
 	if m_simpleTV.User.kodik.Tabletitle and not psevdotv then
 		local index = m_simpleTV.Control.GetMultiAddressIndex()
 		if index then
@@ -93,21 +94,39 @@
 		end
 	 return index
 	end
+	-- local function decode_kodik(data)
+		-- local t = {}
+			-- for i = 1, #data do
+				-- local s = data:sub(i, i)
+				-- s = string.byte(s)
+				-- if s >= 65 and s <= 77 then
+					-- s = s + 13
+				-- elseif s >= 78 and s <= 90 then
+					-- s = s - 13
+				-- elseif s >= 97 and s <= 109 then
+					-- s = s + 13
+				-- elseif s >= 110 and s <= 122 then
+					-- s = s - 13
+				-- end
+				-- t[i] = string.char(s)
+			-- end
+		-- data = table.concat(t)
+		-- data = decode64(data)
+	 -- return data
+	-- end
 	local function decode_kodik(data)
+		local a = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+		local b = 'STUVWXYZABCDEFGHIJKLMNOPQRstuvwxyzabcdefghijklmnopqr0123456789'
 		local t = {}
 			for i = 1, #data do
 				local s = data:sub(i, i)
-				s = string.byte(s)
-				if s >= 65 and s <= 77 then
-					s = s + 13
-				elseif s >= 78 and s <= 90 then
-					s = s - 13
-				elseif s >= 97 and s <= 109 then
-					s = s + 13
-				elseif s >= 110 and s <= 122 then
-					s = s - 13
-				end
-				t[i] = string.char(s)
+					for j = 1, #a do
+						local a = a:sub(j, j)
+						if s == a then
+							local b = b:sub(j, j)
+							t[i] = b
+						end
+					end
 			end
 		data = table.concat(t)
 		data = decode64(data)
@@ -126,10 +145,12 @@
 		local typ = answer:match('videoInfo%.type = \'(.-)\'')
 		local hash = answer:match('hash = \'(.-)\'')
 		local id = answer:match('id = \'(.-)\'')
+		local ref_sign = answer:match('ref_sign = "([^"]+)')
 			if not domain
 				or not d_sign
 				or not pd
 				or not pd_sign
+				or not ref_sign
 				or not ref
 				or not typ
 				or not hash
@@ -155,7 +176,8 @@
 				.. '&pd=' .. pd
 				.. '&pd_sign=' .. pd_sign
 				.. '&ref=' .. m_simpleTV.Common.toPercentEncoding(ref)
-				.. '&bad_user=false'
+				.. '&ref_sign=' .. ref_sign
+				.. '&bad_user=false&cdn_is_working=true'
 				.. '&type=' .. typ
 				.. '&hash=' .. hash
 				.. '&id=' .. id
@@ -173,33 +195,40 @@
 					t[#t].qlty = tonumber(qlty)
 					t[#t].Name = qlty .. 'p'
 					t[#t].Address = adr:gsub('^//', 'https://')
+--					debug_in_file(t[#t].Address..'\n')
 				end
 			end
 			if #t == 0 then return end
+
+--		debug_in_file(t[#t].Address..'\n')
+--		if #t > 2 then
+			if not t[#t].Address:match('/720%.mp4') and not t[#t].Address:match('/1080%.mp4') then
+				local adr = t[#t].Address:gsub('/%d+%.mp4', '/720.mp4')
+--				debug_in_file(adr..'\n')
+				local rc, answer = m_simpleTV.Http.Request(session, {url = adr, method = 'GET'})
+--				debug_in_file(rc..'\n')
+				if rc == 200 and answer and not answer:match('Not Found') then
+					t[#t + 1] = {qlty = 720, Name = '720p', Address = adr}
+				end
+			end
+			if not t[#t].Address:match('/1080%.mp4') then
+				local adr = t[#t].Address:gsub('/%d+%.mp4', '/1080.mp4')
+--				debug_in_file(adr..'\n')
+				local rc, answer = m_simpleTV.Http.Request(session, {url = adr, method = 'GET'})
+--				debug_in_file(rc..'\n')
+				if rc == 200 and answer and not answer:match('Not Found') then
+					t[#t + 1] = {qlty = 1080, Name = '1080p', Address = adr}
+				end
+			end
+--		end
 		local hash, t1 = {}, {}
 			for i = 1, #t do
-				if not hash[t[i].Address] then
+				if not hash[t[i].Address:gsub('^.-//.-/','')] then
 					t1[#t1 + 1] = t[i]
-					hash[t[i].Address] = true
+					hash[t[i].Address:gsub('^.-//.-/','')] = true
 				end
 			end
 		table.sort(t1, function(a, b) return a.qlty < b.qlty end)
-		if #t1 > 2 then
-			if not t1[#t1].Address:match('/720%.mp4') then
-				local adr = t1[#t1].Address:gsub('/%d+%.mp4', '/720.mp4')
-				local rc, answer = m_simpleTV.Http.Request(session, {url = adr, method = 'HEAD'})
-				if rc == 200 then
-					t1[#t1 + 1] = {qlty = 720, Name = '720p', Address = adr}
-				end
-			end
-			if t1[#t1].Address:match('/720%.mp4') then
-				local adr = t1[#t1].Address:gsub('/720%.mp4', '/1080.mp4')
-				local rc, answer = m_simpleTV.Http.Request(session, {url = adr, method = 'HEAD'})
-				if rc == 200 then
-					t1[#t1 + 1] = {qlty = 1080, Name = '1080p', Address = adr}
-				end
-			end
-		end
 		for i = 1, #t1 do
 			t1[i].Id = i
 		end
@@ -226,7 +255,7 @@
 			header = m_simpleTV.Common.UTF8ToMultiByte(header)
 			header = header:gsub('%c', ''):gsub('[\\/"%*:<>%|%?]+', ' '):gsub('%s+', ' '):gsub('^%s*', ''):gsub('%s*$', '')
 			local fileEnd = ' (Kodik ' .. os.date('%d.%m.%y') ..').m3u'
-			local folder = m_simpleTV.Common.GetMainPath(1) .. m_simpleTV.Common.UTF8ToMultiByte('сохраненые плейлисты/')
+			local folder = m_simpleTV.Common.GetMainPath(1) .. m_simpleTV.Common.UTF8ToMultiByte('сохраненные плейлисты/')
 			lfs.mkdir(folder)
 			local folderAk = folder .. 'Kodik/'
 			lfs.mkdir(folderAk)
@@ -292,6 +321,7 @@
 	local url = inAdr:gsub('&kinopoisk.+', '')
 	local rc, answer = m_simpleTV.Http.Request(session, {url = url, headers = 'Referer: ' .. refer})
 		if rc ~= 200 then return end
+	answer = htmlEntities.decode(answer)
 	local season_title = ''
 	local seson = ''
 	m_simpleTV.User.kodik.Tabletitle = nil
@@ -331,6 +361,7 @@
 				m_simpleTV.OSD.ShowMessageT({text = 'kodik ошибка[2]-' .. rc, color = 0xff99ff99, showTime = 1000 * 5, id = 'channelName'})
 			 return
 			end
+		answer = htmlEntities.decode(answer)
 	end
 	local seasons = answer:match('<div class="serial%-panel".-</div>')
 	if seasons then
@@ -389,6 +420,7 @@
 		m_simpleTV.User.kodik.title = title
 		title = title .. ' - ' .. m_simpleTV.User.kodik.Tabletitle[1].Name
 	else
+
 		inAdr = answer:match('<iframe src="(.-)"') or answer:match('iframe.src = "(.-)"')
 			if not inAdr then
 				m_simpleTV.Http.Close(session)

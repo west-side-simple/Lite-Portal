@@ -1,4 +1,4 @@
--- видеоскрипт воспроизведения контента по tmdb_id,tv (09/04/25)
+-- видеоскрипт воспроизведения контента по tmdb_id,tv (01/07/25)
 -- author west_side
 
 	if m_simpleTV.Control.ChangeAdress ~= 'No' then return end
@@ -66,9 +66,9 @@ local function get_thumb()
 			local handlerInfo = {}
 			handlerInfo.luaFunction = 'PositionThumbs_TMDB'
 			handlerInfo.regexString = ''
-			handlerInfo.sizeFactor = 0.15
+			handlerInfo.sizeFactor = 0.12
 			handlerInfo.backColor = ARGB(255, 0, 0, 0)
-			handlerInfo.textColor = ARGB(215, 255, 215, 0)
+			handlerInfo.textColor = ARGB(222, 253, 234, 168)
 			handlerInfo.glowParams = 'glow="7" samples="5" extent="4" color="0xB0000000"'
 			handlerInfo.marginBottom = 0
 			handlerInfo.showPreviewWhileSeek = true
@@ -83,15 +83,16 @@ local function get_thumb()
 end
 
 function PositionThumbs_TMDB(queryType, address, forTime)
-	if not m_simpleTV.User.TVPortal.get then return true end
+	if not m_simpleTV.User.TVPortal.get or not m_simpleTV.User.TVPortal.get.TMDB then return end
 	if queryType == 'testAddress' and m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo then
-	 if string.match(address, "/lite/zetflix") or
-	 string.match(address, "videoframe1%.com/embed/")
+	 if string.match(address, "/lite/zetflix") 
+--	 or
+--	 string.match(address, "videoframe1%.com/embed/")
 	 then return true end
 	 return false
 	end
 	if queryType == 'getThumbs' then
-			if not m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo or m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo == nil then
+			if m_simpleTV.User.TVPortal.get and m_simpleTV.User.TVPortal.get.TMDB and (not m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo or m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo == nil) then
 			 return true
 			end
 		local imgLen = m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo.samplingFrequency * m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo.thumbsPerImage
@@ -214,6 +215,9 @@ end
 	if not m_simpleTV.User.rezka then
 		m_simpleTV.User.rezka = {}
 	end
+	if not m_simpleTV.User.EXFS then
+		m_simpleTV.User.EXFS = {}
+	end
 	if not m_simpleTV.User.TVPortal then
 		m_simpleTV.User.TVPortal = {}
 	end
@@ -229,6 +233,7 @@ end
 	if not m_simpleTV.User.TVPortal.cor.TMDB then
 		m_simpleTV.User.TVPortal.cor.TMDB = {}
 	end
+	m_simpleTV.User.EXFS.CurAddress = nil
 	m_simpleTV.User.filmix.CurAddress = nil
 	m_simpleTV.User.rezka.CurAddress = nil
 	m_simpleTV.User.rezka.ThumbsInfo = nil
@@ -244,7 +249,7 @@ end
 	Get_current_global(m_simpleTV.User.TVPortal.get.TMDB.Id, m_simpleTV.User.TVPortal.get.TMDB.tv)
 
 	if m_simpleTV.User.TVPortal.get.imdb then
-		get_thumb()
+--		get_thumb()
 	end
 
 	local title = m_simpleTV.User.TVPortal.get.title .. ' (' .. m_simpleTV.User.TVPortal.get.year .. ')'

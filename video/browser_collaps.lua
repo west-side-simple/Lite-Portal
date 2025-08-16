@@ -1,7 +1,7 @@
--- видеоскрипт для видеобалансера "Collaps" (29/03/25)
+-- видеоскрипт для видеобалансера "Collaps" (17/06/25)
 -- author WS
 -- воспроизводит в браузере без рекламы
-	if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
+		if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 		if not m_simpleTV.Control.CurrentAddress:match('^https?://api[%d]*[^/]+/embed/movie/%d+')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://api[%d]*[^/]+/embed/kp/%d+')
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://api[%d]*[^/]+/embed/imdb/tt%d+')
@@ -9,6 +9,11 @@
 			and not m_simpleTV.Control.CurrentAddress:match('^https?://api%..-/embed/movie/%d+')
 		then
 		 return
+		else
+		 local retAdr = m_simpleTV.Control.CurrentAdress
+		 m_simpleTV.Control.ChangeAddress = 'Yes'
+	     m_simpleTV.Control.CurrentAdress = 'wait'
+		 return m_simpleTV.Interface.OpenLink(retAdr)
 		end
 
 ----------- отображение инфы
@@ -113,7 +118,7 @@
         midThenNonLinear:  true
     };
 	]]
-	answer = answer:gsub('<script data%-name="ad">.-</script>','<script data-name="ad">\n' .. ad .. '</script>')
+--	answer = answer:gsub('<script data%-name="ad">.-</script>','<script data-name="ad">\n' .. ad .. '</script>')
 	local fileName = 'Collaps'
 --	debug_in_file(answer .. '\n','c://1/ans_collaps.txt')
 

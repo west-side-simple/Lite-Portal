@@ -1,8 +1,9 @@
--- видеоскрипт для балансера ashdi (15.12.24)
+-- видеоскрипт для балансера ashdi (19.07.25)
 -- author west_side
 	if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 	if m_simpleTV.Control.CurrentAddress:match('^tmdb_id=')
 	then return end
+	if m_simpleTV.Control.CurrentAddress:match('^https?://ex%-fs%.%a+') then return end
 	if not m_simpleTV.Control.CurrentAddress:match('/lite/ashdi')
 	then return end
 	local inAdr = m_simpleTV.Control.CurrentAddress
@@ -88,6 +89,15 @@
 	local url_vn = decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvc2hvcnQ/YXBpX3Rva2VuPW9TN1d6dk5meGU0SzhPY3NQanBBSVU2WHUwMVNpMGZtJmtpbm9wb2lza19pZD0=') .. kpid
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then	return false end
+	local url = 'https://api.manhan.one/externalids?' .. 'kinopoisk_id=' .. kpid
+		local rc, answer = m_simpleTV.Http.Request(session,{url=url})
+		if rc == 200 then
+			local imdb_id = answer:match('"imdb_id":"(tt%d+)"')
+			if imdb_id then
+				m_simpleTV.Http.Close(session)
+				return imdb_id,'','',tv
+			end
+		end
 	local rc5,answer_vn = m_simpleTV.Http.Request(session,{url=url_vn})
 		if rc5~=200 then
 		if tonumber(kpid) == 231141 then return 'tt0435978','','',1 end
@@ -379,7 +389,7 @@
 		m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = logo, TypeBackColor = 0, UseLogo = 3, Once = 1})
 	end
 	local retAdr,retAdr1,retAdr2
-	
+
 	retAdr = unescape3(answer)
 --	debug_in_file(retAdr .. '\n','c://1/ans_ashdi.txt')
 		if not retAdr then

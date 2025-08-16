@@ -1,10 +1,10 @@
--- видеоскрипт для балансера VF (19.04.25)
+-- видеоскрипт для балансера VF (16.08.25)
 -- author west_side
 
 	if m_simpleTV.Control.ChangeAddress ~= 'No' then return end
 	if m_simpleTV.Control.CurrentAddress:match('^tmdb_id=')
 	then return end
-	if not m_simpleTV.Control.CurrentAddress:match('^https?://.-videoframe1%.com/embed.+')
+	if not m_simpleTV.Control.CurrentAddress:match('^https?://.-videoframe%d+%.com/embed.+')
 	then return end
 	local inAdr = m_simpleTV.Control.CurrentAddress
 	m_simpleTV.Control.ChangeAddress = 'Yes'
@@ -37,6 +37,7 @@
 	m_simpleTV.User.VF.CurAddress = inAdr
 	m_simpleTV.User.VF.DelayedAddress = nil
 	m_simpleTV.User.TVPortal.balanser = 'Vibix'
+	m_simpleTV.User.westSide.PortalTable = true
 	local function getConfigVal(key)
 		return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
 	end
@@ -46,11 +47,19 @@
 	local current_np = getConfigVal('perevod/vf') or ''
 	if not getConfigVal('perevod/vf') then setConfigVal('perevod/vf','') end
 
-local function check_thumb(url,session)
+local function check_thumb(url, session)
 	local rc, answer = m_simpleTV.Http.Request(session,{url=url})
 	if rc == 200 then return true end
-	m_simpleTV.Http.Close(session)
+--	m_simpleTV.Http.Close(session)
 	return
+end
+
+local function check_stream(file, session)
+	local url = file:match('(http.-%.mp4/)')
+	local rc, answer = m_simpleTV.Http.Request(session,{url=url, method='HEAD'})
+	if rc == 200 then return true end
+--	m_simpleTV.Http.Close(session)
+	return false
 end
 
 local function get_id_for_episode(answer, season, episode)
@@ -86,11 +95,12 @@ local function get_id_for_episode(answer, season, episode)
 end
 
 local function get_thumb(season, episode)
-	local url
-	if m_simpleTV.User.VF.id_imdb then
-		url = 'https://api.ninsel.ws/embed/imdb/' .. m_simpleTV.User.VF.id_imdb
-	elseif m_simpleTV.User.VF.kpid then
-		url = 'https://api.ninsel.ws/embed/kp/' .. m_simpleTV.User.VF.kpid
+--	local url = 'https://api' .. os.time() .. '.synchroncode.com/embed/'
+	local url = 'https://api.kinogram.best/embed/'
+	if m_simpleTV.User.VF.kpid then
+		url = url..'kp/' .. m_simpleTV.User.VF.kpid
+	elseif m_simpleTV.User.VF.id_imdb then
+		url = 'https://api' .. os.time() .. '.synchroncode.com/embed/imdb/' .. m_simpleTV.User.VF.id_imdb	
 	else
 		return
 	end
@@ -105,7 +115,7 @@ local function get_thumb(season, episode)
 			if not m_simpleTV.User.TVPortal.get.TMDB.PositionThumbsHandler then
 				local handlerInfo = {}
 				handlerInfo.luaFunction = 'PositionThumbs_VF'
-				handlerInfo.regexString = 'videoframe1\.com/embed'
+				handlerInfo.regexString = 'videoframe2\.com/embed'
 				handlerInfo.sizeFactor = 0.15
 				handlerInfo.backColor = ARGB(191, 30, 33, 61)
 				handlerInfo.textColor = ARGB(255, 255, 215, 0)
@@ -131,7 +141,7 @@ local function get_thumb(season, episode)
 			if not m_simpleTV.User.TVPortal.get.TMDB.PositionThumbsHandler then
 				local handlerInfo = {}
 				handlerInfo.luaFunction = 'PositionThumbs_VF'
-				handlerInfo.regexString = 'videoframe1\.com/embed'
+				handlerInfo.regexString = 'videoframe2\.com/embed'
 				handlerInfo.sizeFactor = 0.15
 				handlerInfo.backColor = ARGB(191, 30, 33, 61)
 				handlerInfo.textColor = ARGB(255, 255, 215, 0)
@@ -146,14 +156,14 @@ local function get_thumb(season, episode)
 			return
 		end
 		if season and episode then src_id = get_id_for_episode(answer,season,episode) or src_id end
-		local src = src_pre .. src_id .. '/desktop/thumb-'
+		local src = src_pre .. src_id .. '/desktop/'
 		local check = check_thumb(src .. firstNum .. '.webp',session)
 		if not check then
 			m_simpleTV.Http.Close(session)
 			if not m_simpleTV.User.TVPortal.get.TMDB.PositionThumbsHandler then
 				local handlerInfo = {}
 				handlerInfo.luaFunction = 'PositionThumbs_VF'
-				handlerInfo.regexString = 'videoframe1\.com/embed'
+				handlerInfo.regexString = 'videoframe2\.com/embed'
 				handlerInfo.sizeFactor = 0.15
 				handlerInfo.backColor = ARGB(191, 30, 33, 61)
 				handlerInfo.textColor = ARGB(255, 255, 215, 0)
@@ -186,11 +196,16 @@ local function get_thumb(season, episode)
 		if not m_simpleTV.User.TVPortal.get.TMDB.PositionThumbsHandler then
 			local handlerInfo = {}
 			handlerInfo.luaFunction = 'PositionThumbs_VF'
-			handlerInfo.regexString = 'videoframe1\.com/embed'
-			handlerInfo.sizeFactor = 0.15
+			handlerInfo.regexString = 'videoframe2\.com/embed'
+			handlerInfo.sizeFactor = 0.12
 			handlerInfo.backColor = ARGB(191, 26, 22, 42)
-			handlerInfo.textColor = ARGB(255, 255, 215, 0)
+			if m_simpleTV.User.TVPortal.isTEXTonTHUMB then 			
+			handlerInfo.textColor = ARGB(222, 253, 234, 168)
 			handlerInfo.glowParams = 'glow="7" samples="5" extent="4" color="0xB0000000"'
+			else			
+			handlerInfo.textColor = ARGB(0, 253, 234, 168)
+			handlerInfo.glowParams = 'glow="0" samples="0" extent="0" color="0x00000000"'
+			end
 			handlerInfo.marginBottom = 5
 			handlerInfo.showPreviewWhileSeek = false
 			handlerInfo.clearImgCacheOnStop = false
@@ -203,7 +218,7 @@ local function get_thumb(season, episode)
 		if not m_simpleTV.User.TVPortal.get.TMDB.PositionThumbsHandler then
 			local handlerInfo = {}
 			handlerInfo.luaFunction = 'PositionThumbs_VF'
-			handlerInfo.regexString = 'videoframe1\.com/embed'
+			handlerInfo.regexString = 'videoframe2\.com/embed'
 			handlerInfo.sizeFactor = 0.15
 			handlerInfo.backColor = ARGB(191, 30, 33, 61)
 			handlerInfo.textColor = ARGB(255, 255, 215, 0)
@@ -226,7 +241,7 @@ function PositionThumbs_VF(queryType, address, forTime)
 	 return false
 	end--]]
 	if queryType == 'getThumbs' then
-			if not m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo or m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo == nil then
+			if not m_simpleTV.User.TVPortal.get or not m_simpleTV.User.TVPortal.get.TMDB or not m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo or m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo == nil then
 			 return false
 			end
 		local imgLen = m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo.samplingFrequency * m_simpleTV.User.TVPortal.get.TMDB.ThumbsInfo.thumbsPerImage
@@ -263,6 +278,8 @@ end
 			return false
 		end
 		answer = unescape3(answer):gsub('\n', ' '):gsub('"\\"', '"«'):gsub('\\"', '»')
+		m_simpleTV.User.VF.answerforid = answer
+--		debug_in_file(answer .. '\n','c://1/vf_answtt.txt')
 		local name = answer:match('"name":"(.-)"')
 		local year = answer:match('"year":.-"(.-)"') or ''
 		m_simpleTV.Http.Close(session)
@@ -276,6 +293,7 @@ end
 	local function get_all_content(file_all, inAdr, current_np)
 		require('json')
 		local answer = file_all:gsub('%[%]', '"nil"'):gsub('\\', '\\\\'):gsub('\\"', '\\\\"'):gsub('\\/', '/')
+--		debug_in_file(answer .. '\n','c://1/vf_answ.txt')
 		local tab = json.decode(answer)
 		if not tab then
 			return false
@@ -302,25 +320,60 @@ end
 						if t[m].Address == inAdr or not inAdr:match('&s=%d+&e=%d+') and m == 1 then
 							current_ep = m
 							m_simpleTV.User.VF.TabPerevod = {}
-							local k = 1
-							while true do
-								if not tab[i].folder[j].folder[k] then
-									break
+							local file = tab[i].folder[j].file
+							file = file .. ','
+							local tf, n = {}, 1
+							for w in file:gmatch('%[.-%,') do
+								local res, tr_all = w:match('%[(.-)(%].-)%,')
+--								debug_in_file(res .. ' ' .. tr_all .. '\n','c://1/resvf.txt')
+								local str_file = ''
+								for w1 in tr_all:gmatch('%{.-%.mp4/') do
+									local tr = w1:match('%{(.-)%}')
+									if not tr and m_simpleTV.User.VF.answerforid then
+										local answerforid_tr = m_simpleTV.User.VF.answerforid:match('"s' .. season_name:match('(%d+)') .. '".-"e' .. episode_name:match('(%d+)') .. '".-"v(%d+)"')
+										local answerforid_alltr = m_simpleTV.User.VF.answerforid:match('"voiceovers":%[(.-)%]')
+										if answerforid_alltr then
+											for w2 in answerforid_alltr:gmatch('%{.-%}') do
+												local id_in,tr_in = w2:match('"id":(%d+).-"name":"(.-)"')
+												if tonumber(answerforid_tr) == tonumber(id_in) then
+													tr = tr_in
+												end
+											end
+										end
+									end
+									tr = tr or 'выбор Vibix'
+									local stream = w1:match('(http.-%.mp4/)')
+									tf[n] = {}
+									tf[n].tr = tr
+									tf[n].str_file = '[' .. res .. ']' .. stream
+--									debug_in_file(tf[n].tr .. ' ' .. tf[n].str_file .. '\n','c://1/strvf.txt')
+									n = n + 1
 								end
-								if tab[i].folder[j].folder[k].title then
-									local translate = tab[i].folder[j].folder[k].title
-									local file = tab[i].folder[j].folder[k].file
-									retAdr = tab[i].folder[j].folder[1].file
-									m_simpleTV.User.VF.TabPerevod[k] = {}
-									m_simpleTV.User.VF.TabPerevod[k].Id = k
-									m_simpleTV.User.VF.TabPerevod[k].Address = file
-									m_simpleTV.User.VF.TabPerevod[k].Name = translate
-									if m_simpleTV.User.VF.TabPerevod[k].Name == current_np then
-										current_p = k
-										retAdr = file
+								local hash, t0 = {}, {}
+								for s = 1, #tf do
+									if not hash[tf[s].tr]
+									then
+										t0[#t0 + 1] = tf[s]
+										hash[tf[s].tr] = true
 									end
 								end
-								k = k + 1
+
+								for k = 1,#t0 do
+									m_simpleTV.User.VF.TabPerevod[k] = {}
+									m_simpleTV.User.VF.TabPerevod[k].Id = k
+									m_simpleTV.User.VF.TabPerevod[k].Name = t0[k].tr
+									local all_str_file = ''
+									for s = 1, #tf do
+										if tf[s].tr == t0[k].tr then
+											all_str_file = all_str_file .. tf[s].str_file .. ','
+										end
+									end
+									m_simpleTV.User.VF.TabPerevod[k].Address = all_str_file:gsub('%,$','')
+									if m_simpleTV.User.VF.TabPerevod[k].Name == current_np then
+										current_p = k
+										retAdr = m_simpleTV.User.VF.TabPerevod[k].Address
+									end
+								end
 							end
 						end
 						m = m + 1
@@ -332,13 +385,23 @@ end
 		end
 		m_simpleTV.User.VF.titleTab = t
 		setConfigVal('perevod/vf', m_simpleTV.User.VF.TabPerevod[current_p].Name)
-		return current_ep, current_p, retAdr
+--		debug_in_file(current_ep .. ' ' .. current_p .. '\n' .. (retAdr or m_simpleTV.User.VF.TabPerevod[1].Address) .. '\n','c://1/ansvf.txt')
+		return current_ep, current_p, (retAdr or m_simpleTV.User.VF.TabPerevod[1].Address)
 	end
 
 	local function kinopoisk_id(imdb_id)
 		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36')
 		if not session then return false end
 		m_simpleTV.Http.SetTimeout(session, 4000)
+		local url = 'https://api.manhan.one/externalids?' .. 'imdb_id=' .. imdb_id
+		local rc, answer = m_simpleTV.Http.Request(session,{url=url})
+		m_simpleTV.Http.Close(session)
+		if rc == 200 then
+			local kp_id = answer:match('"kinopoisk_id":"(%d+)"')
+			if kp_id then
+				return kp_id
+			end
+		end
 		local url_vn = decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvc2hvcnQ/YXBpX3Rva2VuPXROamtaZ2M5N2JtaTlqNUl5NnFaeXNtcDlSZG12SG1oJmltZGJfaWQ9') .. imdb_id
 		local rc5,answer_vn = m_simpleTV.Http.Request(session,{url=url_vn})
 			if rc5~=200 then
@@ -360,7 +423,7 @@ end
 		local url = decode64('aHR0cHM6Ly9oaWR4bGdsay5kZXBsb3kuY3gvbGl0ZS96ZXRmbGl4P2tpbm9wb2lza19pZD0=') .. id
 		local rc,answer = m_simpleTV.Http.Request(session,{url = url})
 
-	--	debug_in_file(url .. '\n' .. answer,'c://1/deb_zf.txt')
+--		debug_in_file(url .. '\n' .. answer,'c://1/deb_zf.txt')
 		if rc==200 and answer:match('data%-json') then
 			m_simpleTV.Http.Close(session)
 			return url
@@ -391,12 +454,21 @@ end
 	end
 
 	local function imdbid(kpid)
-	if not kpid then return end
+		if not kpid then return end
 	if tonumber(kpid)== 1101239 then return 'tt15307130','Реализация',2019,1 end
 	local tv = 0
 	local url_vn = decode64('aHR0cHM6Ly92aWRlb2Nkbi50di9hcGkvc2hvcnQ/YXBpX3Rva2VuPW9TN1d6dk5meGU0SzhPY3NQanBBSVU2WHUwMVNpMGZtJmtpbm9wb2lza19pZD0=') .. kpid
 	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
 	if not session then	return false end
+	local url = 'https://api.manhan.one/externalids?' .. 'kinopoisk_id=' .. kpid
+		local rc, answer = m_simpleTV.Http.Request(session,{url=url})
+		if rc == 200 then
+			local imdb_id = answer:match('"imdb_id":"(tt%d+)"')
+			if imdb_id then
+				m_simpleTV.Http.Close(session)
+				return imdb_id,'','',tv
+			end
+		end
 	local rc5,answer_vn = m_simpleTV.Http.Request(session,{url=url_vn})
 		if rc5~=200 then
 		if tonumber(kpid) == 231141 then return 'tt0435978','','',1 end
@@ -546,7 +618,7 @@ end
 			if not qlty:match('%d+') then break end
 			t[i] = {}
 			t[i].Address = adr
-			t[i].Name = qlty
+			t[i].Name = qlty:gsub('4k','2160p'):gsub('Preview','180p'):match('(%d+p)')
 			t[i].qlty = tonumber(qlty:gsub('4k','2160p'):gsub('Preview','180p'):match('(%d+)p'))
 			i = i + 1
 		end
@@ -554,7 +626,7 @@ end
 		table.sort(t, function(a, b) return a.qlty < b.qlty end)
 		for i = 1, #t do
 			t[i].Id = i
-			t[i].Address = t[i].Address:gsub('^https://', 'http://') .. '$OPT:NO-STIMESHIFT$OPT:demux=mp4,any'
+			t[i].Address = t[i].Address .. '$OPT:NO-STIMESHIFT$OPT:demux=mp4,any'
 		end
 		m_simpleTV.User.VF.Tab = t
 		local index = VFIndex(t)
@@ -576,8 +648,7 @@ end
 				setConfigVal('perevod/vf', t[id].Name)
 				local episode = m_simpleTV.User.VF.CurAddress:match('&e=(%d+)')
 				if episode then
-					episode = '&e=' .. episode
-					m_simpleTV.Control.SetNewAddressT({address = t[id].Address .. episode, position = m_simpleTV.Control.GetPosition()})
+					m_simpleTV.Control.SetNewAddressT({address = m_simpleTV.User.VF.CurAddress, position = m_simpleTV.Control.GetPosition()})
 				else
 					episode = ''
 					m_simpleTV.Control.Restart()
@@ -624,6 +695,13 @@ end
 
 	local kpid = inAdr:match('id=(%d+)')
 	local id_imdb = inAdr:match('id=(tt%d+)')
+	m_simpleTV.User.VF.answerforid = nil
+	if m_simpleTV.User.EXFS.id_KP and kpid and tonumber(m_simpleTV.User.EXFS.id_KP) ~= tonumber(kpid) or m_simpleTV.User.EXFS.id_IMDB and id_imdb and m_simpleTV.User.EXFS.id_IMDB ~= id_imdb then
+	m_simpleTV.User.EXFS.CurAddress = nil
+	end
+	if kpid or id_imdb then
+		Get_Vibix_title(kpid or id_imdb)
+	end
 	if not kpid and id_imdb then
 		kpid = kinopoisk_id(id_imdb)
 	end
@@ -641,6 +719,26 @@ end
 		title, year = Get_Vibix_title(kpid or id_imdb)
 	end
 	if year and year ~= '' and year ~= 0 then year = ', ' .. year else year = '' end
+
+-------------------------
+	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36')
+	if not session then return end
+	m_simpleTV.Http.SetTimeout(session, 10000)
+	local rc,answer = m_simpleTV.Http.Request(session,{url = inAdr:gsub('&.-$',''):gsub('videoframe1','videoframe2'), method = 'post', 
+	headers = 'Referer: ' .. inAdr:gsub('&.-$','')
+})
+
+	if rc~=200 or not answer then return end
+--debug_in_file(answer .. '\n')
+-------------------------
+	local title1 = answer:match('<title>(.-)</title>')
+	if title == '' then title = nil end
+	if not title then title = title1 end
+	m_simpleTV.User.VF.titleTab = nil
+	m_simpleTV.User.VF.isVideo = nil
+	m_simpleTV.User.VF.zf_bal = nil
+--	m_simpleTV.Control.CurrentTitle_UTF8 = (title or m_simpleTV.Control.CurrentTitle_UTF8 or 'Vibix') .. year
+--	m_simpleTV.Control.SetTitle((title or m_simpleTV.Control.CurrentTitle_UTF8 or 'Vibix') .. year)
 	if inAdr:match('/embed%-serials/') then
 		if not season or not episode then
 			if not season then season = 1 end
@@ -696,22 +794,6 @@ end
 			title = (title or 'VF') .. ' (Сезон ' .. season .. ', Эпизод ' .. episode .. ')'
 		end
 	end
--------------------------
-	local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36')
-	if not session then return end
-	m_simpleTV.Http.SetTimeout(session, 10000)
-	local rc,answer = m_simpleTV.Http.Request(session,{url = inAdr:gsub('&.-$','')})
-	if rc~=200 or not answer then return end
--------------------------
-	local title1 = answer:match('<title>(.-)</title>')
-	if title == '' then title = nil end
-	if not title then title = title1 end
-	m_simpleTV.User.VF.titleTab = nil
-	m_simpleTV.User.VF.isVideo = nil
-	m_simpleTV.User.VF.zf_bal = nil
---	m_simpleTV.Control.CurrentTitle_UTF8 = (title or m_simpleTV.Control.CurrentTitle_UTF8 or 'Vibix') .. year
---	m_simpleTV.Control.SetTitle((title or m_simpleTV.Control.CurrentTitle_UTF8 or 'Vibix') .. year)
-
 	local zf_b
 	if kpid then
 		zf_b = Get_ZF(kpid)
@@ -735,6 +817,7 @@ end
 			m_simpleTV.Control.ExecuteAction(102, 1)
 			return
 		end
+--		debug_in_file(retAdr .. '\n')
 		local t1,i,current_p = {},1,1
 		local poster = retAdr:match('poster:.-"(.-)"')
 		local file_all = retAdr:gsub('^.-%,file:',''):gsub('%,poster.-$',''):gsub('%}$','')
@@ -744,7 +827,6 @@ end
 			m_simpleTV.Interface.SetBackground({BackColor = 0, PictFileName = poster or logo, TypeBackColor = 0, UseLogo = 3, Once = 1})
 			end
 		end
-
 		local tr,file
 
 	if inAdr:match('/embed/') then
@@ -754,15 +836,18 @@ end
 		for w in file_all:gmatch('%{.-%}') do
 			tr,file = w:match('"title":"(.-)"%,"file":"(.-)"')
 			if not tr or not file then break end
-			t1[i]={}
-			t1[i].Id = i
-			t1[i].Address = file
-			t1[i].Name = tr
-			if t1[i].Name == getConfigVal('perevod/vf') then
-				current_p = i
-				is_perevod = true
+			if check_stream(file,session) then
+				t1[i]={}
+				t1[i].Id = i
+				t1[i].Address = file
+				t1[i].Name = tr
+				if t1[i].Name == getConfigVal('perevod/vf') then
+					current_p = i
+					is_perevod = true
+				end
+				i=i+1
 			end
-			i=i+1
+--			debug_in_file(tr .. '\n' .. file .. '\n')
 		end
 		m_simpleTV.User.VF.TabPerevod = t1
 		if i > 2 then
@@ -789,7 +874,9 @@ end
 	local t,current_ep = {},1
 
 	if inAdr:match('/embed%-serials/') then
+
 		current_ep, current_p, retAdr = get_all_content(file_all, inAdr, current_np)
+
 		m_simpleTV.Control.CurrentTitle_UTF8 = (title or m_simpleTV.Control.CurrentTitle_UTF8 or title1 or 'Vibix') .. year .. ' - ' .. getConfigVal('perevod/vf')
 		t = m_simpleTV.User.VF.titleTab
 		t.ExtButton0 = {ButtonEnable = true, ButtonName = ' ⚙ ', ButtonScript = 'Qlty_VF()'}
@@ -797,6 +884,7 @@ end
 			t.ExtButton1 = {ButtonEnable = true, ButtonName = ' 🔊 ', ButtonScript = 'perevod_VF()'}
 		end
 		m_simpleTV.OSD.ShowSelect_UTF8('VF: ' .. (title or 'Vibix'), current_ep - 1, t, 10000, 32)
+--		debug_in_file(retAdr .. '\n')
 		retAdr = GetVFAdr(retAdr)
 		m_simpleTV.Control.ChangeAdress = 'Yes'
 		m_simpleTV.Control.CurrentAddress = retAdr
