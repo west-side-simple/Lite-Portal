@@ -155,3 +155,14 @@ end
     t1.location = 'LOCATION_PLAYLIST_MENU'
     t1.image = m_simpleTV.MainScriptDir_UTF8 .. 'user/westSide_Logo/img/palette-custom.png'
     m_simpleTV.Interface.AddExtMenuT(t1)
+	
+	local t2 = {}
+    t2.utf8 = true -- string coding
+    t2.name = "Update Logopack"
+    t2.lua_as_scr = false
+    t2.luastring = 'user/westSide_Logo/up_group_logo.lua'
+    --t.key = 0x01000002
+    --t.ctrlkey = 0 -- modifier keys (type: number) (available value: 0 - not modifier keys, 1 - CTRL, 2 - SHIFT, 3 - CTRL + SHIFT )
+    t2.location = 'LOCATION_MAIN_MENU'
+    t2.image = m_simpleTV.MainScriptDir_UTF8 .. 'user/westSide_Logo/img/palette-custom.png'
+    m_simpleTV.Interface.AddExtMenuT(t2)

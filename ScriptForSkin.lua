@@ -1,8 +1,8 @@
---Плагин быстрого доступа к замене скина, обоев, виртуальной клавиатуры, расположения контролпанели для lite portal - west_side 02.07.23
+--Плагин быстрого доступа к замене скина, обоев, виртуальной клавиатуры, расположения контролпанели для lite portal - west_side 05.07.25
 function background_skin()
 	local currentbackground = m_simpleTV.Config.GetValue('mainView/logo/file','simpleTVConfig') or ''
 	local path = m_simpleTV.Common.GetMainPath(2) .. 'work/Channel/logo/Wallpapers/'
-	local t1,t,i,currentid = m_simpleTV.Common.DirectoryEntryList(path,'*.png;*.jpg','Files|NoDot|NoDotDot','Name|IgnoreCase|DirsFirst'),{},1,1
+	local t1,t,i,currentid = m_simpleTV.Common.DirectoryEntryList(path,'*.png;*.jpg;*.svg','Files|NoDot|NoDotDot','Name|IgnoreCase|DirsFirst'),{},1,1
     if t1~=nil then
     for i=1,#t1 do
 	t[i] ={}
@@ -18,7 +18,12 @@ function background_skin()
 	end
     end
 	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Skins '}
-	t.ExtButton1 = {ButtonEnable = true, ButtonName = ' View '}
+	local currentskin = m_simpleTV.Config.GetValue('skin/path','simpleTVConfig') or ''
+	if currentskin:match('WS') then
+		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' Type '}
+	else
+		t.ExtButton1 = {ButtonEnable = true, ButtonName = ' View '}
+	end
 	local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Select background',currentid-1,t,9000,1+4+8)
     if id==nil then return end
     if ret == 1 then
@@ -31,15 +36,49 @@ function background_skin()
 	  skin_schema_settings()
     end
 	if ret == 3 then
-	if id == #t
-	then
-	  m_simpleTV.Config.SetValue('mainView/logo/file', '../Channel/logo/Wallpapers/' .. t[1].Action ,'simpleTVConfig')
+	if currentskin:match('WS') then
+		skin_WS_type()
 	else
-	  m_simpleTV.Config.SetValue('mainView/logo/file', '../Channel/logo/Wallpapers/' .. t[id+1].Action ,'simpleTVConfig')
+		if id == #t	then
+		  m_simpleTV.Config.SetValue('mainView/logo/file', '../Channel/logo/Wallpapers/' .. t[1].Action ,'simpleTVConfig')
+		else
+		  m_simpleTV.Config.SetValue('mainView/logo/file', '../Channel/logo/Wallpapers/' .. t[id+1].Action ,'simpleTVConfig')
+		end
+		  m_simpleTV.Config.Apply('NEED_MAIN_VIEW_UPDATE')
+		  m_simpleTV.Control.ExecuteAction(37)
+		  background_skin()
+		end  
+    end
+end
+-------------------------------------------------------------------
+function skin_WS_type()
+	local current_type_WS = m_simpleTV.Config.GetValue("current_type_WS","LiteConf.ini") or 1
+	local current_color_WS = m_simpleTV.Config.GetValue("mainView/logo/file","simpleTVConfig") or ""
+	current_color_WS = current_color_WS:match('/Wallpapers/(.-)%d') or "User"
+	local t, i = {}, 1
+	for i = 1,6 do
+		t[i] = {}
+		t[i].Id = i
+		t[i].Name = i
+		t[i].InfoPanelLogo = 'https://raw.githubusercontent.com/west-side-simple/logopacks/main/Wallpapers/' .. current_color_WS .. i .. '.png'
+		t[i].InfoPanelTitle = 'Select type WS background'
 	end
-	  m_simpleTV.Config.Apply('NEED_MAIN_VIEW_UPDATE')
-	  m_simpleTV.Control.ExecuteAction(37)
-	  background_skin()
+	t.ExtButton0 = {ButtonEnable = true, ButtonName = ' Skins '}
+	t.ExtButton1 = {ButtonEnable = true, ButtonName = ' Background '}
+	local ret,id = m_simpleTV.OSD.ShowSelect_UTF8('Select type WS background',tonumber(current_type_WS)-1,t,9000,1+4+8)
+    if id==nil then return end
+    if ret == 1 then
+		m_simpleTV.Config.SetValue("current_type_WS",id,"LiteConf.ini")
+		m_simpleTV.Config.SetValue('mainView/logo/file', 'https://raw.githubusercontent.com/west-side-simple/logopacks/main/Wallpapers/' .. current_color_WS .. id .. '.png' ,'simpleTVConfig')
+		m_simpleTV.Config.Apply('NEED_MAIN_VIEW_UPDATE')
+		m_simpleTV.Control.ExecuteAction(37)
+		skin_WS_type()
+	end
+	if ret == 2 then
+		skin_schema_settings()
+    end
+	if ret == 3 then
+		background_skin()
     end
 end
 -------------------------------------------------------------------
@@ -60,9 +99,10 @@ local function set_skin(dir)
 	local version,author,name,desc,preview = answer:match('<SimpleTVSkin.-version="(.-)".-author="(.-)".-name="(.-)".-desc="(.-)".-imagepre="(.-)">')
 -- controlside
 	local controlside = 1
-	if dir:match('WS')
-	or dir:match('base')
-	or dir:match('BlackGlass')
+	if 
+--	dir:match('WS')	or -- for timeline image need 1
+	dir:match('base') or 
+	dir:match('BlackGlass')
 -- add dir for controlside = 0
 	then controlside = 0 end
 -- backgroundimage
@@ -195,7 +235,8 @@ function select_keyboard()
 	  skin_schema_settings()
     end
 end
-		if not m_simpleTV.Config.GetValue('mainPlayController/playLastChannelOnStartup','simpleTVConfig') == true and not io.open(m_simpleTV.MainScriptDir .. 'user/startup/ScriptForAssemblage.lua', 'r') then
+	local hi_simpleTV = true -- true or false
+		if not m_simpleTV.Config.GetValue('mainPlayController/playLastChannelOnStartup','simpleTVConfig') == true and not io.open(m_simpleTV.MainScriptDir .. 'user/startup/ScriptForAssemblage.lua', 'r') and hi_simpleTV then
 
 			m_simpleTV.Control.CurrentAdress = 'wait'
 			m_simpleTV.Control.PlayAddressT({title='Welcome to SimpleTV',address='wait'})-- fix title

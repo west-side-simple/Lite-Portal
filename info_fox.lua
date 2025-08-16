@@ -1,4 +1,4 @@
--- видеоскрипт для получения информации медиа по названию и году (19/02/25) - автор west_side
+-- видеоскрипт для получения информации медиа по названию и году (10/07/25) - автор west_side
 
 function info_fox(title,year,logo)
 	if year == nil then return end
@@ -44,7 +44,7 @@ function info_fox(title,year,logo)
 
 		local rc4,answertm = m_simpleTV.Http.Request(session,{url=urltm})
 		if rc4~=200 then
-		  m_simpleTV.Http.Close(session)
+--		  m_simpleTV.Http.Close(session)
 		  return
 		end
 		require('json')
@@ -156,7 +156,7 @@ function info_fox(title,year,logo)
 		end
 		local rc3,answertm = m_simpleTV.Http.Request(session,{url=urltm})
 		if rc3~=200 then
-			m_simpleTV.Http.Close(session)
+--			m_simpleTV.Http.Close(session)
 			return
 		end
 		require('json')
@@ -218,8 +218,9 @@ function info_fox(title,year,logo)
 		local background, poster, overview, rating, count, ru_name, orig_name, promo, genre, country, slogan, tmid
 		local urld = decode64('aHR0cHM6Ly9hcGkudGhlbW92aWVkYi5vcmcvMy9zZWFyY2gvbW92aWU/YXBpX2tleT1kNTZlNTFmYjc3YjA4MWE5Y2I1MTkyZWFhYTc4MjNhZCZsYW5ndWFnZT1ydSZleHRlcm5hbF9zb3VyY2U9aW1kYl9pZCZxdWVyeT0=') .. m_simpleTV.Common.toPercentEncoding(title) .. '&primary_release_year=' .. year
 		local rc1,answerd = m_simpleTV.Http.Request(session,{url=urld})
+--		debug_in_file(rc1 .. urld .. '\n' .. answerd .. '\n--------------\n','c://1/tst.txt')
 		if rc1~=200 then
-			m_simpleTV.Http.Close(session)
+--			m_simpleTV.Http.Close(session)
 			return
 		end
 		require('json')
@@ -232,8 +233,9 @@ function info_fox(title,year,logo)
 		if not tab or not tab.results[1] then
 			local urld2 = decode64('aHR0cHM6Ly9hcGkudGhlbW92aWVkYi5vcmcvMy9zZWFyY2gvdHY/YXBpX2tleT1kNTZlNTFmYjc3YjA4MWE5Y2I1MTkyZWFhYTc4MjNhZCZsYW5ndWFnZT1ydSZxdWVyeT0=') .. m_simpleTV.Common.toPercentEncoding(title) .. '&first_air_date_year=' .. year
 			local rc2,answerd2 = m_simpleTV.Http.Request(session,{url=urld2})
+--			debug_in_file(rc2 .. urld2 .. '\n' .. answerd2 .. '\n--------------\n','c://1/tst.txt')
 			if rc2~=200 then
-				m_simpleTV.Http.Close(session)
+--				m_simpleTV.Http.Close(session)
 				return
 			end
 			tv = 1
@@ -327,7 +329,7 @@ function info_fox(title,year,logo)
 		m_simpleTV.User.TVPortal.year = year_tmdb
 		m_simpleTV.User.TVPortal.slogan = (slogan or ''):gsub("'",'´')
 		m_simpleTV.User.TVPortal.ret_tmdb = rating
-		
+
 --		debug_in_file(m_simpleTV.User.TVPortal.title .. '\n' .. m_simpleTV.User.TVPortal.title_en .. '\n' .. m_simpleTV.User.TVPortal.genre .. '\n' .. m_simpleTV.User.TVPortal.country .. '\n' .. m_simpleTV.User.TVPortal.year .. '\n' .. m_simpleTV.User.TVPortal.slogan .. '\n' .. m_simpleTV.User.TVPortal.ret_tmdb .. '\n--------------\n','c://1/tst.txt')
 		return background, poster, overview, rating, count, ru_name, orig_name, promo, genre, country, slogan, tmid, tv
 	end
@@ -337,7 +339,7 @@ function info_fox(title,year,logo)
 		local urle = decode64('aHR0cHM6Ly9hcGkudGhlbW92aWVkYi5vcmcvMy9zZWFyY2gvbW92aWU/YXBpX2tleT1kNTZlNTFmYjc3YjA4MWE5Y2I1MTkyZWFhYTc4MjNhZCZsYW5ndWFnZT1lbiZleHRlcm5hbF9zb3VyY2U9aW1kYl9pZCZxdWVyeT0=') .. m_simpleTV.Common.toPercentEncoding(title) .. '&primary_release_year=' .. year
 		local rc3,answere = m_simpleTV.Http.Request(session,{url=urle})
 		if rc3~=200 then
-			m_simpleTV.Http.Close(session)
+--			m_simpleTV.Http.Close(session)
 			return ''
 		end
 		require('json')
@@ -347,7 +349,7 @@ function info_fox(title,year,logo)
 			local urle2 = decode64('aHR0cHM6Ly9hcGkudGhlbW92aWVkYi5vcmcvMy9zZWFyY2gvdHY/YXBpX2tleT1kNTZlNTFmYjc3YjA4MWE5Y2I1MTkyZWFhYTc4MjNhZCZsYW5ndWFnZT1lbiZxdWVyeT0=') .. m_simpleTV.Common.toPercentEncoding(title) .. '&first_air_date_year=' .. year
 			local rc4,answere2 = m_simpleTV.Http.Request(session,{url=urle2})
 			if rc4~=200 then
-				m_simpleTV.Http.Close(session)
+--				m_simpleTV.Http.Close(session)
 				return ''
 			end
 			require('json')
@@ -368,7 +370,7 @@ function info_fox(title,year,logo)
 		local urld = 'https://api.themoviedb.org/3/find/' .. imdb_id .. decode64('P2FwaV9rZXk9ZDU2ZTUxZmI3N2IwODFhOWNiNTE5MmVhYWE3ODIzYWQmbGFuZ3VhZ2U9cnUmZXh0ZXJuYWxfc291cmNlPWltZGJfaWQ')
 		local rc5,answerd = m_simpleTV.Http.Request(session,{url=urld})
 		if rc5~=200 then
-			m_simpleTV.Http.Close(session)
+--			m_simpleTV.Http.Close(session)
 		return false
 		end
 		require('json')
@@ -484,13 +486,21 @@ function info_fox(title,year,logo)
 	end
 
 	local function get_alloha(title, year)
-
+		local userAgent1 = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36"
+		local session_alloha =  m_simpleTV.Http.New(userAgent1)
+		if not session_alloha then return end
+		m_simpleTV.Http.SetTimeout(session_alloha, 2000)
 		local urlb = decode64('aHR0cHM6Ly9hcGkuYXBidWdhbGwub3JnLz90b2tlbj1kMzE3NDQxMzU5ZTUwNWMzNDNjMjA2M2VkYzk3ZTc=') .. '&name=' .. m_simpleTV.Common.toPercentEncoding(title) .. '&year=' .. year
-		local rc,answer = m_simpleTV.Http.Request(session,{url=urlb})
---		debug_in_file(rc .. ':\n' .. unescape3(answer) .. '\n','c://1/testfox.txt')
+		local rc,answer = m_simpleTV.Http.Request(session_alloha,{url=urlb})
+--		debug_in_file(rc .. ': '..urlb..'\n','c://1/testfox.txt')
+		if rc==-1 then
+			urlb = decode64('aHR0cHM6Ly9hcGkuYWxsb2hhLnR2Lz90b2tlbj1kMzE3NDQxMzU5ZTUwNWMzNDNjMjA2M2VkYzk3ZTc=') .. '&name=' .. m_simpleTV.Common.toPercentEncoding(title) .. '&year=' .. year
+			rc,answer = m_simpleTV.Http.Request(session_alloha,{url=urlb})
+--			debug_in_file(rc .. ': '..urlb..'\n','c://1/testfox.txt')
+		end
 		if rc~=200 then
-			m_simpleTV.Http.Close(session)
-			return
+--			m_simpleTV.Http.Close(session)
+			return false
 		end
 		local background, poster, overview, rating, count, ru_name, orig_name, promo, genres, country, slogan, tmdbid, imdb_id
 		require('json')
@@ -548,7 +558,7 @@ function info_fox(title,year,logo)
 			m_simpleTV.User.TVPortal.ret_tmdb = rating
 			country_ID = get_country(country)
 			if orig == '' then orig = rus end
-			videodesc = '<table width="100%" border="0"><tr><td style="padding: 15px 15px 5px;"><img src="' .. (poster or logo) .. '" height="450"></td><td style="padding: 0px 5px 5px; color: #EBEBEB; vertical-align: middle;"><h4><font color=#00FA9A>' .. rus .. '</font></h4><h5><i><font color=#CCCCCC>' .. slogan .. '</font></i></h5><h4>' .. str_poisk .. '</h4><h5><font color=#BBBBBB>' .. orig .. '<h5><font color=#EBEBEB>' .. country_ID .. ' ' .. country .. ' </font><font color=#E0FFFF>' .. yearb .. '</font></h5><h5><font color=#EBEBEB>' .. genres .. '</font> • ' .. age .. '+</h5>' .. reting .. '<h5><font color=#E0FFFF>' .. time_all .. '</font></h5><h5>Режиссер: <font color=#EBEBEB>' .. director .. '</font><br>В ролях: <font color=#EBEBEB>' .. actors .. '</font></h5></td></tr></table><table width="100%"><tr><td style="padding: 5px 5px 5px;"><h5><font color=#EBEBEB>' .. description .. '</font></h5></td></tr></table>'
+			videodesc = '<table width="100%" border="0"><tr><td style="padding: 15px 15px 5px;"><img src="' .. (poster or logo) .. '" height="480"></td><td style="padding: 0px 5px 5px; color: #EBEBEB; vertical-align: middle;"><h4><font color=#00FA9A>' .. rus .. '</font></h4><h5><i><font color=#CCCCCC>' .. slogan .. '</font></i></h5><h4>' .. str_poisk .. '</h4><h5><font color=#BBBBBB>' .. orig .. '<h5><font color=#EBEBEB>' .. country_ID .. ' ' .. country .. ' </font><font color=#E0FFFF>' .. yearb .. '</font></h5><h5><font color=#EBEBEB>' .. genres .. '</font> • ' .. age .. '+</h5>' .. reting .. '<h5><font color=#E0FFFF>' .. time_all .. '</font></h5><h5>Режиссер: <font color=#EBEBEB>' .. director .. '</font><br>В ролях: <font color=#EBEBEB>' .. actors .. '</font></h5></td></tr></table><table width="100%"><tr><td style="padding: 5px 5px 5px;"><h5><font color=#EBEBEB>' .. description .. '</font></h5></td></tr></table>'
 			local videodesc = videodesc:gsub('"', '\"')
 
 			m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.5" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/show_mi/menuKP1.png"', text = rus .. '\n' .. orig .. '\n' .. yearb .. '\n' .. country .. '\n' .. genres .. '\n\n\n\n\n\n', showTime = 5000,0xFF00,3})
@@ -563,13 +573,13 @@ function info_fox(title,year,logo)
 		if not title then return end
 		local url = 'http://api.vokino.tv/v2/list?name=' .. title
 		local token = decode64('d2luZG93c18zZWZlMGUyZDg5ZTQ3NzVhYWFjMTBiMGMxYjU0YTU3MF81OTIwMjE=')
-		local session = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
-		if not session then return end
-		m_simpleTV.Http.SetTimeout(session, 10000)
+		local session1 = m_simpleTV.Http.New('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101 Firefox/91.0')
+		if not session1 then return end
+		m_simpleTV.Http.SetTimeout(session1, 10000)
 		url = url .. '&token=' .. token
-		local rc,answer = m_simpleTV.Http.Request(session,{url=url})
+		local rc,answer = m_simpleTV.Http.Request(session1,{url=url})
 		if rc~=200 then
-			m_simpleTV.Http.Close(session)
+			m_simpleTV.Http.Close(session1)
 			return
 		end
 		require('json')
@@ -578,7 +588,7 @@ function info_fox(title,year,logo)
 			if not tab or not tab.channels or not tab.channels[1] or not tab.channels[1].details or not tab.channels[1].details.id or not tab.channels[1].details.name
 		then
 		return end
-		m_simpleTV.Http.Close(session)
+		m_simpleTV.Http.Close(session1)
 		local t, i = {}, 1
 	--	debug_in_file('\n----------------------\n' .. title .. ' ' .. year .. '\n----------------------\n','d://info_test.txt')
 		while true do
@@ -613,6 +623,7 @@ function info_fox(title,year,logo)
 	end
 
 -----------------------------------
+----[[
 	local videodesc, background, description = get_alloha(title, year)
 	if videodesc then
 		m_simpleTV.User.TVPortal.overview = description
@@ -627,6 +638,7 @@ function info_fox(title,year,logo)
 	if overview == '' and tmid ~= '' then
 		overview = tmdb_eng(title, year)
 	end
+	m_simpleTV.Http.Close(session)
 	m_simpleTV.User.TVPortal.overview = (overview or ''):gsub('\\"','"')
 	if background and poster and poster ~= '' and genre and tmid ~= '' and country then
 		if promo and promo ~= '' then
@@ -634,7 +646,7 @@ function info_fox(title,year,logo)
 		else
 			str_poisk = ''
 		end
-		videodesc= '<table width="100%"><tr><td style="padding: 15px 15px 5px;"><img src="' .. poster .. '" height="450"></td><td style="padding: 0px 5px 5px; color: #EBEBEB; vertical-align: middle;"><h3><font color=#00FA9A>' .. ru_name .. '</font></h3><h5><i><font color=#CCCCCC>' .. slogan .. '</font></i></h5><h4>' .. str_poisk .. '</h4><h5><font color=#BBBBBB>' .. orig_name .. '</font></h5><h5><font color=#E0FFFF>' .. country .. ' ' .. year .. '</font></h5><h5><font color=#EBEBEB>' .. genre .. '</font></h5><h5><img src="simpleTVImage:./luaScr/user/show_mi/menuTM.png" height="36" align="top"> <img src="simpleTVImage:./luaScr/user/show_mi/stars/' .. (tonumber(rating)*10 - tonumber(rating)*10%1)/10 .. '.png" height="36" align="top"> ' .. rating .. ' (' .. count .. ')</h5><h5>' .. overview .. '</h5></td></tr></table>'
+		videodesc= '<table width="100%"><tr><td style="padding: 15px 15px 5px;"><img src="' .. poster .. '" height="480"></td><td style="padding: 0px 5px 5px; color: #EBEBEB; vertical-align: middle;"><h3><font color=#00FA9A>' .. ru_name .. '</font></h3><h5><i><font color=#CCCCCC>' .. slogan .. '</font></i></h5><h4>' .. str_poisk .. '</h4><h5><font color=#BBBBBB>' .. orig_name .. '</font></h5><h5><font color=#E0FFFF>' .. country .. ' ' .. year .. '</font></h5><h5><font color=#EBEBEB>' .. genre .. '</font></h5><h5><img src="simpleTVImage:./luaScr/user/show_mi/menuTM.png" height="36" align="top"> <img src="simpleTVImage:./luaScr/user/show_mi/stars/' .. (tonumber(rating)*10 - tonumber(rating)*10%1)/10 .. '.png" height="36" align="top"> ' .. rating .. ' (' .. count .. ')</h5><h5>' .. overview .. '</h5></td></tr></table>'
 		videodesc = videodesc:gsub('"', '\"')
 		m_simpleTV.OSD.ShowMessageT({imageParam = 'vSizeFactor="2.5" src="' .. m_simpleTV.Common.GetMainPath(2) .. './luaScr/user/show_mi/menuTM1.png"', text = ru_name .. '\n' .. orig_name .. '\n' .. year_tmdb .. '\n' .. country .. '\n' .. genre .. '\n\n\n\n\n\n', showTime = 5000,0xFF00,3})
 		return videodesc:gsub('\\"','"'), background, overview:gsub('\\"','"')

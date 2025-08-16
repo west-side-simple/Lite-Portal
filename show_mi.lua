@@ -1,10 +1,11 @@
--- show mediainfo westSide (01.04.25)
+-- show mediainfo westSide (22.07.25)
+
 function show_mediainfo(channelId)
  if channelId==-1 then return end
 
 --[[
 	local state, info = m_simpleTV.EPG.GetCurrent(channelId)
-	debug_in_file((state or "uncertain") .. '\n-----------------\n','c://1/test_show.txt')
+	debug_in_file(channelId .. '/' .. (state or "uncertain") .. '\n-----------------\n','c://1/test_show.txt')
 	if state=="PRESENT" then
 		debug_in_file(
 		"EpgId=" .. info.EpgId .. '\n'  -- string, id of the EPG channel(main key)
@@ -24,6 +25,22 @@ function show_mediainfo(channelId)
 	 .. "HasDesc2=" .. (info.HasDesc2 and 'true' or 'false') .. '\n-----------------\n' -- boolean, true if next programme has description
 	 ,'c://1/test_show.txt')
 	end--]]
+
+		local function MtoHM(time_in_min)
+			local time_H = math.floor (tonumber(time_in_min)/60)
+			if time_H > 0 then return time_H .. ' ч. ' .. tonumber(time_in_min) - time_H * 60 end
+			return time_in_min
+		end
+		
+		local function StoHMS(time_in_sec)			
+			local time_H = math.floor (tonumber(time_in_sec)/60/60)
+			local time_M = math.floor (tonumber(time_in_sec)/60) - time_H * 60
+			local time_S = tonumber(time_in_sec) - time_M * 60 - time_H * 60 * 60
+			if time_H > 0 then return time_H .. ' ч. ' .. time_M .. ' мин. ' .. time_S  .. ' сек.' 
+			elseif time_M > 0 then return time_M .. ' мин. ' .. time_S  .. ' сек.' 
+			else return time_in_sec  .. ' сек.'
+			end
+		end		
 
 		local function test_logo(logo)
 			local userAgent = "Mozilla/5.0 (Windows NT 10.0; rv:85.0) Gecko/20100101 Firefox/85.0"
@@ -65,14 +82,207 @@ function show_mediainfo(channelId)
 			s = s:gsub('%,$', '')
 		 return s
 		end
+--      nexterr code
+	local function unescape_html(str)
+	 return htmlEntities.decode(str)
+	end
 
+	local function desc_clean(d)
+		d = d:gsub('%%22', '"')
+		d = d:gsub('\\u200%a', '')
+		d = d:gsub('\\u202%a', '')
+		d = d:gsub('\\u00ad', '')
+		d = d:gsub('\\r', '')
+		d = d:gsub('\r', '')
+		d = d:gsub('\\n', '\n')
+		d = d:gsub('\n\n[\n]+', '\n\n')
+		d = unescape3(d)
+		d = unescape_html(d)
+		d = d:gsub('\\', '\\')
+--		debug_in_file(d..'\n')
+	 return d
+	end
+
+	local function stringToHex(str)
+	 return (str:gsub('.',
+		function (c)
+		 return string.format('\\x%02X', string.byte(c))
+		end))
+	end
+-----------
  local t = m_simpleTV.Database.GetTable('SELECT * FROM channels WHERE Id==' .. channelId)
  if   t == nil
    or t[1] == nil
   then
  return
  end
+----------------------------
+local function Get_isactiv(id)
+	if id == nil then return end
+	local verNumber, verString = m_simpleTV.Common.GetVersion()
+	if verNumber < 1100 then return '' end
+	local active = m_simpleTV.Control.GetTracksInfo()
+	if active == nil then return end
+	if active["video"] and active["video"]["currentID"] == -1 then
+		m_simpleTV.User.TVPortal.res_video = nil
+		m_simpleTV.User.TVPortal.codec_video = nil
+		m_simpleTV.User.TVPortal.btr_video = nil
+	end
+	if active["audio"] and active["audio"]["currentID"] == -1 then
+		m_simpleTV.User.TVPortal.codec_audio = nil
+		m_simpleTV.User.TVPortal.res_audio = nil
+		m_simpleTV.User.TVPortal.btr_audio = nil
+	end
+	if active["subtitle"] and active["subtitle"]["currentID"] == -1 then
+		m_simpleTV.User.TVPortal.lang_sub = nil
+	end
+	if active and
+	(active["video"] and active["video"]["currentID"] and tonumber(id) == tonumber(active["video"]["currentID"]) or
+		active["audio"] and active["audio"]["currentID"] and tonumber(id) == tonumber(active["audio"]["currentID"]) or
+		active["subtitle"] and active["subtitle"]["currentID"] and tonumber(id) == tonumber(active["subtitle"]["currentID"]))
+	then
+		return '● '
+	end
+	return ''
+end
 
+local function Get_lang(lang)
+	local t = {
+	{'Russian','ru'},
+	{'English','en'},
+	{'Ukrainian','ua'},
+	{'French','fr'},
+	{'German','de'},
+	{'Italian','it'},
+	{'Spanish','es'},
+	}
+	for i = 1,#t do
+		if lang == t[i][1] then return t[i][2] end
+	end
+	return '-'
+end
+
+local function Get_res_audio(res)
+	local t = {
+	{'Mono','1'},
+	{'Stereo','2.0'},
+	{'3F2M','5.0'},
+	{'3F2R','5.0'},
+	{'3F2M/LFE','5.1'},
+	{'3F2R/LFE','5.1'},
+	{'3F2M1R/LFE','7.1'},
+	{'3F2M2R/LFE','7.1'},
+	}
+	for i = 1,#t do
+		if res == t[i][1] then return t[i][2] end
+	end
+	return 'na'
+end
+
+local function Get_res(res)
+	if res==nil then return end
+	res = res:match('(%d+)')
+	if tonumber(res) >= 3800 then
+		return '4kbis'
+	end
+	if tonumber(res) >= 1400 then
+		return '1080'
+	end
+	if tonumber(res) >= 1200 then
+		return '720'
+	end
+	if tonumber(res) >= 800 then
+		return '480'
+	end
+	return 'sd'
+end
+
+local function Get_codec(codec)
+	codec = codec:match('%(.-%) %((.-)%)$') or codec:match('%((.-)%)$') or codec
+	if codec then
+--		debug_in_file(codec:gsub(' $','') .. '\n')
+		return codec:gsub(' $','')
+	end
+	return 'na'
+end
+
+	local img_res_video, img_codec_video, img_res_audio, img_codec_audio
+	local str_stream, str_stream1 = '', ''
+	if m_simpleTV.Control.ChannelID and tonumber(m_simpleTV.Control.ChannelID) == tonumber(channelId) then
+
+   local mess=''
+   local ss = m_simpleTV.Control.GetCodecInfo()
+   local i,act,j=1,{},1
+	while ss and ss[i] and type(ss[i])=='table' do
+     if ss[i]["Type"]~=nil and ss[i]["Codec"]~=nil then
+	 local original_id = ss[i]["Original ID"] or ss[i]["EsMetaId"]
+	 local lang, desc, btr = '', '', ''
+	  if (ss[i]["Type"] == 'Audio' or ss[i]["Type"] == 'Subtitle') and ss[i]["Language"] or
+	  ss[i]["Type"] == 'Video' and ss[i]["Video resolution"] and ss[i]["Video resolution"] ~= '' then
+	   if ss[i]["Type"] == 'Video' then lang = ' | ' .. ss[i]["Video resolution"]
+	    else lang = ' | ' .. ss[i]["Language"]
+	   end
+	  end
+	  if ss[i]["Description"] then desc = ' | ' .. ss[i]["Description"] end
+	  if ss[i]["Channels"] then desc = ' | ' .. ss[i]["Channels"] end
+	  local isactive = Get_isactiv(original_id)
+	  if isactive and isactive ~= '' then
+	   if ss[i]["Type"] == 'Video' then
+		m_simpleTV.User.TVPortal.res_video = Get_res(ss[i]["Video resolution"])
+		m_simpleTV.User.TVPortal.codec_video = Get_codec(ss[i]["Codec"])		
+		if ss[i]["Frame rate"] then
+		 btr = ' | ' .. math.ceil (ss[i]["Frame rate"]) .. ' fps'
+		 m_simpleTV.User.TVPortal.btr_video = math.ceil (ss[i]["Frame rate"]) .. ' fps'
+	    end
+	   end
+	   if ss[i]["Type"] == 'Audio' then
+		m_simpleTV.User.TVPortal.codec_audio = Get_codec(ss[i]["Codec"])
+		if ss[i]["Channels"] then
+		 m_simpleTV.User.TVPortal.res_audio = Get_res_audio(ss[i]["Channels"])
+		end
+		if ss[i]["Language"] then
+		 m_simpleTV.User.TVPortal.lang_audio = Get_lang(ss[i]["Language"])
+	    end--
+		if ss[i]["Sample rate"] then
+		 btr = ' | ' .. ss[i]["Sample rate"]
+		 m_simpleTV.User.TVPortal.btr_audio = ss[i]["Sample rate"]
+	    end
+	   end
+	   if ss[i]["Type"] == 'Subtitle' then
+		m_simpleTV.User.TVPortal.lang_sub = Get_lang(ss[i]["Language"])
+	   end
+	  end
+      mess = mess .. (isactive or '') .. ss[i]["Type"] .. lang .. desc .. ' | ' .. ss[i]["Codec"] .. btr .. '\n'
+	  act[j] = isactive
+	  j=j+1
+     end
+	i = i + 1
+   end
+--   debug_in_file((m_simpleTV.User.TVPortal.res_video or 'NOT-res_video') .. '\n' .. (m_simpleTV.User.TVPortal.codec_video or 'NOT-codec_video') .. '\n' .. (m_simpleTV.User.TVPortal.codec_audio or 'NOT-codec_audio') .. '\n' .. (m_simpleTV.User.TVPortal.res_audio or 'NOT-res_audio') .. '\n' .. mess .. '\n')
+
+
+	str_stream = '<td style="padding: 20px 0px 0px; vertical-align: middle; align: top;" width="240" align="center">'
+	if m_simpleTV.User.TVPortal.res_video then
+		img_res_video = 'simpleTVImage:./luaScr/user/show_mi/pause/video/' .. m_simpleTV.User.TVPortal.res_video .. '.png'
+		str_stream = str_stream .. '<img src="' .. img_res_video .. '" width="50" align="top"> '
+	end
+	if m_simpleTV.User.TVPortal.codec_video then
+		img_codec_video = 'simpleTVImage:./luaScr/user/show_mi/pause/video/' .. m_simpleTV.User.TVPortal.codec_video .. '.png'
+		str_stream = str_stream .. '<img src="' .. img_codec_video .. '" width="50" align="top"> '
+	end
+	if m_simpleTV.User.TVPortal.res_audio then
+		img_res_audio = 'simpleTVImage:./luaScr/user/show_mi/pause/audio/' .. m_simpleTV.User.TVPortal.res_audio .. '.png'
+		str_stream = str_stream .. '<img src="' .. img_res_audio .. '" width="50" align="top"> '
+	end
+	if m_simpleTV.User.TVPortal.codec_audio then
+		img_codec_audio = 'simpleTVImage:./luaScr/user/show_mi/pause/audio/' .. m_simpleTV.User.TVPortal.codec_audio .. '.png'
+		str_stream = str_stream .. '<img src="' .. img_codec_audio .. '" width="50" align="top">'
+	end
+	str_stream = str_stream .. '</td>'
+	--debug_in_file((img_res_video or 'NOT-res_video') .. '\n' .. (img_codec_video or 'NOT-codec_video') .. '\n' .. (img_codec_audio or 'NOT-codec_audio') .. '\n' .. (img_res_audio or 'NOT-res_audio') .. '\n' .. str_stream .. '\n--------------------------\n')
+	str_stream1 = '<td style="padding: 25px 0px 0px; color: #EBEBEB;" align="left"><h5><i><font color="#FFC0C0C0">' .. (m_simpleTV.User.TVPortal.btr_video or '') .. '</font></i><p><i><font color="#FFC0C0C0">' .. (m_simpleTV.User.TVPortal.btr_audio or '') .. '</font></i></h5></td>'
+	end
+----------------------------
   local logo = t[1].Logo
   if logo == '' or not logo then
     logo = 'simpleTVImage:./luaScr/user/show_mi/emptyLogo.png'
@@ -82,12 +292,14 @@ function show_mediainfo(channelId)
   if string.match(logo,'^http') then
    logo = test_logo(logo)
   end
+ local logo_ch = logo
  local state, info = m_simpleTV.EPG.GetCurrent(channelId)
  local delta = 0
- local dataEND = ''
+ local dataEND
  if state and state=="PRESENT" then
 	delta = os.time() - (tonumber(info.Start1) + (tonumber(info.End1)-tonumber(info.Start1))*tonumber(info.Progress))
-	dataEND = math.floor((tonumber(info.End1) - tonumber(info.Start1)) * (1 - tonumber(info.Progress)) / 60) .. ' мин.'
+	dataEND = math.floor((tonumber(info.End1) - tonumber(info.Start1)) * (1 - tonumber(info.Progress)) / 60)
+	dataEND = MtoHM(dataEND) .. ' мин.'
  end
  local epgTitle,epgDesc,epgTitle1,epgDesc1
 -- local delta = m_simpleTV.Timeshift.EpgOffsetRequest or 0
@@ -116,7 +328,11 @@ function show_mediainfo(channelId)
 
 --	local delta = m_simpleTV.Timeshift.EpgOffsetRequest or 0
 	local curTime = os.date('%Y-%m-%d %X', os.time() - delta + 1)
-
+	local prefix = 'эфир: '
+	if delta > 0 then
+	prefix = 'архив: '
+	end
+	m_simpleTV.User.TVPortal.cur_time = prefix .. os.date('%a %d %b %Y %H:%M', os.time() - delta + 1):gsub('Sun', 'Вс'):gsub('Mon', 'Пн'):gsub('Tue', 'Вт'):gsub('Wed', 'Ср'):gsub('Thu', 'Чт'):gsub('Fri', 'Пт'):gsub('Sat', 'Сб'):gsub('Jan', 'Янв'):gsub('Feb', 'Фев'):gsub('Mar', 'Мар'):gsub('Apr', 'Апр'):gsub('May', 'Май'):gsub('Jun', 'Июн'):gsub('Jul', 'Июл'):gsub('Aug', 'Авг'):gsub('Sep', 'Сен'):gsub('Oct', 'Окт'):gsub('Nov', 'Ноя'):gsub('Dec', 'Дек')
 	local sql1 = 'SELECT * FROM ChProg WHERE IdChannel=="' .. t[1].EpgId .. '"'
               .. ' AND StartPr > "' .. curTime .. '"'
   --debug_in_file(sql1)
@@ -137,10 +353,70 @@ function show_mediainfo(channelId)
 	dataRU = dataRU:gsub('Jan', 'Янв'):gsub('Feb', 'Фев'):gsub('Mar', 'Мар'):gsub('Apr', 'Апр'):gsub('May', 'Май'):gsub('Jun', 'Июн'):gsub('Jul', 'Июл'):gsub('Aug', 'Авг'):gsub('Sep', 'Сен'):gsub('Oct', 'Окт'):gsub('Nov', 'Ноя'):gsub('Dec', 'Дек')
 	local data = dataEN
 	local desc_in_channel
-	if dataEND =='' and t[1].LastPosition then
+	local progress_current
+	if not dataEND and t[1].LastPosition then
+		progress_current = math.ceil(tonumber(t[1].LastPosition)*100)
 		dataEND = 'Прогресс просмотра ' .. math.ceil(tonumber(t[1].LastPosition)*100) .. '%'
 		desc_in_channel = t[1].Desc or ''
+		if m_simpleTV.User.TVPortal.stena_youtube_get_video_desc then
+		logo_ch = m_simpleTV.User.TVPortal.stena_youtube_get_channel_logo or 'https://s.ytimg.com/yts/img/favicon_144-vfliLAfaB.png'
+		t[1].Name = m_simpleTV.User.TVPortal.stena_youtube_get_channel_name or 'Youtube'
+		logo = m_simpleTV.User.TVPortal.stena_youtube_get_video_logo
+		epgTitle = m_simpleTV.User.TVPortal.stena_youtube_get_video_title
+		epgDesc = m_simpleTV.User.TVPortal.stena_youtube_get_video_desc
+	--nexterr code---
+		epgDesc = desc_clean(epgDesc)
+		epgDesc = string.gsub(epgDesc, '(https?://%S+)',
+				function(c)
+					c = c:gsub('#', '%%23')
+					if c:match('%.%.%p*$') then
+						c = string.format('<span style="color:%%23817c76; font-size:small;">%s</span>', c)
+					else
+						c = string.format('<a href="%s" style="color:%%23319785; font-size:small; text-decoration:none">%s</a>', c, c)
+					end
+				 return c:gsub('([.,)]+)"', '"%1'):gsub('([.,)]+)</a>', '</a>%1')
+				end)
+		epgDesc = string.gsub(epgDesc, '(%d+[:%d+]+)',
+				function(c)
+						if not (c:match('%d+:%d+$')
+							or c:match('%d+:%d+:%d+$'))
+							or c:match('::')
+						then
+						 return
+						end
+				 return string.format('<span style="color:%%23e6e76d; font-size:small;">%s</span>', c)
+				end)
+			epgDesc = string.gsub(epgDesc, 'none">(https?://[%a.]*youtu[.combe][^<]+)<',
+				function(c)
+						if c:match('sub_confirmation')
+							or c:match('subscription_center')
+							or c:match('/join$')
+						then
+						 return
+						end
+				 return string.format('none">%s</a> <a href="simpleTVLua:PlayAddressT_YT(\'%s\')"><img src="' .. m_simpleTV.User.YT.playPicFromDisk ..'" height="32" valign="top"><', c, stringToHex(c))
+				end)
+			epgDesc = string.gsub(epgDesc, '#([^\'%s%c/#,:%-?)]+)',
+				function(c)
+					if c:match('%.%.$') then
+						c = string.format('<span style="color:%%23817c76; font-size:small;">#%s</span>', c)
+					elseif (c:match('^%d+%p*$') and #c < 6) or c:match('%.[^.]+$') then
+					 return
+					else
+						c = string.format('<a href="simpleTVLua:PlayAddressT_YT(\'https://www.youtube.com/hashtag/%s\')" style="color:#436FAF; font-size:small; text-decoration:none">#%s</a>', stringToHex(c:gsub('%p+$', '')), c)
+					end
+				 return c:gsub('(%p+)</a>', '</a>%1')
+				end)		
+		epgDesc = epgDesc:gsub('%%23', '#')
+		epgDesc = epgDesc:gsub('"+', '"')
+		epgDesc = epgDesc:gsub('*****', '"')
+		epgDesc = epgDesc:gsub('\n', '<br>')
+		epgDesc = string.format('<hr><p>%s</p>', epgDesc)
+--		debug_in_file(epgDesc..'\n')
+		------------
+		end
 	else
+		progress_current = math.ceil(tonumber(info.Progress)*100)
 		dataEND = 'До окончания ' .. dataEND
 	end
 	if m_simpleTV.Interface.GetLanguage() == 'ru' or m_simpleTV.Interface.GetLanguage() == 'uk' then data = dataRU end
@@ -161,25 +437,33 @@ function show_mediainfo(channelId)
  end
   if epgCategory and epgCategory ~= '' then epgCategory = '<font color="#BBBBBB">' .. epgCategory .. '</font><p>' else epgCategory = '' end
   if epgCategory1 and epgCategory1 ~= '' then epgCategory1 = ' (' .. epgCategory1 .. ')' else epgCategory1 = '' end
-  local str1, str2 = '<td style="padding: 10px 10px 0px; color: #EBEBEB;" valign="middle"><h3><font color="#00FF7F">' .. t[1].Name .. '</font></h3>', ''
+  local str1, str2 = '<td style="padding: 10px 10px 0px; color: #EBEBEB;" valign="middle"><h3><img src="' .. logo_ch .. '" height="40" align="top"> <font color="#00FF7F">' .. t[1].Name .. '</font></h3>', ''
   local titleepg, yearepg, str3, backgroundepg, str4
   if epgTitle then
-		str1 = str1 .. '<h4><i><font color="#BBBBBB">' .. epgTitle ..  '</font></i><p>' .. epgCategory .. '<font color="#CD7F32">(' .. StartForH .. ':' .. StartForM .. ' - '  .. EndForH .. ':' .. EndForM .. ')</font> <b>' .. prtime .. ' мин.</b></h4>' .. '</td></tr></table>'
-	titleepg = clean_title(epgTitle)
+		if m_simpleTV.User.TVPortal.stena_youtube_get_video_desc then
+		str1 = str1 .. '<h4><i><font color="#BBBBBB">' .. epgTitle:gsub('*****', '"') ..  '</font></i></h4><h5>' .. epgCategory .. '<b>' .. StoHMS(m_simpleTV.User.TVPortal.stena_youtube_get_video_duration) .. '<p><i><font color="#BBBBBB">' .. m_simpleTV.User.TVPortal.stena_youtube_get_video_viewCount .. ' просмотров</font></i></b></h5>' .. '</td></tr></table>'
+		else
+		str1 = str1 .. '<h4><i><font color="#BBBBBB">' .. epgTitle ..  '</font></i><p>' .. epgCategory .. '<font color="#CD7F32">(' .. StartForH .. ':' .. StartForM .. ' - '  .. EndForH .. ':' .. EndForM .. ')</font> <b>' .. MtoHM(prtime) .. ' мин.</b></h4>' .. '</td></tr></table>'
+		titleepg = clean_title(epgTitle)
+		end
   end
   if epgDesc then
+   yearepg = epgDesc:match('Год: (%d%d%d%d)') or epgDesc:match('Год:(%d%d%d%d)')
+   if not yearepg then
    for w in epgDesc:gmatch('%d%d%d%d') do
     yearepg = w
    end
+   end
   end
   yearepg = epgTitle and epgTitle:match('%((%d%d%d%d)%)') or yearepg or epgTitle and epgTitle:match('(%d%d%d%d)')
-  if titleepg and yearepg then
+  
+  if titleepg and yearepg and not m_simpleTV.User.TVPortal.stena_youtube_get_video_desc then
     if t[1].Name and t[1].Name:match('KBC') then titleepg = titleepg:gsub(' 4K.-$',''):gsub(' %d%d%d%d$','') end
     str3, backgroundepg, str4 = info_fox(titleepg,yearepg,logo)
 --	debug_in_file(titleepg .. ' ' .. yearepg .. '\n')
   end
   if str4 and str4 ~= '' then
-   str1 = str1 .. '<table width="100%"><tr><td style="padding: 0px 10px 10px;" valign="middle" width="100%"><h5><font color="#EBEBEB">' .. str4 ..  '</font></h5>'
+   str1 = str1 .. '<table width="100%"><tr><td style="padding: 0px 0px 10px;" valign="middle" width="100%"><h5><font color="#EBEBEB">' .. str4 ..  '</font></h5>'
   else
    str1 = str1 .. '<table width="100%"><tr><td style="padding: 0px 10px 10px;" valign="middle" width="100%"><h5><font color="#EBEBEB">' .. (epgDesc or desc_in_channel or '') ..  '</font></h5>'
   end
@@ -192,7 +476,7 @@ function show_mediainfo(channelId)
   end
   local bg = ' bgcolor="#182633"'
 --  if m_simpleTV.Config.GetValue('mainOsd/showEpgInfoAsWindow', 'simpleTVConfig') then bg = '' end
-  str1 = '<html><body' .. bg .. '>' .. '<table width="100%"><tr><td style="padding: 10px 10px 0px; color: #EBEBEB;" align="left"><h4><i><font color="#BBFF8C00">' .. data .. '</font></i></h4></td><td style="padding: 10px 10px 0px; color: #EBEBEB;" align="right"><h4><i><font color="#BBFF8C00">' .. dataEND .. '</font></i></h4></td></tr></table>' .. '<table width="100%"><tr><td style="padding: 10px 10px 0px; color: #EBEBEB;">' .. '<img src="' .. logo .. '" width="240">' .. '</td>' .. str1
+  str1 = '<html><body' .. bg .. '>' .. '<table width="100%" border="0"><tr>' .. str_stream .. str_stream1 .. '<td style="padding: 25px 0px 0px; color: #EBEBEB;" align="right"><h5><i><font color="#BBFF8C00">' .. m_simpleTV.User.TVPortal.cur_time .. '</font></i><p><i><font color="#BBFF8C00">' .. dataEND .. '</font></i></h5></td><td style="padding: 20px 0px 0px; vertical-align: middle; align: top;" width="50" align="center"><img src="' .. 'simpleTVImage:./luaScr/user/westSide/progress1/p' .. progress_current .. '.png' .. '" height="40" align="top"></td></tr></table><table width="100%" border="0"><tr><td style="padding: 10px 0px 0px; color: #EBEBEB;">' .. '<img src="' .. logo .. '" width="240">' .. '</td>' .. str1
 
   if epgTitle1 then
    str1 = str1 .. '<p><h4><font color="#CD7F32">далее: </font><i><font color="#BBBBBB">' .. epgTitle1 .. epgCategory1 .. '</font></i></h4>'
@@ -202,11 +486,11 @@ function show_mediainfo(channelId)
 
  -- парсер названия
  t[1].Name = t[1].Name:gsub('BTV X%-Files HD', 'The X-Files 1993'):gsub('BTV  Ивановы%-Ивановы HD', 'Ивановы-Ивановы 2017'):gsub('BTV Игра престолов HD', 'Игра престолов 2011'):gsub('BTV Мистер Бин HD', 'Мистер Бин 1990'):gsub(' %- Украинский', ''):gsub(' %(Color%)', ''):gsub('пьесса','пьеса')
- local title_rus = t[1].Name:gsub(' /.-$', ''):gsub('%(4K%)', ''):gsub(' %(мини%-сериал%)', ''):gsub('%(%+18%)', ''):gsub('%(Special%)', ''):gsub(' %- ', ' – '):gsub(' %(.-%d+%)$', ''):gsub(' %d+$', ''):gsub('%(color%)', '')
+ local title_rus = t[1].Name:gsub(' /.-$', ''):gsub('%(4K%)', ''):gsub(' %(мини%-сериал%)', ''):gsub('%(%+18%)', ''):gsub('%(Special%)', ''):gsub(' %- ', ' – '):gsub(' %(.-%d+%)$', ''):gsub('%(color%)', ''):gsub('%, %d+$',''):gsub('%,$','')
  local year = t[1].Name:match('%(.-(%d+)%)$') or t[1].Name:match(' (%d+)$') or ''
  t[1].Name = t[1].Name:gsub(' %(.-$', '')
- local title_orig = t[1].Name:gsub('^.-/ ', ''):gsub('%(4K%)', ''):gsub('%(4%)', ''):gsub(' %(мини%-сериал%)', ''):gsub('%(%+18%)', ''):gsub('%(Special%)', ''):gsub(' %- ', ' – '):gsub('%(.-%d+%)$', ''):gsub(' %d+$', ''):gsub('%(color%)', '') or title_rus
- if title_orig and year and not epgTitle then
+ local title_orig = t[1].Name:gsub('^.-/ ', ''):gsub('%(4K%)', ''):gsub('%(4%)', ''):gsub(' %(мини%-сериал%)', ''):gsub('%(%+18%)', ''):gsub('%(Special%)', ''):gsub(' %- ', ' – '):gsub('%(.-%d+%)$', ''):gsub('%(color%)', ''):gsub('%, %d+$',''):gsub('%,$','') or title_rus
+ if title_orig and year and year~='' and not epgTitle then
  if title_orig:match('The Witcher') then title_orig = 'Ведьмак' year = 2019 end
  if title_orig == 'Bob Dylan at the Newport Folk Festival' then title_orig = 'Bob Dylan: The Other Side of the Mirror - Live at the Newport Folk Festival' year = 2007 end
  if title_orig:match('Холодное лето') then year = 1988 end
@@ -255,6 +539,7 @@ function show_mediainfo(channelId)
  if title_rus:match('Майами') and title_orig == 'New in Town' then year = 2009 end
  if title_orig:match('Неоконченная пьеса') then	year = 1977 end
  title_orig = title_orig:gsub('%: %d+ серия$', ''):gsub(' %d+ серия$', ''):gsub(' chapter %d+$', ''):gsub('Сокровища Агри', 'Сокровища Агры'):gsub('20%-й Век начинается', 'Двадцатый век начинается')
+--debug_in_file(title_orig .. '\n' .. year .. ' ' .. logo .. '\n...............\n')
  str2,background = info_fox(title_orig,year,logo)
 
     if m_simpleTV.Control.MainMode == 0 and not backgroundepg then
@@ -262,19 +547,27 @@ function show_mediainfo(channelId)
 	end
 
  end
- if not str2 or str2 == '' then
+--debug_in_file(str1 .. '\n' .. str2 .. '\n...............\n')
+ m_simpleTV.User.TVPortal.is_TV = false
+ if not str2 or str2 == '' or m_simpleTV.User.TVPortal.stena_youtube_get_video_desc then
+ m_simpleTV.User.TVPortal.is_TV = true
  str = str1
  else
  str2 = '<html><body' .. bg .. '>' .. str2 .. '</body></html>'
  str = str2
  end
+		if m_simpleTV.Interface.GetFullScreenMode() then
+			str =str:gsub('width="240"','width="480"'):gsub('width="50"','width="100"'):gsub('height="40"','height="60"')
+--			str =str:gsub('width="240"','width="360"'):gsub('width="50"','width="75"'):gsub('height="40"','height="50"')
+		end
 --  debug_in_file(str:gsub('http://image%.tmdb%.org',m_simpleTV.User.TVPortal.proxy_image):gsub('/original/','/w200/') .. '\n')
- return '',str:gsub('http://image%.tmdb%.org',m_simpleTV.User.TVPortal.proxy_image):gsub('/original/','/w200/')
+ return '',str:gsub('http://image%.tmdb%.org',m_simpleTV.User.TVPortal.proxy_image):gsub('/original/','/w400/')
 end
 
 function show_me()
 --	debug_in_file(m_simpleTV.Control.ChannelID .. '\n')
 	if not m_simpleTV.Control.ChannelID then return end
+
 	local function findChannelNameByID(id)
 		if id then
 			local t = m_simpleTV.Database.GetTable('SELECT Channels.Name FROM Channels WHERE Channels.Id="' .. id .. '";')
@@ -283,23 +576,36 @@ function show_me()
 	 return nil
 	end
 		local rc,str = show_mediainfo(m_simpleTV.Control.ChannelID)
+--		debug_in_file(str:gsub(' bgcolor="#182633"',''):gsub('width="240"','width="480"'):gsub('width="50"','width="100"'):gsub('height="40"','height="60"') .. '\n')
 		local t ={}
-		t.message=str:gsub(' bgcolor="#182633"','')   -- string  (empty string mean close current messageBox)
+		t.message=str:gsub(' bgcolor="#182633"',''):gsub('width="240"','width="480"'):gsub('width="50"','width="100"'):gsub('height="40"','height="60"')  -- string  (empty string mean close current messageBox)
 		--All other field are optional
-		t.header=findChannelNameByID(m_simpleTV.Control.ChannelID)    -- string
+		if m_simpleTV.User.TVPortal.is_TV == true then
+		t.header=findChannelNameByID(m_simpleTV.Control.ChannelID) .. ' (' .. m_simpleTV.User.TVPortal.cur_time .. ')'  -- string
+		else
+		t.header=findChannelNameByID(m_simpleTV.Control.ChannelID)
+		end
 --		t.extMessage -- string
 --		t.textColor  -- ARGB
 --		t.linkColor  -- ARGB
 		t.richTextMode=true -- boolean
 		t.addFontHeight=3  -- number
 		t.addHeaderFontHeight=5  -- number
-		t.showTime=5000  -- number
---		t.once      -- boolean (auto close if current play stopped or changed)
+		if m_simpleTV.User.TVPortal.cur_show == true then
+		m_simpleTV.User.TVPortal.cur_show = false
+		return m_simpleTV.Control.ExecuteAction(161)
+--		t.showTime=1000
+		else
+		m_simpleTV.User.TVPortal.cur_show = true
+		t.showTime=-1  -- number
+		end
+		t.once=true -- boolean (auto close if current play stopped or changed)
 --		t.textAlignment  -- Qt::Alignment
 --		t.windowAlignment  -- number
 --		t.windowMaxSizeH   -- number
 --		t.windowMaxSizeV   -- number
 		m_simpleTV.OSD.ShowMessageBox(t)
+
 end
 
 	if m_simpleTV.User==nil then m_simpleTV.User={} end

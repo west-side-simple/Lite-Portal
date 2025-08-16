@@ -1,6 +1,6 @@
 --startup westSide portal
 --saved as utf-8 without bom
---wafee code, west_side updated 15.05.25
+--wafee code, west_side updated 17.07.25
 -------------------------------------------------------------------
 
 if m_simpleTV.User==nil then m_simpleTV.User={} end
@@ -12,9 +12,11 @@ if m_simpleTV.User.hevc==nil then m_simpleTV.User.hevc={} end
 if m_simpleTV.User.AudioWS==nil then m_simpleTV.User.AudioWS={} end
 if m_simpleTV.User.TVPortal==nil then m_simpleTV.User.TVPortal={} end
 if m_simpleTV.User.VF==nil then m_simpleTV.User.VF={} end
+if m_simpleTV.User.EXFS==nil then m_simpleTV.User.EXFS={} end
 -- VF headers
-m_simpleTV.User.VF.headers = decode64('QXV0aG9yaXphdGlvbjogQmVhcmVyIDExOTcyfHpCZ1VlUkR4WldHcDVUUEpSRVpJNlNiaWpyQUhzVkxkc3Btb0RHTDFhZjVlMmNkMA==')
+m_simpleTV.User.VF.headers = decode64('QXV0aG9yaXphdGlvbjogIEJlYXJlciAxNjkzM3xMQklrS0drTEFIdEFMUmVGYUlkR0o2V3JUamNWdExscUw4NG1zVmpyNWJlNDhlYWY=')
 
+m_simpleTV.User.TVPortal.isTEXTonTHUMB = false --true - text on thumb
 m_simpleTV.User.TVPortal.is_stena = false
 
 AddFileToExecute('events', m_simpleTV.MainScriptDir .. "user/westSide/events.lua")
@@ -37,18 +39,45 @@ end
 end
 -------------------------------------------------------------------
 
+function get_scheme_color()
+	local currentskin = m_simpleTV.Config.GetValue('skin/path','simpleTVConfig')
+	local pass = m_simpleTV.Common.GetMainPath(2) .. currentskin:gsub('^%./','')
+	local file = io.open(pass .. '/img/back.svg', 'r')
+	if not file then
+		return 0xd0252850, 0xd01E213D
+	end
+	local answer = file:read('*a')
+	file:close()
+	local color = {
+	{'Blue', 0xd0B0C4DE, 0xd01E213D, 0xd04169E1, 0xd06699CC, 0xd0252850},
+	{'Green', 0xd0A0D6B4, 0xd0123524, 0xd000A693, 0xd071BC78, 0xd0177245},
+	{'Red', 0xd0FFCBBB, 0xd0560319, 0xd0FF2400, 0xd0FFA089, 0xd092000A},
+	{'Orange', 0xd0E7C697, 0xd035170C, 0xd0E8793E, 0xd0DEAA88, 0xd04D220E},
+	{'Magenta', 0xd0FCB4D5, 0xd0270A1F, 0xd0ED3CCA, 0xd0FF97BB, 0xd04A192C},
+	{'Cyan', 0xd0AFEEEE, 0xd0193737, 0xd048D1CC, 0xd078DBE2, 0xd0256D7B},
+	{'Orchid', 0xd0C9A0DC, 0xd0320B35, 0xd09932CC, 0xd0BA55D3, 0xd07442C8},
+	{'User', 0xd0C1CACA, 0xd0293133, 0xd0708090, 0xd09DA1AA, 0xd0414A4C},
+	}
+	for i = 1,#color do
+		if answer:match(color[i][1]) then
+			return color[i][6], color[i][3]
+		end
+	end
+	return  0xd0252850, 0xd01E213D
+end
+
 function get_bookmark()
 	m_simpleTV.Control.ExecuteAction(37)
 	m_simpleTV.Control.ExecuteAction(100)
 end
-	
+
 function start_page_mediaportal_test()
 	dofile(m_simpleTV.MainScriptDir_UTF8 .. 'user\\startup\\west_side.lua')
 	start_page_mediaportal()
 end
 
 function start_page_mediaportal()
-
+	m_simpleTV.Control.ExecuteAction(36,0) --KEYOSDCURPROG
 	local function getConfigVal(key)
 		return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
 	end
@@ -63,9 +92,12 @@ function start_page_mediaportal()
 						{'ZF','Zetflix'},
 						{'HDVB','HDVB'},
 						{'Collaps','Collaps'},
+						{'Kodik','Kodik'},
 						{'FX','FXLite'},
+						{'VideoDB','VideoDB'},
 						{'Ashdi','ASHDI'},
 						{'Magnets','Trackers'},
+						{'Trailer','Trailer'},
 						}
 		for i = 1,#balansers do
 			if balansers[i][1] == name then
@@ -86,8 +118,12 @@ function start_page_mediaportal()
 			return 'HDVB'
 		elseif adr:match('/lite/ashdi') then
 			return 'ASHDI'
+		elseif adr:match('kodik%.info') then
+			return 'Kodik'
 		elseif adr:match('/lite/filmix') then
 			return 'FXLite'
+		elseif adr:match('/lite/veoveo') or adr:match('/movies/files/episodes/') then
+			return 'VideoDB'	
 		elseif adr:match('magnet:') then
 			return 'Trackers'
 		end
@@ -102,19 +138,20 @@ function start_page_mediaportal()
 			m_simpleTV.OSD.RemoveElement('ID_DIV_STENA_REQUEST')
 			m_simpleTV.OSD.RemoveElement('ID_DIV_STENA_REQUEST1')
 			m_simpleTV.OSD.RemoveElement('ID_LOGO_STENA_REQUEST')
---			stena_clear()
+			stena_clear()
 			m_simpleTV.User.TVPortal.stena_info = false
 			m_simpleTV.User.TVPortal.stena_use = false
 			m_simpleTV.User.TVPortal.stena_home = true
 
 			local tt = {
 			{'Поиск Медиа','poisk_media.png','stena_search'},
-			{'EX-FS','EX-FS.png','run_lite_qt_exfs'},
+			{'EX-FS','EX-FS.png','select_genres'},
 			{'TMDB','tmdb.png','run_lite_qt_tmdb'},
 			{'HDRezka','hdrezka.png','get_start'},
 			{'Filmix','filmix.png','movie_genres_filmix1'},
 			{'IMDB','IMDB.png','run_lite_qt_imdb'},
-			{'VideoCDN','VideoCDN.png','run_lite_qt_cdntr_ozv'},
+			{'RipsClub','hevc.png','start_hevc'},
+--			{'VideoCDN','VideoCDN.png','run_lite_qt_cdntr_ozv'},
 			{'TV Potal','tv_portal.png','SelectTVPortal'},
 			{'YouTube','youtube.png','get_answer_start'},
 			}
@@ -123,11 +160,11 @@ function start_page_mediaportal()
 			{'Search ⟲','','get_history_of_search'},
 --			{'VideoCDN','VideoCDN.png','run_lite_qt_cdntr_ozv'},
 --			{'EX-FS','','run_lite_qt_exfs'},
-			{'KinoGo','','run_lite_qt_kinogo'},
+--			{'KinoGo','','run_lite_qt_kinogo'},
 			{'KinoKong','','run_lite_qt_kinokong'},
 --			{'UA','','run_lite_qt_ua'},
-			{'RipsClub','hevc.png','start_hevc'},
-			{'Kinopub','','run_lite_qt_kinopub'},
+--			{'RipsClub','hevc.png','start_hevc'},
+--			{'Kinopub','','run_lite_qt_kinopub'},
 			{'Трекеры','','start_page'},
 			}
 
@@ -162,8 +199,7 @@ function start_page_mediaportal()
 			 t.once=1
 			 t.zorder=0
 			 t.background = 1
-			 t.backcolor0 = 0x440000FF
---			 t.backcolor1 = 0x77FFFFFF
+			 t.backcolor0, t.backcolor1 = get_scheme_color()
 			 AddElement(t)
 
 			 t = {}
@@ -201,7 +237,7 @@ function start_page_mediaportal()
 				 t.mousePressEventFunction = 'stena_clear'
 --				 t.mousePressEventFunction = 'start_page_mediaportal_test'
 				 AddElement(t,'ID_DIV_STENA_1')
-				 
+
 				 t = {}
 				 t.id = 'BOOKMARK_STENA_ID'
 				 t.cx= 60
@@ -245,7 +281,9 @@ function start_page_mediaportal()
 				 t.glowcolor = 0xFF000077 -- цвет glow эффекта
 				 AddElement(t,'ID_DIV_STENA_1')
 
-			for j = 1,9 do
+			local shift = (1920 - 200*tonumber(#tt))/2 + 15
+
+			for j = 1,#tt do
 
 			 t = {}
 			 t.id = 'MEDIAPOISK_IMG_STENA_BACK_ID' .. j
@@ -256,7 +294,7 @@ function start_page_mediaportal()
 			 t.minresx=-1
 			 t.minresy=-1
 			 t.align = 0x0101
-			 t.left= 75 + 200*(j-1)
+			 t.left= shift + 200*(j-1)
 			 t.top= 200
 			 t.transparency = 200
 			 t.zorder=0
@@ -298,7 +336,7 @@ function start_page_mediaportal()
 			t.class="TEXT"
 			t.text = tt[j][1]
 			t.align = 0x0101
-			t.left= 145 + 170*(j-1) / 1*1.25
+			t.left= shift + 170*(j-1) / 1*1.25
 			t.top= 250
 			t.color = ARGB(255, 192, 192, 192)
 			t.font_height = -14 / m_simpleTV.Interface.GetScale()*1.5
@@ -319,7 +357,9 @@ function start_page_mediaportal()
 
 		end
 
-			for j = 1,6 do
+			shift = (1920 - 280*tonumber(#tt1))/2 + 20
+
+			for j = 1,#tt1 do
 
 			 t = {}
 			 t.id = 'MEDIAPOISK2_IMG_STENA_BACK_ID' .. j
@@ -330,7 +370,7 @@ function start_page_mediaportal()
 			 t.minresx=-1
 			 t.minresy=-1
 			 t.align = 0x0101
-			 t.left= 140 + 280*(j-1)
+			 t.left= shift + 280*(j-1)
 			 t.top= 410
 			 t.transparency = 200
 			 t.zorder=0
@@ -358,7 +398,7 @@ function start_page_mediaportal()
 			 t.minresx=-1
 			 t.minresy=-1
 			 t.align = 0x0101
-			 t.left= 125 + 250*(j-1)
+			 t.left= shift - 15 + 250*(j-1)
 			 t.top= 445
 			 t.transparency = 200
 			 t.zorder=2
@@ -391,7 +431,7 @@ function start_page_mediaportal()
 			AddElement(t,'MEDIAPOISK2_IMG_STENA_BACK_ID' .. j)
 
 		end
-		
+
 			t={}
 			t.id = 'TEXT_STENA_6_ID'
 			t.cx=0
@@ -823,7 +863,7 @@ end
 function show_portal_window()
 
 	local function globus()
-	
+
 		local  t, AddElement = {}, m_simpleTV.OSD.AddElement
 
 		t = {}
@@ -865,11 +905,11 @@ function show_portal_window()
 	local function getConfigVal(key)
 		return m_simpleTV.Config.GetValue(key,"LiteConf.ini")
 	end
-	
+
 	local function setConfigVal(key,val)
 		m_simpleTV.Config.SetValue(key,val,"LiteConf.ini")
 	end
-	
+
 	if m_simpleTV.User.westSide.PortalTable~=nil then
 		if m_simpleTV.User.filmix and m_simpleTV.User.filmix.CurAddress then
 			if m_simpleTV.User.TVPortal.is_stena == false then
@@ -884,6 +924,15 @@ function show_portal_window()
 				globus()
 				m_simpleTV.User.TVPortal.is_stena = true
 				media_info_rezka(m_simpleTV.User.rezka.CurAddress)
+			else
+				stena_clear()
+			end
+		elseif m_simpleTV.User.EXFS and m_simpleTV.User.EXFS.CurAddress then
+			m_simpleTV.User.TVPortal.get = {}
+			if m_simpleTV.User.TVPortal.is_stena == false then
+				globus()
+				m_simpleTV.User.TVPortal.is_stena = true
+				media_info(m_simpleTV.User.EXFS.CurAddress)
 			else
 				stena_clear()
 			end
@@ -1041,7 +1090,7 @@ function run_westSide_portal()
  {'Filmix',''},
  {'Kinopub',''},
  {'VideoCDN',''},
- {'KinoGo',''},
+-- {'KinoGo',''},
  {'KinoKong',''},
 -- {'UA',''},
  {'TV Portal',''},
@@ -1176,6 +1225,7 @@ function history_stena_cleane_item(id)
 	end
 
 	local current_scheme, item = id:match('^(.-)&STENA_START_CLEANE_ITEM&(%d+)')
+--	debug_in_file(current_scheme..' '..item..'\n\n')
 	local recentName
 	local recentAddress
 	local recentLogo
@@ -1307,3 +1357,22 @@ end
 	m_simpleTV.Interface.AddExtMenuT({utf8 = false, name = '-'})
 	m_simpleTV.Interface.AddExtMenuT(t1)
 	m_simpleTV.Interface.AddExtMenuT({utf8 = false, name = '-'})
+
+function ShowInfoCheckInfo_switch()
+	if not m_simpleTV.User.westSide.CheckInfo then
+		m_simpleTV.User.westSide.CheckInfo = true
+	else
+		m_simpleTV.User.westSide.CheckInfo = false
+	end
+end
+
+local t={}
+t.utf8 = true
+t.name = 'CheckInfo'
+t.luastring = 'ShowInfoCheckInfo_switch()'
+t.lua_as_scr = true
+t.key = string.byte('3')
+t.ctrlkey = 2
+t.location = 0
+t.image= m_simpleTV.MainScriptDir_UTF8 .. 'user/show_mi/fw_box_t2.png'
+m_simpleTV.Interface.AddExtMenuT(t)

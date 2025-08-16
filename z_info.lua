@@ -1,4 +1,4 @@
------------ отображение инфы premium accounts hdrezka and filmix и доступа к Vibix 09.05.25 WS
+----------- отображение инфы premium accounts hdrezka and filmix и доступа к Vibix 23.06.25 WS
 
 function ShowInfoPremiumAccount()
 
@@ -57,10 +57,10 @@ end
 		q.imagepath = 'https://rezka-ua.org/templates/hdrezka/images/hd_prem_logo.png'
 		q.top = 40*mas
 		else
-		q.cx = 264*mas
+		q.cx = 515*mas
 		q.cy = 160*mas
-		q.imagepath = 'https://rezka-ua.org/templates/hdrezka/images/hdrezka-logo.png'
-		q.top = 80*mas
+		q.imagepath = m_simpleTV.MainScriptDir_UTF8 .. 'user/show_mi/pause/FM_HDrezka.gif'
+		q.top = 15*mas
 		end
 		q.minresx=-1
 		q.minresy=-1
